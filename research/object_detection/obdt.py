@@ -80,10 +80,13 @@ IMAGE_SIZE = (12, 8)
 
 def run_inference_for_single_image(image, graph):
   with graph.as_default():
-    with tf.Session() as sess:
+    gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.3)
+    config=tf.ConfigProto(gpu_options=gpu_options)
+    with tf.Session(config=config) as sess:
       # Get handles to input and output tensors
       ops = tf.get_default_graph().get_operations()
       all_tensor_names = {output.name for op in ops for output in op.outputs}
+      print(all_tensor_names)
       tensor_dict = {}
       for key in [
           'num_detections', 'detection_boxes', 'detection_scores',
@@ -93,14 +96,22 @@ def run_inference_for_single_image(image, graph):
         if tensor_name in all_tensor_names:
           tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(
               tensor_name)
+      print(tensor_dict)
+ 
       if 'detection_masks' in tensor_dict:
         # The following processing is only for single image
+	# 对于标号位置是0的位置,如果该位置维度是1,则删除掉它.
         detection_boxes = tf.squeeze(tensor_dict['detection_boxes'], [0])
         detection_masks = tf.squeeze(tensor_dict['detection_masks'], [0])
         # Reframe is required to translate mask from box coordinates to image coordinates and fit the image size.
+	# tf.cast 转换类型.把A的类型转成tf.int32类型.
         real_num_detection = tf.cast(tensor_dict['num_detections'][0], tf.int32)
+	# tf.slice 从张量中切分. input,begin,size. size[i]=-1,表示维度i的元素都包含在切片中.
         detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
         detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
+	# 把detection_masks嵌入到一个和图像尺寸一致的一个更大的mask中.
+	# detection_masks　是num_masks x mask_height x mask_width的mask
+	# detectio_boxes　是包含mask的个数以及对应的第i个mask的四个坐标.
         detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(
             detection_masks, detection_boxes, image.shape[0], image.shape[1])
         detection_masks_reframed = tf.cast(
@@ -135,7 +146,7 @@ for image_path in TEST_IMAGE_PATHS:
   # Actual detection.
   output_dict = run_inference_for_single_image(image_np, detection_graph)
   # Visualization of the results of a detection.
-  vis_util.visualize_boxes_and_labels_on_image_array(
+  vis_util.visualize_boxes_and_labels_on_image_array( # 把以下几个框叠加到原图上.
       image_np,
       output_dict['detection_boxes'],
       output_dict['detection_classes'],
@@ -147,7 +158,9 @@ for image_path in TEST_IMAGE_PATHS:
   #plt.figure(figsize=IMAGE_SIZE)
   #plt.imshow(image_np)
 
-
+  from PIL import Image
+  im=Image.fromarray(image_np)
+  im.save("test.jpg")
 
 
 
