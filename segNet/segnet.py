@@ -39,6 +39,7 @@ def training(trainfilepath,valfilepath):
 	train_image_filenames,train_label_filenames=get_filename_list(trainfilepath)
 	val_image_filenames,val_label_filenames=get_filename_list(valfilepath)
 	
+    with tf.Graph
 
 
 
