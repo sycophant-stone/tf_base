@@ -27,3 +27,47 @@ with tf.Session() as sess:
 
 #### tf.train.start_queue_runners 
 利用它启动执行文件名队列的填充线程.之后计算单元才可以把数据读出来，否则文件名队列为空的，计算单元就会处于一直等待状态，导致系统阻塞。
+
+
+
+
+#### weight decay作用
+
+一、weight decay（权值衰减）的使用既不是为了提高你所说的收敛精确度也不是为了提高收敛速度，其最终目的是防止过拟合。
+在损失函数中，weight decay是放在正则项（regularization）前面的一个系数，正则项一般指示模型的复杂度，
+所以weight decay的作用是调节模型复杂度对损失函数的影响，若weight decay很大，则复杂的模型损失函数的值也就大。
+
+二、momentum是梯度下降法中一种常用的加速技术。对于一般的SGD，其表达式为,沿负梯度方向下降。
+而带momentum项的SGD则写生如下形式：
+其中即momentum系数，通俗的理解上面式子就是，如果上一次的momentum（即）与这一次的负梯度方向是相同的，那这次下降的幅度就会加大，所以这样做能够达到加速收敛的过程。
+
+三、normalization。如果我没有理解错的话，题主的意思应该是batch normalization吧。
+batch normalization的是指在神经网络中激活函数的前面，将按照特征进行normalization，
+这样做的好处有三点：
+
+1、提高梯度在网络中的流动。Normalization能够使特征全部缩放到[0,1]，这样在反向传播时候的梯度都是在1左右，避免了梯度消失现象。
+2、提升学习速率。归一化后的数据能够快速的达到收敛。
+3、减少模型训练对初始化的依赖。
+
+作者：陈永志
+链接：https://www.zhihu.com/question/24529483/answer/114711446
+来源：知乎
+
+
+#### tf.device()指定运行设备
+
+在TensorFlow中，模型可以在本地的GPU和CPU中运行，用户可以指定模型运行的设备。
+如果需要切换成CPU运算，可以调用tf.device(device_name)函数，其中device_name格式如/cpu:0其中的0表示设备号，TF不区分CPU的设备号，设置为0即可。GPU区分设备号\gpu:0和\gpu:1表示两张不同的显卡。 
+在一些情况下，我们即使是在GPU下跑模型，也会将部分Tensor储存在内存里，因为这个Tensor可能太大了，显存不够放，相比于显存，内存一般大多了，于是这个时候就常常人为指定为CPU设备。这种形式我们在一些代码中能见到。如：
+
+```python
+with tf.device('/cpu:0'):
+    build_CNN() # 此时，这个CNN的Tensor是储存在内存里的，而非显存里。
+```
+
+#### np.prod
+返回给定轴上的数组元素的乘积。
+
+#### tf.nn.max_pool_with_argmax
+
+返回最大值及相应的索引
