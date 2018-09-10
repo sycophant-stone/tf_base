@@ -25,12 +25,21 @@ IMAGE_WIDTH = 480
 IMAGE_DEPTH = 3
 NUM_CLASSES=12
 
+EVAL_BATCH_SIZE = 5
+BATCH_SIZE = 5
+
 # Constants describing the training process.
 MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average.
 NUM_EPOCHS_PER_DECAY = 350.0      # Epochs after which learning rate decays.
 LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor.
 
 INITIAL_LEARNING_RATE = 0.001 
+
+
+NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 367
+NUM_EXAMPLES_PER_EPOCH_FOR_TEST = 101
+NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 1
+TEST_ITER = NUM_EXAMPLES_PER_EPOCH_FOR_TEST / BATCH_SIZE
 
 '''------------------------------------------------------------------'''
 ##input
@@ -46,6 +55,17 @@ def get_filename_list(filename):
 		label_filenames.append(line[1])
 	
 	return image_filenames,label_filenames
+
+def helper_generate_image_label_batch(images,labels,min_queue_examples,batch_size,shuffle=True):
+    """
+    有image和label以及batch_size.拿出一组 [btach_size,ih,iw,ch]的数据
+    """ 
+    if shuffle:
+        images_batch,label_batch=tf.train.shuffle_batch([images,labels],batch_size=batch_size,num_threads=1,capacity=min_queue_examples+3*batch_size,min_after_dequeue=min_queue_examples)
+    else:
+        images,label_batch=tf.train.batch([images,labels],batch_size=batch_size,num_threads=1,capacity=min_queue_examples+3*batch_size)
+    return images_batch,label_batch
+
 
 def CamVidInput(inputdatafilename,inputlabelfilename,batch_size):
     """
@@ -71,8 +91,14 @@ def CamVidInput(inputdatafilename,inputlabelfilename,batch_size):
     # 把读到的png图片做reshape
     image=tf.reshape(image_bytes,(IMAGE_HEIGHT,IMAGE_WIDTH,IMAGE_DEPTH))
     label=tf.reshape(label_bytes,(IMAGE_HEIGHT,IMAGE_WIDTH,1))
+    # 丢掉了
+    reshape_image=tf.cast(image,tf.float32)
     
-    return image,label
+    # 产生一组images和labels
+    min_fraction_of_example_in_queue=0.4
+    min_queue_examples=int(NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN * min_fraction_of_example_in_queue)
+    return helper_generate_image_label_batch(reshape_image,label,min_queue_examples,batch_size,shuffle=True)
+     
     
 '''------------------------------------------------------------------'''
 # Networks
@@ -210,9 +236,24 @@ def cal_loss(logits,labels):
       1.0974]) # class 0~11
     labels=tf.cast(labels,tf.int32)
     return weight_loss(logits,labels,NUM_CLASSES,head=loss_weight)
-        
 
+
+def get_hist(predictions,labels):# labels不准确,这里传入的是batch_size
+    num_cls=predictions.shape[3]
+    batch_size=predictions.shape[0]
+    hist=np.zeros([num_cls,num_cls])
+    for i in range(batch_size):
+        ylabel=labels[i].flatten()
+        print("ylabel",ylabel)
+        yHat=predictions[i].argmax(2).flatten()
+        print("yHat",yHat)
+        k=(ylabel>0)&(ylabel<num_cls) # sanity check , 找到同时满足0<?<num_cls的那些位的地址.
+        print("k",k)
+        hist+=np.bincount(num_cls*ylabel[k].astype(int)+yHat[k],minlength=num_cls**2).reshape(num_cls,num_cls) # num_cls个类出现的次数.
     
+    return hist
+        
+        
 
 def inference(images,labels,batch_size,phase_train):
     """
@@ -300,6 +341,19 @@ def train(total_loss,global_step):
     
     apply_gradient_op=opt.apply_gradients(grads,global_step=global_step)
     
+    # 记录参与训练的变量的直方图
+    for var in tf.trainable_variables():
+        print("%s",var.op.name)
+        tf.summary.histogram(var.op.name,var)
+    
+    # 记录梯度直方图
+    for grad,var in grads:
+        if grad is not None:
+            stringname=var.op.name+"/gradients"
+            print(stringname)
+            tf.summary.histogram(var.op.name+"/gradients",grad)
+        
+    
     variable_averages=tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY,global_step)
     variable_averages_op=variable_averages.apply(tf.trainable_variables())
     
@@ -342,10 +396,19 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
         #     输入数据集及标签.
         loss,eval_prediction=inference(train_data_node,train_label_node,batch_size,phase_train)
         
-        
-        
         # 建立train的图
         train_op=train(loss,global_step)
+        
+        summary_op=tf.summary.merge_all() #把之前train的summary合到一起.
+        
+        # 记录average_loss,test_accuracy,mean_IU值,它们是标量.
+        average_loss =tf.placeholder(tf.float32)
+        accuracy=tf.placeholder(tf.float32)
+        mean_iu=tf.placeholder(tf.float32)
+        
+       
+        saver=tf.train.Saver(tf.global_variables())
+        
         
         with tf.Session() as sess:
             init=tf.global_variables_initializer()
@@ -354,6 +417,14 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
             # 创建线程,并用coordinator()管理
             coord=tf.train.Coordinator()
             threads=tf.train.start_queue_runners(sess=sess,coord=coord)
+            # tf.summary.scalar 会存储标量
+            average_loss_smy=tf.summary.scalar("average_loss",average_loss)
+            accuracy_smy=tf.summary.scalar("accuracy",accuracy)
+            mean_iu_smy=tf.summary.scalar("mean_iu",mean_iu)
+        
+            # tf file writer
+            logdir="/home/julyedu_433249/work/log"
+            summary_filewriter=tf.summary.FileWriter(logdir,sess.graph)
             
             
             for step in range(startstep,startstep+max_steps):
@@ -363,11 +434,54 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
                     train_label_node:label_batch,
                     phase_train:True
                 }
+                #print("train_data_node shape",train_data_node.shape())
+                #print("image_batch shape",image_batch.shape())
                 _,loss_value=sess.run([train_op,loss],feed_dict=feed_dict) # 第一个_是不关心的.
                 if step%10==0:
                     print("setp:%d,loss=%.2f" %(step,loss_value))
                 pred=sess.run(eval_prediction,feed_dict=feed_dict)
-                print("pred:%s"%pred)
+                if step%100==0:#每100次做一下验证集.计算误差,精度等.
+                    #print("pred:%s"%pred)
+                    print("start validation")
+                    total_val_loss=0.0
+                    hist=np.zeros([NUM_CLASSES,NUM_CLASSES])
+                    for val_step in range(int(TEST_ITER)):
+                        val_image_batch,val_label_batch=sess.run([val_images,val_labels])
+                        val_loss,val_pred=sess.run([loss,eval_prediction],feed_dict={
+                            train_data_node:val_image_batch,
+                            train_label_node:val_label_batch,
+                            phase_train:True
+                        })
+                        total_val_loss+=val_loss
+                        hist+=get_hist(val_pred,val_image_batch)
+                    print("hist:",hist)
+                    print("np.diag(hist)",np.diag(hist))
+                    print("hist.sum(0)",hist.sum(0))
+                    print("hist.sum(1)",hist.sum(1))
+                    acc_total=np.diag(hist).sum()/hist.sum()
+                    iu=np.diag(hist)/(hist.sum(0)+hist.sum(1)-np.diag(hist))
+                    average_loss_smy_str=sess.run(average_loss_smy,feed_dict={
+                        average_loss:total_val_loss/TEST_ITER
+                    })
+                    accuracy_smy_str=sess.run(accuracy_smy,feed_dict={
+                        accuracy:acc_total
+                    })
+                    mean_iu_smy_str=sess.run(mean_iu_smy,feed_dict={
+                        mean_iu:iu
+                    })
+                    summary_str=sess.run(summary_op,feed_dict=feed_dict)
+                    summary_filewriter.add_summary(summary_str,step)
+                    summary_filewriter.add_summary(average_loss_smy_str,step)
+                    summary_filewriter.add_summary(accuracy_smy_str,step)
+                    summary_filewriter.add_summary(mean_iu_smy_str,step)
+                
+                if step%1000==0 or (step+1)==max_steps:
+                    # 保存模型
+                    checkpoint_path=os.path.join(logdir,"segnet.model.ckpt")
+                    saver.save(sess,checkpoint_path,global_step=step)
+                    
+                    
+                    
     
     coord.request_stop()
     coord.join(threads)
@@ -378,10 +492,11 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
             
 
 if __name__=='__main__':
-    training(trainfilepath="/home/julyedu_433249/work/demo_playgroud/Tensorflow-SegNet/SegNet/CamVid/train.txt",
-             valfilepath="/home/julyedu_433249/work/demo_playgroud/Tensorflow-SegNet/SegNet/CamVid/val.txt",
+    training(trainfilepath="/home/julyedu_433249/work/tf_base/segNet/SegNet/CamVid/train.txt",
+             valfilepath="/home/julyedu_433249/work/tf_base/segNet/SegNet/CamVid/val.txt",
              batch_size=5,
              image_width=480,
              image_height=360,
              image_ch=3,
              max_steps=20000)
+
