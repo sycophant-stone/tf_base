@@ -117,8 +117,8 @@ def helper_add_loss_summaries(total_loss):
     
 def batch_norm_layer(inputI,is_trainning,scope):
     return tf.cond(is_trainning,
-                   lambda: tf.contrib.layers.batch_norm(inputI,is_trainning=True,center=False,updates_collections=None,scope=scope+"_bn"),
-                   lambda: tf.contrib.layers.batch_norm(inputI,is_trainning=False,center=False,updates_collections=None,scope=scope+"_bn",reuse=True))
+                   lambda: tf.contrib.layers.batch_norm(inputI,is_training=True,center=False,updates_collections=None,scope=scope+"_bn"),
+                   lambda: tf.contrib.layers.batch_norm(inputI,is_training=False,center=False,updates_collections=None,scope=scope+"_bn",reuse=True))
 
 def conv_layer_with_bn(inputI,shape,train_phase,activation=True,name=None):
     in_ch=shape[2]
@@ -132,7 +132,7 @@ def conv_layer_with_bn(inputI,shape,train_phase,activation=True,name=None):
         if activation is True:
             conv_out=tf.nn.relu(batch_norm_layer(bias,train_phase,scope.name))
         else:
-            conv_out=atch_norm_layer(bias,train_phase,scope.name)
+            conv_out=batch_norm_layer(bias,train_phase,scope.name)
     return conv_out
 
         
@@ -164,7 +164,7 @@ def decode_layer(inputI,f_shape,output_shape,stride=2,name=None):
     strides=[1,stride,stride,1]
     with tf.variable_scope(name):
         weights=get_decode_filter(f_shape)
-        deconv=tf.nn.conv2d_transpose(inputI,weights,output_shape,stride=stride,padding='SAME')
+        deconv=tf.nn.conv2d_transpose(inputI,weights,output_shape,strides=strides,padding='SAME') # 这里strides区别于stride,strides是一组参数.
     
     return deconv
 
@@ -251,22 +251,22 @@ def inference(images,labels,batch_size,phase_train):
     # upsamping4
     upsample4=decode_layer(pool4,[2,2,64,64],[batch_size,45,60,64],2,"up4")
     # decode4
-    conv_decode4=conv_layer_with_bn(upsample4,[7,7,64,64],False,"conv_decode4")
+    conv_decode4=conv_layer_with_bn(upsample4,[7,7,64,64],phase_train,False,"conv_decode4")
     
     # upsamping3
     upsample3=decode_layer(conv_decode4,[2,2,64,64],[batch_size,90,120,64],2,"up3")
     # decode3
-    conv_decode3=conv_layer_with_bn(upsample3,[7,7,64,64],False,"conv_decode3")
+    conv_decode3=conv_layer_with_bn(upsample3,[7,7,64,64],phase_train,False,"conv_decode3")
     
     # upsamping2
     upsample2=decode_layer(conv_decode3,[2,2,64,64],[batch_size,180,240,64],2,"up2")
     # decode2
-    conv_decode2=conv_layer_with_bn(upsample2,[7,7,64,64],False,"conv_decode2")
+    conv_decode2=conv_layer_with_bn(upsample2,[7,7,64,64],phase_train,False,"conv_decode2")
     
     # upsampling1
     upsample1=decode_layer(conv_decode2,[2,2,64,64],[batch_size,360,480,64],2,"up1")
     # decode2
-    conv_decode1=conv_layer_with_bn(upsample1,[7,7,64,64],False,"conv_decode1")
+    conv_decode1=conv_layer_with_bn(upsample1,[7,7,64,64],phase_train,False,"conv_decode1")
     
     """ end of decode"""
     
@@ -301,7 +301,7 @@ def train(total_loss,global_step):
     apply_gradient_op=opt.apply_gradients(grads,global_step=global_step)
     
     variable_averages=tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY,global_step)
-    variable_averages_op=variable_averages.appy(tf.trainable_variables())
+    variable_averages_op=variable_averages.apply(tf.trainable_variables())
     
     with tf.control_dependencies([apply_gradient_op,variable_averages_op]):
         train_op=tf.no_op(name='train')
@@ -324,7 +324,7 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
 
         #phase_train
         # phase_train作为conv*的输入.是一个True和false的
-        phase_train=tf.placeholder(tf.float32,name="phase_train") # 为什么没有设置shape=[],因为它是Bool型变量
+        phase_train=tf.placeholder(tf.bool,name="phase_train") # 为什么没有设置shape=[],因为它是Bool型变量,  phase_train是个bool型而非float32型.它描述当前是train还是test.true为train.
         global_step=tf.Variable(0,trainable=False) # 设置步长,不参与训练
         
         
