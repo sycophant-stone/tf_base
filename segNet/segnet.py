@@ -474,7 +474,7 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
                         accuracy:acc_total
                     })
                     mean_iu_smy_str=sess.run(mean_iu_smy,feed_dict={
-                        mean_iu:iu
+                        mean_iu:np.nanmean(iu) # 注意这里有np.nanmean对iu的均值.不包含nan的数值.
                     })
                     summary_str=sess.run(summary_op,feed_dict=feed_dict)
                     summary_filewriter.add_summary(summary_str,step)
