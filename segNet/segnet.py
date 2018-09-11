@@ -60,10 +60,12 @@ def helper_generate_image_label_batch(images,labels,min_queue_examples,batch_siz
     """
     有image和label以及batch_size.拿出一组 [btach_size,ih,iw,ch]的数据
     """ 
+    print("min_queue_examples:",min_queue_examples)
     if shuffle:
         images_batch,label_batch=tf.train.shuffle_batch([images,labels],batch_size=batch_size,num_threads=1,capacity=min_queue_examples+3*batch_size,min_after_dequeue=min_queue_examples)
     else:
         images,label_batch=tf.train.batch([images,labels],batch_size=batch_size,num_threads=1,capacity=min_queue_examples+3*batch_size)
+    print("label_batch shape:%d,%d,%d,%d"%(label_batch.shape[0],label_batch.shape[1],label_batch.shape[2],label_batch.shape[3]))
     return images_batch,label_batch
 
 
@@ -244,11 +246,14 @@ def get_hist(predictions,labels):# labels不准确,这里传入的是batch_size
     hist=np.zeros([num_cls,num_cls])
     for i in range(batch_size):
         ylabel=labels[i].flatten()
-        print("ylabel",ylabel)
+        #print("ylabel",ylabel)
         yHat=predictions[i].argmax(2).flatten()
-        print("yHat",yHat)
+        #print("yHat",yHat)
         k=(ylabel>0)&(ylabel<num_cls) # sanity check , 找到同时满足0<?<num_cls的那些位的地址.
-        print("k",k)
+        #print("k",k)
+        #print("len(k)",len(k))
+        #print("labels.len",len(ylabel))
+        #print("yHat.len",len(yHat))
         hist+=np.bincount(num_cls*ylabel[k].astype(int)+yHat[k],minlength=num_cls**2).reshape(num_cls,num_cls) # num_cls个类出现的次数.
     
     return hist
@@ -452,8 +457,10 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
                             train_label_node:val_label_batch,
                             phase_train:True
                         })
+                        #print("val_pred shape:%d,%d,%d,%d"%(val_pred.shape[0],val_pred.shape[1],val_pred.shape[2],val_pred.shape[3]))
+                        #print("val_image_batch shape:%d,%d,%d,%d"%(val_image_batch.shape[0],val_image_batch.shape[1],val_image_batch.shape[2],val_image_batch.shape[3]))
                         total_val_loss+=val_loss
-                        hist+=get_hist(val_pred,val_image_batch)
+                        hist+=get_hist(val_pred,val_label_batch) #val_image_batch)  注意此处是val_label_batch,而非image.这个花了我们好长时间.
                     print("hist:",hist)
                     print("np.diag(hist)",np.diag(hist))
                     print("hist.sum(0)",hist.sum(0))
