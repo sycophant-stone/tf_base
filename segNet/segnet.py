@@ -240,7 +240,8 @@ def weight_loss(logits,labels,num_classes,head=None):
         label_flat=tf.reshape(labels,(-1,1))
         labels=tf.reshape(tf.one_hot(label_flat,depth=num_classes),(-1,num_classes))
         softmax=tf.nn.softmax(logits)
-        cross_entropy=tf.reduce_sum(tf.multiply(labels*tf.log(softmax+epsilon),head),axis=[1])
+        """[[[特别注意]]]: 交叉熵是是正值,由于概率是小于1的,所以log的值是负值,所以需要一个负号来修正"""
+        cross_entropy=  -tf.reduce_sum(tf.multiply(labels*tf.log(softmax+epsilon),head),axis=[1]) ### 注意交叉熵是正值,log操作前面要有负号来修证!!!!!!
         cross_entropy_mean=tf.reduce_mean(cross_entropy,name='cross_entropy')
         tf.add_to_collection('losses',cross_entropy_mean)
         loss=tf.add_n(tf.get_collection('losses'),name='total_loss')
@@ -474,9 +475,10 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
                     print("setp:%d,loss=%.2f" %(step,loss_value))
                     pred=sess.run(eval_prediction,feed_dict=feed_dict)
                     per_class_acc(pred,label_batch)
+                    """For debug
                     norm1_val=sess.run(norm1,feed_dict=feed_dict)
                     print("norm1_val",norm1_val)
-
+                    """
                 if step%100==0:#每100次做一下验证集.计算误差,精度等.
                     #print("pred:%s"%pred)
                     print("start validation")
