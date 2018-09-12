@@ -43,6 +43,27 @@ TEST_ITER = NUM_EXAMPLES_PER_EPOCH_FOR_TEST / BATCH_SIZE
 
 '''------------------------------------------------------------------'''
 ##input
+def fast_hist(a, b, n):
+    k = (a >= 0) & (a < n)
+    return np.bincount(n * a[k].astype(int) + b[k], minlength=n**2).reshape(n, n)
+
+def per_class_acc(predictions, label_tensor):
+    labels = label_tensor
+    size = predictions.shape[0]
+    num_class = predictions.shape[3]
+    hist = np.zeros((num_class, num_class))
+    for i in range(size):
+      hist += fast_hist(labels[i].flatten(), predictions[i].argmax(2).flatten(), num_class)
+    acc_total = np.diag(hist).sum() / hist.sum()
+    print ('accuracy = %f'%np.nanmean(acc_total))
+    iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
+    print ('mean IU  = %f'%np.nanmean(iu))
+    for ii in range(num_class):
+        if float(hist.sum(1)[ii]) == 0:
+          acc = 0.0
+        else:
+          acc = np.diag(hist)[ii] / float(hist.sum(1)[ii])
+        print("    class # %d accuracy = %f "%(ii,acc))
 
 def get_filename_list(filename):
 	# 拿到数据集
@@ -141,6 +162,10 @@ def helper_add_loss_summaries(total_loss):
     for l in losses+[total_loss]:
         
     """
+    for l in losses+[total_loss]:
+        tf.summary.scalar(l.op.name+' (raw)', l)
+        tf.summary.scalar(l.op.name, loss_average.average(l))
+
     return loss_average_op
     
 def batch_norm_layer(inputI,is_trainning,scope):
@@ -186,7 +211,7 @@ def get_decode_filter(f_shape):
     return tf.get_variable(name="up_filter",initializer=init,shape=weights.shape)
         
         
-def decode_layer(inputI,f_shape,output_shape,stride=2,name=None):
+def deconv_layer(inputI,f_shape,output_shape,stride=2,name=None):
     # 这个shape的格式: kernel_w,kernel_h,batch,chn
     sess_temp=tf.global_variables_initializer()
     strides=[1,stride,stride,1]
@@ -201,7 +226,7 @@ def msra_initializer(k1,d1):
     k1: kernel size
     d1: filter number
     """
-    stddev=math.sqrt(2.0/(k1**2*d1))
+    stddev=math.sqrt(2. /(k1**2 * d1))
     return tf.truncated_normal_initializer(stddev=stddev)
 
 def weight_loss(logits,labels,num_classes,head=None):
@@ -295,22 +320,22 @@ def inference(images,labels,batch_size,phase_train):
     """upsampling"""
     
     # upsamping4
-    upsample4=decode_layer(pool4,[2,2,64,64],[batch_size,45,60,64],2,"up4")
+    upsample4=deconv_layer(pool4,[2,2,64,64],[batch_size,45,60,64],2,"up4")
     # decode4
     conv_decode4=conv_layer_with_bn(upsample4,[7,7,64,64],phase_train,False,"conv_decode4")
     
     # upsamping3
-    upsample3=decode_layer(conv_decode4,[2,2,64,64],[batch_size,90,120,64],2,"up3")
+    upsample3=deconv_layer(conv_decode4,[2,2,64,64],[batch_size,90,120,64],2,"up3")
     # decode3
     conv_decode3=conv_layer_with_bn(upsample3,[7,7,64,64],phase_train,False,"conv_decode3")
     
     # upsamping2
-    upsample2=decode_layer(conv_decode3,[2,2,64,64],[batch_size,180,240,64],2,"up2")
+    upsample2=deconv_layer(conv_decode3,[2,2,64,64],[batch_size,180,240,64],2,"up2")
     # decode2
     conv_decode2=conv_layer_with_bn(upsample2,[7,7,64,64],phase_train,False,"conv_decode2")
     
     # upsampling1
-    upsample1=decode_layer(conv_decode2,[2,2,64,64],[batch_size,360,480,64],2,"up1")
+    upsample1=deconv_layer(conv_decode2,[2,2,64,64],[batch_size,360,480,64],2,"up1")
     # decode2
     conv_decode1=conv_layer_with_bn(upsample1,[7,7,64,64],phase_train,False,"conv_decode1")
     
@@ -329,7 +354,7 @@ def inference(images,labels,batch_size,phase_train):
     logit=conv_classifier
     loss=cal_loss(conv_classifier,labels)
     
-    return loss,logit
+    return loss,logit,norm1
     
 
 # train's network
@@ -399,7 +424,7 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
         #     phase_train作用,是Bool型
         # train_data_node,train_label_node: 
         #     输入数据集及标签.
-        loss,eval_prediction=inference(train_data_node,train_label_node,batch_size,phase_train)
+        loss,eval_prediction,norm1=inference(train_data_node,train_label_node,batch_size,phase_train)
         
         # 建立train的图
         train_op=train(loss,global_step)
@@ -442,9 +467,16 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
                 #print("train_data_node shape",train_data_node.shape())
                 #print("image_batch shape",image_batch.shape())
                 _,loss_value=sess.run([train_op,loss],feed_dict=feed_dict) # 第一个_是不关心的.
+                if step==0:
+                    print("setp:%d,loss=%.2f" %(step,loss_value))
+                    
                 if step%10==0:
                     print("setp:%d,loss=%.2f" %(step,loss_value))
-                pred=sess.run(eval_prediction,feed_dict=feed_dict)
+                    pred=sess.run(eval_prediction,feed_dict=feed_dict)
+                    per_class_acc(pred,label_batch)
+                    norm1_val=sess.run(norm1,feed_dict=feed_dict)
+                    print("norm1_val",norm1_val)
+
                 if step%100==0:#每100次做一下验证集.计算误差,精度等.
                     #print("pred:%s"%pred)
                     print("start validation")
