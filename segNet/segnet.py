@@ -14,6 +14,8 @@ import time
 from PIL import Image
 from math import ceil
 from tensorflow.python.ops import gen_nn_ops
+import skimage
+import skimage.io
 # modules
 #from Utils import _variable_with_weight_decay, _variable_on_cpu, _add_loss_summaries, _activation_summary, print_hist_summery, get_hist, per_class_acc, writeImage
 #from Inputs import *
@@ -121,7 +123,69 @@ def CamVidInput(inputdatafilename,inputlabelfilename,batch_size):
     min_fraction_of_example_in_queue=0.4
     min_queue_examples=int(NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN * min_fraction_of_example_in_queue)
     return helper_generate_image_label_batch(reshape_image,label,min_queue_examples,batch_size,shuffle=True)
-     
+    
+def get_all_test_data(image_filenames,label_filenames):
+    """根据image和label文件名路径,读取出对应文件,把它们整理成数据.
+    args:
+        image_filenames:
+            测试集文件路径
+        label_filenames:
+            测试集的mask图,这个作为预测的真值.
+    return:
+        返回数组状态的images和labels.
+    """
+    images=[]
+    labels=[]
+    for im_filename,lb_filename in zip(image_filenames,label_filenames):
+        im=np.array(skimage.io.imread(im_filename))
+        im=im[np.newaxis] # 其实起到一个把数组变成矩阵的功能
+        images.append(im)
+        lb=skimage.io.imread(lb_filename)
+        lb=lb[np.newaxis]
+        lb=lb[...,np.newaxis]
+        labels.append(lb)
+    
+    return images,labels
+
+
+def writeImage(image, filename):
+    """ store label data to colored image """
+    Sky = [128,128,128]
+    Building = [128,0,0]
+    Pole = [192,192,128]
+    Road_marking = [255,69,0]
+    Road = [128,64,128]
+    Pavement = [60,40,222]
+    Tree = [128,128,0]
+    SignSymbol = [192,128,128]
+    Fence = [64,64,128]
+    Car = [64,0,128]
+    Pedestrian = [64,64,0]
+    Bicyclist = [0,128,192]
+    Unlabelled = [0,0,0]
+    r = image.copy()
+    g = image.copy()
+    b = image.copy()
+    label_colours = np.array([Sky, Building, Pole, Road_marking, Road, Pavement, Tree, SignSymbol, Fence, Car, Pedestrian, Bicyclist, Unlabelled])
+    for l in range(0,12):
+        """
+        image是预测值,它应该有一组区域构成,同一组区块用一个数字表示,比如0,会表示sky.比如靠近地面的地方会有一组4,表示road
+        但是这个数字图是不能显示出来给人看的,那么我们可以针对每一组都一个它一个颜色,比如对于所有位置是1的区域,人为修改该区域的
+        rbg为sky的Sky = [128,128,128],这样这种图可以被人眼看出来.
+        处理时候还是会依照rgb来处理
+        """
+        r[image==l]=label_colours[l,0]
+        g[image==l]=label_colours[l,1]
+        b[image==l]=label_colours[l,2]
+  
+    # 保存图片
+    rgb=np.zeros([image.shape[0],image.shape[1],3])
+    rgb[:,:,0]=r/1.0
+    rgb[:,:,1]=g/1.0
+    rgb[:,:,2]=b/1.0
+    im=Image.fromarray(np.uint8(rgb))
+    im.save(filename)
+
     
 '''------------------------------------------------------------------'''
 # Networks
@@ -392,8 +456,80 @@ def train(total_loss,global_step):
         train_op=tf.no_op(name='train')
         
     return train_op
+
+'''------------------------------------------------------------------'''
+
+def test(testfilepath,batch_size,image_width,image_height,image_ch):
+    """测试函数,会恢复training时候保存的ckpt模型文件
+    testfilepath:
+        含有测试集的照片列表文件
+    batch_size:
+        每次做几个文件的推断
+    image_width,image_height,image_ch
+        每张图的尺寸
     
+    """
+    # 读取测试集,分成image和label.
+    test_image_filenames,test_label_filenames=get_filename_list(testfilepath)
     
+    # 建立graph的测试节点
+    test_data_node=tf.placeholder(tf.float32,shape=[batch_size,image_height,image_width,image_ch])
+    test_label_node=tf.placeholder(tf.int64,shape=[batch_size,360,480,1]) # 只有单通道的mask图.
+    phase_train=tf.placeholder(tf.bool,name="phase_train")
+    
+    # 给网络通入输入
+    loss,logit,_=inference(test_data_node,test_label_node,batch_size,phase_train)
+    
+    pred=tf.argmax(logit,axis=3) # 取出预测最高的前三个结果
+    
+    # 从保存的网络中直接恢复到当前网络的权重中,而非恢复到影子变量中.
+    variable_arverage=tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY)
+    variable_restore=variable_arverage.variables_to_restore()
+    saver=tf.train.Saver(variable_restore)
+   
+    # 开始往网络中冠数据
+    with tf.Session() as sess:
+        # 加载网络图
+        ####saver=tf.train.import_meta_graph('/home/julyedu_433249/work/log/segnet.model.ckpt-19999.meta') 
+        saver.restore(sess,tf.train.latest_checkpoint('/home/julyedu_433249/work/log/'))
+        tvs=[v for v in tf.trainable_variables()]
+        for v in tvs:
+            print(v.name)
+            print(sess.run(v))
+
+        # 加载网络
+        #model_file=tf.train.latest_checkpoint("")
+        #logdir="/home/julyedu_433249/work/log/checkpoint"
+        #saver.restore(sess,logdir)
+        
+        # 加载图片和mask的label图
+        # 区别于train时候利用tensorflow去读数据集,我们这里利用skimage包去读测试集
+        test_images,test_labels=get_all_test_data(test_image_filenames,test_label_filenames)
+        
+        # 启动文件名队列填充过程
+        tf.train.start_queue_runners(sess)
+        
+        # 统计正确率需要的hist
+        hist= np.zeros((NUM_CLASSES,NUM_CLASSES))
+        
+        # 批量
+        for image_batch,label_batch in zip(test_images,test_labels): # 注意理解和trian时候利用sess.run得到数据集的不同.
+            feed_dict={
+                test_data_node:image_batch,
+                test_label_node:label_batch,
+                phase_train:False
+            }
+            test_loss,test_logit,test_pred=sess.run([loss,logit,pred],feed_dict=feed_dict)
+            
+            # 保存预测区域
+            writeImage(test_pred[0],"test_pred.png") # 保存第一个最大的预测
+            hist+=get_hist(test_logit,label_batch)
+        # 一组batch推断后,评估准确率
+        acc_total=np.diag(hist).sum()/hist.sum()
+        # 交并区域
+        iu=np.diag(hist).sum()/(hist.sum(0)+hist.sum(1)-np.diag(hist).sum())
+        print("acc:",acc_total)
+        print("mean iu",np.mean(iu))
     
 '''------------------------------------------------------------------'''
 
@@ -533,11 +669,43 @@ def training(trainfilepath,valfilepath,batch_size,image_width,image_height,image
             
 
 if __name__=='__main__':
-    training(trainfilepath="/home/julyedu_433249/work/tf_base/segNet/SegNet/CamVid/train.txt",
+    
+    if len(sys.argv) < 2:
+        print ("NO action specified.")
+        sys.exit()
+
+    if sys.argv[1].startswith('--'):
+        option = sys.argv[1][2:]
+        if option == 'version':
+            print ("version 1.2 ")
+        elif option == 'help':
+            print ("This program prints files to the standard output.\
+                 Any number of files can be specified.\
+                 Options include:\
+                 --version : Prints the version number\
+                 --train: traing segnet\
+                 --test: test segnet\
+                 --help     : Display this help")
+            
+        elif option == 'train':
+            print("start training")
+            training(trainfilepath="/home/julyedu_433249/work/tf_base/segNet/SegNet/CamVid/train.txt",
              valfilepath="/home/julyedu_433249/work/tf_base/segNet/SegNet/CamVid/val.txt",
              batch_size=5,
              image_width=480,
              image_height=360,
              image_ch=3,
              max_steps=20000)
+        elif option == 'test':
+            print("start testing")
+            test(testfilepath="/home/julyedu_433249/work/tf_base/segNet/SegNet/CamVid/test.txt",
+             batch_size=1,
+             image_width=480,
+             image_height=360,
+             image_ch=3)
+
+        else:
+            print("Unknow option.")
+    
+    
 
