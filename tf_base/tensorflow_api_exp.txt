@@ -78,3 +78,28 @@ with tf.device('/cpu:0'):
 #### tf.train.start_queue_runners 
 
 这个函数将会启动输入管道的线程，填充样本到队列中，以便出队操作可以从队列中拿到样本。
+
+#### assert conditions,("when conditions fails we should print those logs for reminding")
+
+这是个assert函数.
+第一个参数,conditions是"期望满足的条件"
+第二个参数是,在不满足"期望条件"下,我们应该打印出来的log.
+
+#### tf.logging.info
+打印log,格式和print一样.
+
+#### tf.train.get_or_create_global_step
+为当前图获得(有必要的话去创建)一个全局步数计数的tensor,一个graph只有一个这样的tensor.
+
+
+#### ops.GraphKeys.UPDATE_OPS
+slim会在当前批训练完成后再更新均值和方差
+可能存在的问题,当前批次使用的均值和方差不是最新的,即总是在当前批次跑完之后才更新均值和方差.会有滞后一次训练的现象.
+
+#### tf.get_collection(name,scope)
+
+返回name的数据
+name可以是the GraphKeys class,这些代表了标准定义的变量名字.
+scope如果存在的话,是在name对应的参数集合中filter,只返回和scope这个字符串描述匹配的那些参数.
+
+
