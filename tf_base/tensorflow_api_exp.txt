@@ -108,3 +108,8 @@ scope如果存在的话,是在name对应的参数集合中filter,只返回和sco
 slim提供一系列的测量损失,计算梯度,并保存到硬盘的函数.可以利用slim.learning.create_train_op和slim.learning.train来训练.
 https://blog.csdn.net/zj360202/article/details/78594089
 
+
+
+#### slim.utils.collect_named_outputs
+将变量去个别名,并收集到collection中.
+
