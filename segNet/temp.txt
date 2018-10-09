@@ -1,0 +1,609 @@
+[julyedu_433249@julyedu-gpu Tensorflow-SegNet]$ python3 main.py --log_dir=log --image_dir=SegNet/CamVid/train.txt --val_dir=SegNet/CamVid/val.txt --batch_size=5
+
+
+2018-09-12 14:00:08.029411: step 0, loss = 1.58 (0.8 examples/sec; 6.151 sec/batch)
+
+
+
+
+
+
+
+
+
+2018-09-12 14:30:03.863949: W tensorflow/core/common_runtime/bfc_allocator.cc:219] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.07GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+2018-09-12 14:30:03.959628: W tensorflow/core/common_runtime/bfc_allocator.cc:219] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.17GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+2018-09-12 14:30:04.235410: step 0, loss = 2.41 (0.7 examples/sec; 7.091 sec/batch)
+accuracy = 0.092622
+mean IU  = 0.034420
+    class # 0 accuracy = 0.046554
+    class # 1 accuracy = 0.110162
+    class # 2 accuracy = 0.082490
+    class # 3 accuracy = 0.116112
+    class # 4 accuracy = 0.089974
+    class # 5 accuracy = 0.072562
+    class # 6 accuracy = 0.197406
+    class # 7 accuracy = 0.078323
+    class # 8 accuracy = 0.085014
+    class # 9 accuracy = 0.066943
+    class # 10 accuracy = 0.074481
+    class # 11 accuracy = 0.067512
+norm1 [[[[15.067055  16.008745  16.008745 ]
+   [21.836294  22.709745  22.709745 ]
+   [25.981855  26.793789  26.793789 ]
+   ...
+   [29.468813  35.709267  39.869568 ]
+   [28.115824  33.575207  39.30756  ]
+   [26.450167  31.280197  39.330246 ]]
+
+  [[10.612337  11.577095  14.471369 ]
+   [11.561394  12.524843  13.488293 ]
+   [15.067055  16.008745  16.008745 ]
+   ...
+   [28.237598  33.044     41.154797 ]
+   [27.342525  32.486168  40.60771  ]
+   [25.593395  28.92508   33.468285 ]]
+
+  [[ 9.671098   9.671098  15.473757 ]
+   [14.079578  15.018217  18.772772 ]
+   [13.297986  14.247843  16.147554 ]
+   ...
+   [26.313059  29.782913  44.24064  ]
+   [26.319342  30.170952  38.944065 ]
+   [26.675606  32.57232   41.557785 ]]
+
+  ...
+
+  [[26.343609  27.893234  30.992481 ]
+   [25.854977  26.638462  31.339367 ]
+   [25.140985  25.926641  32.211887 ]
+   ...
+   [20.821102  27.761469  35.47299  ]
+   [19.930618  28.362803  36.028423 ]
+   [19.385824  27.915586  35.669914 ]]
+
+  [[24.956669  27.296356  31.975733 ]
+   [24.547777  26.131506  31.674553 ]
+   [25.453005  25.453005  31.02085  ]
+   ...
+   [21.342575  28.202688  35.825035 ]
+   [20.281662  27.302237  35.10288  ]
+   [20.457605  28.792185  36.369076 ]]
+
+  [[23.132027  27.120306  31.108585 ]
+   [22.273623  24.748468  29.698162 ]
+   [24.51975   25.337074  28.606375 ]
+   ...
+   [20.821102  27.761469  35.47299  ]
+   [21.342575  28.202688  35.825035 ]
+   [22.332695  29.032503  36.476734 ]]]
+
+
+ [[[26.14264   27.284239  28.19752  ]
+   [27.083725  28.859707  31.819677 ]
+   [27.734173  28.895815  30.78348  ]
+   ...
+   [26.460966  26.460966  26.460966 ]
+   [26.460966  26.460966  26.460966 ]
+   [26.460966  26.460966  26.460966 ]]
+
+  [[27.403458  29.89468   30.334309 ]
+   [26.262693  27.518736  27.861292 ]
+   [26.356815  27.257902  27.708447 ]
+   ...
+   [26.460966  26.460966  26.460966 ]
+   [26.460966  26.460966  26.460966 ]
+   [26.460966  26.460966  26.460966 ]]
+
+  [[26.300133  28.439377  29.194405 ]
+   [26.647865  27.591152  28.180706 ]
+   [30.719849  32.767838  36.863815 ]
+   ...
+   [26.431805  26.431805  26.96044  ]
+   [26.460966  26.460966  26.460966 ]
+   [26.460966  26.460966  26.460966 ]]
+
+  ...
+
+  [[36.25168   34.628468  34.628468 ]
+   [35.51955   33.77269   34.354977 ]
+   [35.6363    33.911964  34.48674  ]
+   ...
+   [34.677967  34.677967  34.085182 ]
+   [34.441383  34.441383  34.441383 ]
+   [34.62084   34.62084   34.62084  ]]
+
+  [[34.51742   33.214878  31.261063 ]
+   [33.703087  32.354965  31.006842 ]
+   [31.857689  29.685574  30.40961  ]
+   ...
+   [34.740044  34.740044  34.141075 ]
+   [34.737133  34.737133  34.737133 ]
+   [34.25686   34.25686   34.25686  ]]
+
+  [[33.017242  33.7051    28.890085 ]
+   [31.634766  30.899073  27.956305 ]
+   [32.08528   31.387775  31.387775 ]
+   ...
+   [34.86237   34.86237   34.250748 ]
+   [34.737133  34.737133  34.737133 ]
+   [34.068203  34.068203  34.068203 ]]]
+
+
+ [[[34.91846   34.91846   31.177197 ]
+   [36.61787   36.61787   33.007656 ]
+   [36.11987   36.11987   32.16926  ]
+   ...
+   [37.396652  35.816513  32.65623  ]
+   [37.478584  35.93837   32.857937 ]
+   [37.041264  36.540707  33.0368   ]]
+
+  [[34.488224  34.488224  29.933174 ]
+   [36.297935  36.297935  32.448154 ]
+   [36.662647  36.662647  33.098225 ]
+   ...
+   [37.851856  36.357704  32.3733   ]
+   [37.867676  36.39231   32.458008 ]
+   [37.73452   36.162247  31.969522 ]]
+
+  [[35.79138   35.79138   31.684174 ]
+   [36.01889   36.01889   32.016792 ]
+   [36.21278   36.21278   32.312943 ]
+   ...
+   [37.732826  36.281563  32.895283 ]
+   [37.65809   36.13141   32.569157 ]
+   [37.135914  35.421947  31.422695 ]]
+
+  ...
+
+  [[ 4.972058   4.972058   4.972058 ]
+   [ 4.972058   4.972058   4.972058 ]
+   [ 4.972058   4.972058   4.972058 ]
+   ...
+   [25.12751   28.934708  32.741905 ]
+   [26.344614  28.602724  33.118942 ]
+   [25.899755  28.185028  32.755573 ]]
+
+  [[ 3.9856603  3.9856603  3.9856603]
+   [ 3.9856603  3.9856603  3.9856603]
+   [ 3.9856603  3.9856603  3.9856603]
+   ...
+   [24.65594   28.50843   32.36092  ]
+   [25.899755  28.185028  32.755573 ]
+   [25.74211   26.522173  31.98262  ]]
+
+  [[ 3.9856603  3.9856603  3.9856603]
+   [ 3.9856603  3.9856603  3.9856603]
+   [ 3.9856603  3.9856603  3.9856603]
+   ...
+   [24.166367  28.064167  31.96197  ]
+   [24.457796  26.82468   31.558447 ]
+   [24.457796  26.82468   31.558447 ]]]
+
+
+ [[[25.956263  26.905882  26.905882 ]
+   [26.01383   26.856382  26.856382 ]
+   [26.01383   26.856382  26.856382 ]
+   ...
+   [30.436691  30.254436  32.259247 ]
+   [31.98021   32.874763  32.874763 ]
+   [29.90538   30.439405  32.041477 ]]
+
+  [[25.956263  26.905882  26.905882 ]
+   [26.01383   26.856382  26.856382 ]
+   [26.01383   26.856382  26.856382 ]
+   ...
+   [29.115744  28.807642  30.964363 ]
+   [29.240389  29.719738  30.838224 ]
+   [30.35586   30.760605  34.200935 ]]
+
+  [[25.956263  26.905882  26.905882 ]
+   [26.01383   26.856382  26.856382 ]
+   [26.01383   26.856382  26.856382 ]
+   ...
+   [28.475367  28.336462  29.586601 ]
+   [28.77857   29.225906  30.120577 ]
+   [29.023266  29.023266  33.31665  ]]
+
+  ...
+
+  [[35.060722  35.060722  36.981857 ]
+   [34.835007  35.299477  37.15734  ]
+   [33.87949   34.938225  37.05569  ]
+   ...
+   [31.973576  36.69099   37.215145 ]
+   [33.032864  36.03585   37.537346 ]
+   [33.599022  35.99895   37.438908 ]]
+
+  [[34.524345  35.772217  37.020084 ]
+   [33.889824  35.826385  37.278805 ]
+   [33.764534  35.750683  37.24029  ]
+   ...
+   [33.607327  36.36957   37.29032  ]
+   [33.60281   36.48305   36.96309  ]
+   [33.889824  35.826385  37.278805 ]]
+
+  [[33.381638  35.43589   37.490147 ]
+   [33.607426  35.135036  37.681053 ]
+   [33.889824  35.826385  37.278805 ]
+   ...
+   [33.562103  36.358944  37.291225 ]
+   [33.89693   36.68298   36.68298  ]
+   [34.22206   35.933163  37.216488 ]]]
+
+
+ [[[27.606506  34.777027  42.306072 ]
+   [26.581503  35.675175  41.970795 ]
+   [26.304642  35.528347  42.019104 ]
+   ...
+   [32.062984  29.53951   26.125397 ]
+   [32.137558  29.734749  26.130537 ]
+   [31.078062  29.390566  26.015574 ]]
+
+  [[27.8673    34.834126  41.80095  ]
+   [27.007444  35.31743   41.896164 ]
+   [26.500437  35.104473  42.331867 ]
+   ...
+   [31.167141  28.749     25.390472 ]
+   [32.735977  30.217823  26.125828 ]
+   [32.291245  30.273043  26.236637 ]]
+
+  [[28.799105  35.044693  40.943306 ]
+   [27.451159  35.19379   41.88061  ]
+   [27.007444  35.31743   41.896164 ]
+   ...
+   [29.814846  27.996868  25.088102 ]
+   [34.06585   31.212166  26.753284 ]
+   [32.666676  30.153854  26.227571 ]]
+
+  ...
+
+  [[18.370308  18.370308  18.370308 ]
+   [19.13146   19.13146   19.13146  ]
+   [18.370308  18.370308  18.370308 ]
+   ...
+   [20.260353  26.743666  31.606152 ]
+   [21.39796   27.738098  32.4932   ]
+   [20.838566  27.250431  32.05933  ]]
+
+  [[18.320034  18.320034  19.236034 ]
+   [19.07715   19.07715   19.985586 ]
+   [18.320034  18.320034  19.236034 ]
+   ...
+   [22.106628  26.843763  33.159943 ]
+   [22.106628  26.843763  33.159943 ]
+   [20.916864  26.548328  32.17979  ]]
+
+  [[17.589788  17.589788  17.589788 ]
+   [18.370308  18.370308  18.370308 ]
+   [19.13146   19.13146   19.13146  ]
+   ...
+   [20.260353  26.743666  31.606152 ]
+   [20.260353  26.743666  31.606152 ]
+   [20.260353  26.743666  31.606152 ]]]]
+start validating.....
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The model is set to Training
+Max training Iteration: 20000
+Initial lr: 0.001000
+CamVid Image dir: SegNet/CamVid/train.txt
+CamVid Val dir: SegNet/CamVid/val.txt
+Batch Size: 5
+Log dir: log
+Filling queue with 146 CamVid images before starting to train. This will take a few minutes.
+min_queue_examples: 146
+label_batch shape:5,360,480,1
+Filling queue with 146 CamVid images before starting to train. This will take a few minutes.
+min_queue_examples: 146
+label_batch shape:5,360,480,1
+^CTraceback (most recent call last):
+  File "/usr/lib64/python3.6/contextlib.py", line 88, in __exit__
+    next(self.gen)
+StopIteration
+
+
+
+2018-09-11 14:50:11.509312: step 0, loss = 1.47 (0.8 examples/sec; 5.914 sec/batch)
+accuracy = 0.105803
+mean IU  = 0.037104
+    class # 0 accuracy = 0.161635
+    class # 1 accuracy = 0.084747
+    class # 2 accuracy = 0.075301
+    class # 3 accuracy = 0.096684
+    class # 4 accuracy = 0.070547
+    class # 5 accuracy = 0.078178
+    class # 6 accuracy = 0.074920
+    class # 7 accuracy = 0.068214
+    class # 8 accuracy = 0.115310
+    class # 9 accuracy = 0.074478
+    class # 10 accuracy = 0.095092
+    class # 11 accuracy = 0.142043
+start validating.....
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+
+
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+
+
+
+
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+_val_pred:5,360,480,12
+val_labels_batch:5,360,480,1
+labels[0].flatten():172800
+predictions[0].flatten():2073600
+predictions[0].argmax(2).flatten():172800
+labels[1].flatten():172800
+predictions[1].flatten():2073600
+predictions[1].argmax(2).flatten():172800
+labels[2].flatten():172800
+predictions[2].flatten():2073600
+predictions[2].argmax(2).flatten():172800
+labels[3].flatten():172800
+predictions[3].flatten():2073600
+predictions[3].argmax(2).flatten():172800
+labels[4].flatten():172800
+predictions[4].flatten():2073600
+predictions[4].argmax(2).flatten():172800
+^C2018-09-11 14:50:14.347779: W tensorflow/core/kernels/queue_base.cc:277] _0_input_producer/input_producer: Skipping cancelled enqueue attempt with queue not closed
+2018-09-11 14:50:14.347896: W tensorflow/core/kernels/queue_base.cc:277] _2_input_producer_1/input_producer: Skipping cancelled enqueue attempt with queue not closed
+2018-09-11 14:50:14.347958: W tensorflow/core/kernels/queue_base.cc:277] _1_shuffle_batch/random_shuffle_queue: Skipping cancelled enqueue attempt with queue not closed
+Traceback (most recent call last):
+  File "main.py", line 52, in <module>
+    tf.app.run()
+  File "/usr/local/lib/python3.6/site-packages/tensorflow/python/platform/app.py", line 126, in run
+    _sys.exit(main(argv))
+  File "main.py", line 49, in main
+    model.training(FLAGS, is_finetune=False)
+  File "/home/julyedu_433249/work/Tensorflow-SegNet/model.py", line 442, in training
+    phase_train: True
+  File "/usr/local/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 900, in run
+    run_metadata_ptr)
+  File "/usr/local/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1135, in _run
+    feed_dict_tensor, options, run_metadata)
+  File "/usr/local/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1316, in _do_run
+    run_metadata)
+  File "/usr/local/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1322, in _do_call
+    return fn(*args)
+  File "/usr/local/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1307, in _run_fn
+    options, feed_dict, fetch_list, target_list, run_metadata)
+  File "/usr/local/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1409, in _call_tf_sessionrun

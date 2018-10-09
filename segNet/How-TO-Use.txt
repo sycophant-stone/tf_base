@@ -1,0 +1,6 @@
+1. 需要在如下位置放置好数据集.
+    SegNet/CamVid/train.txt
+    SegNet/CamVid/val.txt
+    
+2. 命令行方法:
+python3 main.py --log_dir=log --image_dir=SegNet/CamVid/train.txt --val_dir=SegNet/CamVid/val.txt --batch_size=5
