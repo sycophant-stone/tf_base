@@ -77,7 +77,7 @@ def xception(inputs,
                     end_points['global_pool']=net
                 if num_classes:
                     net=slim.dropout(net,keep_prob=keep_prob,is_training=is_training,scope='prelogits_dropout')
-                    net=slim.conv2d(net,num_classes=num_classes,[1,1],activation_fn=None,
+                    net=slim.conv2d(inputs=net,num_classes=num_classes,kernel_size=[1,1],activation_fn=None,
                                    normalizer_fn=None,scope='logits')
                     end_points[sc.name+'/logits']=net
                     end_points['predictions']=slim.softmax(net,scope='predictions')
@@ -124,7 +124,7 @@ def separable_conv2d_same(inputs,
                           1,
                           scope=scope+'_pointwise',
                           **kwargs)
-    is_stride ==1 or not use_explicit_padding:
+    if is_stride ==1 or not use_explicit_padding:
         if regularize_depthwise:
             # 加正则化,并不是downsampling,
             outputs=_seperable_conv2d(padding='SAME')
@@ -355,8 +355,7 @@ def xception_arg_scope(weight_decay=0.00004,
             with slim.arg_scope([slim.conv2d],
                                weights_regularizer=slim.l2_regularizer(weight_decay)):
                 with slim.arg_scope([slim.separable_conv2d],weights_regularizer=depthwise_regularizer) as arg_sc:
-                    
-    return arg_sc
+                    return arg_sc
 
 def _preprocess_zero_mean_unit_range(inputs):
     """把图像数据转成-1到1
@@ -367,7 +366,7 @@ def get_network(network_name, preprocess_images, arg_scope=None):
     """get network的函数以及对应的参数
     """
     arg_scope=arg_scope or xception_arg_scope() # 在xception默认参数配置基础上
-    if preprocess_images==True:
+    #if preprocess_images==True:
         #preprocess_function =_preprocess_zero_mean_unit_range
     def network_fn(inputs, *args, **kwargs):
         with slim.arg_scope(arg_scope):
@@ -391,7 +390,7 @@ def local_extract_features(
                                batch_norm_epsilon=1e-3,
                                batch_norm_scale=True,
                                regularize_depthwise=False)
-    temp_network=get_network("exception",preprocess_images=True,arg_scope)
+    temp_network=get_network(network_name="exception",preprocess_images=True,arg_scope=arg_scope)
     features,endpoints=temp_network(inputs=features,
                  num_classes=None,
                 is_training=is_training,
@@ -1018,7 +1017,7 @@ datasetDescriptor=collections.namedtuple(
     'DatasetDescriptor',
     [
         'splits_to_size',
-        'name_classes', # 分类,包含背景类.例如pascal是20分类+1个背景
+        'num_classes', # 分类,包含背景类.例如pascal是20分类+1个背景
         'ignore_label'
     ]
 )
@@ -1062,9 +1061,9 @@ def get_dataset(dataset_name,split_name,dataset_dir):
             image_key='image/encoded',
             format_key='image/format',
             channels=3),
-        'image_name':tfexample_decoder.Tensor('image/filename')
-        'height':tfexample_decoder.Tensor('image/height')
-        'width':tfexample_decoder.Tensor('image/width')
+        'image_name':tfexample_decoder.Tensor('image/filename'),
+        'height':tfexample_decoder.Tensor('image/height'),
+        'width':tfexample_decoder.Tensor('image/width'),
         'labels_class':tfexample_decoder.Image(
             image_key='image/segmentation/class/encoded',
             format_key='image/segmentation/class/format',
@@ -1162,7 +1161,6 @@ def input_get(dataset,
             resize_to_range(image=processed_image,
                            label=label,
                             min_size=min_resize_value,
-                            min_size=min_resize_value,
                             max_size=max_resize_value,
                             factor=resize_factor, # factor的倍数+1
                             align_corners=True))
@@ -1191,7 +1189,7 @@ def train():
     
     with tf.Graph().as_default() as graph:
         with tf.device(config.inputs_device()):
-                samples=input_generator.get(
+            samples=input_generator.get(
                 # 从数据集中拿到样本
                 dataset,
                 train_batch_size,
@@ -1205,8 +1203,7 @@ def train():
                 is_training=True,
                 model_variant=model_variant)
             # slim.prefetch_queue生成一个queue实例.
-            inputs_queue=prefetch_queue.prefetch_queue(
-                samples,capacity=128*config.num_clones)
+            inputs_queue=prefetch_queue.prefetch_queue(samples,capacity=128*config.num_clones)
             
         with tf.device(config.variables_device()):
             global_step=tf.train.get_or_create_global_step() # 为当前图获得(有必要的话去创建)一个全局步数计数的tensor,一个graph只有一个这样的tensor.
