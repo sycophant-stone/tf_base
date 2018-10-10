@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 slim=tf.contrib.slim
 prefetch_queue = slim.prefetch_queue
@@ -10,6 +11,8 @@ IMAGE_POOLING_SCOPE = 'image_pooling'
 ASPP_SCOPE = 'aspp'
 CONCAT_PROJECTION_SCOPE = 'concat_projection'
 DECODER_SCOPE = 'decoder'
+
+from utils import input_generator
 
 #-----------------------xception65网络----------------------
 def stack_blocks_dense(net,
@@ -918,7 +921,7 @@ task=0# 'The task ID.')
 
 # Settings for logging.
 
-train_logdir=None#                    'Where the checkpoint and logs are stored.')
+train_logdir="/output" #                    'Where the checkpoint and logs are stored.')
 
 
 log_steps=10 # Display logging information at every log_steps.')
@@ -1005,7 +1008,7 @@ dataset_name='pascal_voc_seg'#                    'Name of the segmentation data
 train_split='train'#                    'Which split of the dataset to be used for training')
                  
 
-dataset_dir=None# 'Where the dataset reside.
+dataset_dir="/work/gi/tf_base/research/deeplab/datasets"  # 'Where the dataset reside.
                  
 #--train utils
 _ITEMS_TO_DESCRIPTIONS = {
@@ -1038,11 +1041,11 @@ def get_dataset(dataset_name,split_name,dataset_dir):
     """获得slim dataset实例
     """
     splite_size=_PASCAL_VOC.splits_to_size
-    name_classes=_PASCAL_VOC.name_classes
+    num_classes=_PASCAL_VOC.num_classes
     ignore_label=_PASCAL_VOC.ignore_label
     
     # file pattern
-    file_pattern=os.path.join(dataset_dir,'%s-*'%split_name)
+    file_pattern=os.path.join(dataset_dir,'%s-*' % split_name)
     
     # TF 解码协议
     keys_to_features={
@@ -1075,7 +1078,7 @@ def get_dataset(dataset_name,split_name,dataset_dir):
     
     return dataset.Dataset(
         data_sources=file_pattern,
-        reader=rf.TFRecordReader,
+        reader=tf.TFRecordReader,
         decoder=decoder,
         num_samples=splite_size[split_name],
         items_to_descriptions=_ITEMS_TO_DESCRIPTIONS,
@@ -1178,7 +1181,7 @@ def train():
         num_replicas=num_replicas,
         num_ps_tasks=num_ps_tasks)
     
-    clone_batch_size=train_batch_size//config_num_clones
+    clone_batch_size=train_batch_size//num_clones
     
     dataset=get_dataset(
         dataset_name,# 分割datasets的名字,是pascal_voc_seg还是什么.
@@ -1289,7 +1292,9 @@ def train():
                   
             
     
-
+if __name__ == "__main__":
+    print("main")
+    train()
                 
     
             
