@@ -263,6 +263,20 @@ def main(unused_argv):
           dataset_split=FLAGS.train_split,
           is_training=True,
           model_variant=FLAGS.model_variant)
+      print("samples:",samples)
+      print("get samples params:")
+      print(" dataset:",dataset)
+      print(" train_crop_size:",FLAGS.train_crop_size)
+      print(" train_batch_size:",FLAGS.train_batch_size)
+      print(" min_resize_value=min_resize_value:",FLAGS.min_resize_value)
+      print(" max_resize_value=max_resize_value:",FLAGS.max_resize_value)
+      print(" resize_factor=resize_factor:",FLAGS.resize_factor)
+      print(" min_scale_factor=min_scale_factor:",FLAGS.min_scale_factor)
+      print(" max_scale_factor=max_scale_factor:",FLAGS.max_scale_factor)
+      print(" scale_factor_step_size=scale_factor_step_size:",FLAGS.scale_factor_step_size)
+      print(" dataset_split:",FLAGS.train_split)
+      print(" is_training=",True)
+      print("samples:",samples)        
       inputs_queue = prefetch_queue.prefetch_queue(
           samples, capacity=128 * config.num_clones)
 

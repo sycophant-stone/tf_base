@@ -12,7 +12,22 @@ ASPP_SCOPE = 'aspp'
 CONCAT_PROJECTION_SCOPE = 'concat_projection'
 DECODER_SCOPE = 'decoder'
 
-from utils import input_generator
+#from utils import input_generator
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+'''
+logger.info('This is a log info')
+logger.debug('Debugging')
+logger.warning('Warning exists')
+logger.info('Finish')
+'''
+min_resize_value=None
+max_resize_value=None
+resize_factor=None
+dataset_split="train"
+is_training=True
 
 #-----------------------xception65网络----------------------
 def stack_blocks_dense(net,
@@ -956,7 +971,7 @@ momentum=0.9# 'The momentum value to use')
 # When fine_tune_batch_norm=True# use at least batch size larger than 12
 # (batch size more than 16 is better). Otherwise# one could use smaller batch
 # size and set fine_tune_batch_norm=False.
-train_batch_size=8#                     'The number of images in each batch during training.')
+train_batch_size=8 #                     'The number of images in each batch during training.')
 
 # For weight_decay# use 0.00004 for MobileNet-V2 or Xcpetion model variants.
 # Use 0.0001 for ResNet model variants.
@@ -1008,7 +1023,7 @@ dataset_name='pascal_voc_seg'#                    'Name of the segmentation data
 train_split='train'#                    'Which split of the dataset to be used for training')
                  
 
-dataset_dir="/work/gi/tf_base/research/deeplab/datasets"  # 'Where the dataset reside.
+dataset_dir="/work/gi/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"  # 'Where the dataset reside.
                  
 #--train utils
 _ITEMS_TO_DESCRIPTIONS = {
@@ -1033,6 +1048,17 @@ _PASCAL_VOC=datasetDescriptor(
     num_classes=19,
     ignore_label=255,
 )
+
+
+#---------
+# 参数自定义
+
+train_batch_size=1
+
+
+
+#####--
+
 
 tfexample_decoder = slim.tfexample_decoder
 dataset = slim.dataset
@@ -1087,6 +1113,53 @@ def get_dataset(dataset_name,split_name,dataset_dir):
         name=dataset_name,
         multi_label=True)
 
+                 
+#---
+# input get samples
+
+dataset_data_provider = slim.dataset_data_provider
+
+def _get_data(data_provider,dataset_split):
+    """data_provider的list_items()中含有数据内容.
+    """
+    if "labels_class" not in data_provider.list_items():
+        raise ValueError("labels_class not in dataset")
+    
+    image,height,width=data_provider.get(["image","height","width"])
+    logger.debug('_get_data,image:%s'%image)
+    logger.debug('_get_data,height:%s'%height)
+    logger.debug('_get_data,widht:%s'%width)
+    
+    if "image_name" in data_provider.list_items():
+        image_name=data_provider.get(["image_name"])
+    else:
+        image_name=tf.constant('')
+    label=None
+    if dataset_split != "test":
+        label,=data_provider.get(["labels_class"])
+    return image, label, image_name, height, width
+
+_PROB_OF_FLIP = 0.5
+
+#---preprocess函数组
+def resolve_shape(tensor, rank=None, scope=None):
+    """返回该tensor的full shape
+    """
+    with tf.name_scope(scope,'resolve_shape',[tendor]):
+        if rank is not None:
+            shape=tensor.get_shape().with_rank(rank).as_list()
+        else:
+            shape=tensor.get_shape().as_list()
+        if None in shape:
+            shape_dynamic = tf.shape(tensor)
+            for i in range(len(shape)):
+                if shape[i] is None:
+                    shape[i] = shape_dynamic[i]
+        
+        return shape
+    
+    
+    
 def resize_to_range(image,
                     label=None,
                     min_size=None,
@@ -1096,16 +1169,228 @@ def resize_to_range(image,
                     label_layout_is_chw=False,
                     scope=None,
                     method=tf.image.ResizeMethod.BILINEAR):
-    """把图像做一个调整.
-       面试问题1: 如何对图像做调整,并手写调整方法.给出min max size,
-       返回: 整理好的image和label.
+    """
+    
     """
     with tf.name_scope(scope,'resize_to_range',[image]):
         new_tensor_list=[]
+        min_size=tf.to_float(min_size)
+        if max_size is not None:
+            max_size=tf.to_float(max_size)
+            if factor is not None:
+                max_size=(max_size + (factor - (max_size - 1) % factor) % factor - factor)
+                
+        [orig_height,orig_width,_]=resolve_shape(image,rank=3)
+        orig_height=tf.to_float(orig_height)
+        orig_width=tf.to_float(orig_width)
+        orig_min=tf.minimum(orig_height,orig_width)
         
+        # 让origin的最小尺寸满足限定的最小尺寸,这里扩大一个倍数.
+        large_scale_factor = min_size / orig_min
+        large_height = tf.to_int32(tf.ceil(orig_height * large_scale_factor))
+        large_width = tf.to_int32(tf.ceil(orig_width * large_scale_factor))
+        large_size = tf.stack([large_height, large_width])
+        
+        new_size=large_size
+        if max_size is not None:
+            orig_max_size = tf.maximum(orig_height, orig_width)
+            small_scale_factor = max_size / orig_max_size
+            small_height = tf.to_int32(tf.ceil(orig_height * small_scale_factor))
+            small_width = tf.to_int32(tf.ceil(orig_width * small_scale_factor))
+            small_size = tf.stack([small_height, small_width])
+            new_size = tf.cond(
+                tf.to_float(tf.reduce_max(large_size)) > max_size, # 限制满足最小size的情况下,不要超过最大size.
+                lambda: small_size,
+                lambda: large_size)
+        if factor is not None:
+            new_size += (factor - (new_size - 1) % factor) % factor # factor的倍数.
+        new_tensor_list.append(tf.image.resize_images(
+            image, new_size, method=method, align_corners=align_corners))
     
-                 
-def input_get(dataset,
+        if label is not None:
+            if label_layout_is_chw:
+                # Input label has shape [channel, height, width].
+                resized_label = tf.expand_dims(label, 3)
+                resized_label = tf.image.resize_nearest_neighbor(
+                    resized_label, new_size, align_corners=align_corners)
+                resized_label = tf.squeeze(resized_label, 3)
+            else:
+                # Input label has shape [height, width, channel].
+                resized_label = tf.image.resize_images(
+                    label, new_size, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR,
+                    align_corners=align_corners)
+                new_tensor_list.append(resized_label)
+        else:
+            new_tensor_list.append(None)
+        return new_tensor_list
+    
+    
+def get_random_scale(min_scale_factor, max_scale_factor, step_size):
+    """获取随机scale值.用于scale图像.
+    """
+    if min_scale_factor == max_scale_factor:
+        return tf.to_float(min_scale_factor)
+    #第一次时候,随机
+    if step_size==0:
+        return tf.random_uniform(shape=[1],minval=min_scale_factor,maxval=max_scale_factor)
+    # 其他采用步长相关的离散值.
+    else:
+        num_steps=int((max_scale_factor-min_scale_factor)/step_size+1) # step_size个大小时候,对应有num_steps个
+        scale_factors = tf.lin_space(min_scale_factor, max_scale_factor, num_steps)
+        shuffled_scale_factors = tf.random_shuffle(scale_factors)
+        return shuffled_scale_factors[0]
+    
+def randomly_scale_image_and_label(image,label,scale=1.0):
+    """随机缩放图像
+    """
+    if scale==1.0:
+        return image,label
+    img_shape=tf.shape(image)
+    new_dims=tf.to_int32(tf.to_float([img_shape[0],img_shape[1]])*scale)
+    image=tf.squeeze(
+        tf.image.resize_bilinear(tf.expand_dims(image,0),
+                                 new_dims,
+                                 align_corners=True),
+        [0])
+    if label is not None:
+        label=tf.squeeze(tf.image.resize_nearest_neighbor(tf.expand_dims(label,0),new_dims,align_corners=True),[0]) 
+    return image,label
+
+def pad_to_bounding_box(image, offset_height, offset_width, target_height,
+                        target_width, pad_value):
+    """在image宽高上加pad,其值是pad_value
+    args:
+        offset_width, 是pading在左侧的宽度.
+        offset_height,是pading在上面的高度.
+        target_width,是总的宽度.
+        target_height,是总高度.
+    """
+    image-=pad_value # 以后还会加上来.因为pad默认是0,以后对所有图片像素加一个pad_value
+    img_shape=tf.shape(image)
+    img_height=img_shape[0]
+    img_width=img_shape[1]
+    right_width=target_width-img_width-offset_width
+    bottom_height=target_height-img_height-offset_height
+    
+    height_params=tf.stack([offset_height,bottom_height])
+    width_params=tf.stack([offset_width,right_width])
+    chn_params=tf.stack([0,0])
+    
+    paddings=tf.stack([height_params,width_params,chn_params])
+    padded=tf.pad(image,paddings)
+    padded+=pad_value
+    return padded
+    
+def _crop(image, offset_height, offset_width, crop_height, crop_width):
+    """对hw做crop
+    """
+    original_shape=tf.shape(image)
+    if len(image.get_shape().as_list())!=3:
+        raise ValueError("should be hwc")
+    original_chns=image.get_shape().as_list()[2]
+    cropped_shape=tf.stack([crop_height,crop_width,original_shape[2]]) # 保留chns,chns不做crop
+    offset=tf.stack([offset_height,offset_width,0]) # chns不涉及offset
+    image=tf.slice(image,offset,cropped_shape)
+    image = tf.reshape(image, cropped_shape) # 犯错点
+    image.set_shape([crop_height,crop_width,original_chns])
+    return image
+    
+def random_crop(image_list, crop_height, crop_width):
+    """随机裁剪
+    args:
+        image_list, 传入一组list.可以是[preimage,label]
+    """
+    img_shape=tf.shape(image_list[0])
+    img_h=img_shape[0]
+    img_w=img_shape[1]
+    max_offset_h=tf.reshape(img_h-crop_height+1,[])
+    max_offset_w=tf.reshape(img_w-crop_width+1,[])
+    offset_height=tf.random_uniform([],maxval=max_offset_h,dtype=tf.int32)
+    offset_width=tf.random_uniform([],maxval=max_offset_w,dtype=tf.int32)
+    return [_crop(image,offset_height,offset_width,crop_height,crop_width) for image in image_list]
+
+def flip_dim(tensor_list, prob=0.5, dim=1):
+    """随机flip
+    """
+    random_val=tf.random_uniform([])
+    def flip():
+        flipped=[]
+        for tensor in tensor_list:
+            flipped.append(tf.reverse_v2(tensor,[dim]))
+        return flipped
+    is_flipped=tf.less_equal(random_val,prob) # 设置一个随机阈值,其实和dropout的随机阈值类似.
+    outputs=tf.cond(is_flipped,flip,lambda:tensor_list)
+    if not isinstance(outputs,(list,tuple)):
+        outputs=[outputs]
+    outputs.append(is_flipped) 
+    
+    return outputs # 里边会有两个内容, image等以及是否是flipped.
+
+##
+
+def preprocess_image_and_label(image,
+                               label,
+                               crop_height,
+                               crop_width,
+                               min_resize_value=None,
+                               max_resize_value=None,
+                               resize_factor=None,
+                               min_scale_factor=1.,
+                               max_scale_factor=1.,
+                               scale_factor_step_size=0,
+                               ignore_label=255,
+                               is_training=True,
+                               model_variant=None):
+    """返回: origin image
+            preprocess image
+            label( groud truth)
+    """
+    # 保存origin image
+    origin_image=image
+    process_image=tf.cast(image,tf.float32)
+    if label is not None:
+        label=tf.cast(label,tf.int32)
+    if min_resize_value is not None or max_resize_value is not None:
+        [process_image,label]=resize_to_range(image=process_image,label=label,min_size=min_resize_value,max_size=max_resize_value,
+                                             factor=resize_factor,align_corners=True)
+        original_image=tf.identity(process_image) # origin描述的变成了resize之后的.
+    
+    # 随机缩放 以 达到数据增强
+    
+    if is_training:
+        argu_scale=get_random_scale(min_scale_factor,max_scale_factor,scale_factor_step_size)
+        process_image,label=randomly_scale_image_and_label(process_image,label,argu_scale)
+        process_image.set_shape([None,None,3])# 3个chn
+    print("randomly_scale_image_and_label'process_image:",process_image)
+    image_shape=tf.shape(process_image)
+    image_height=image_shape[0]
+    image_width=image_shape[1]
+    
+    target_height=image_height+tf.maximum(crop_height-image_height,0)
+    target_width=image_width+tf.maximum(crop_width-image_width,0)
+    meanpixel=[127.5, 127.5, 127.5]
+    meanpixel=tf.reshape(meanpixel,[1,1,3])
+    #pad
+    processed_image=pad_to_bounding_box(process_image,0,0,target_height,target_width,meanpixel)
+    if label is not None:
+        label=pad_to_bounding_box(label,0,0,target_height,target_width,ignore_label)
+    print("pad_to_bounding_box'process_image:",process_image)
+    # 随机裁剪
+    if is_training and label is not None:
+        process_image,label=random_crop([process_image,label],crop_height,crop_width)
+    print("random_crop'process_image:",process_image)
+    process_image.set_shape([crop_height,crop_width,3])
+    if label is not None:
+        label.set_shape([crop_height,crop_width,1])
+    
+    # 随机左右颠倒
+    if is_training:
+        process_image,label,_=flip_dim([process_image,label],_PROB_OF_FLIP,dim=1) # 这个`_`号描述的是is_flipped信息,这里我们不关心,就省略掉了.
+    print("flip_dim'process_image:",process_image)   
+    return origin_image, process_image, label   #!!!!!!请注意这个拼写错误:::processed_image, label
+    
+
+def get_samples(dataset,
         crop_size,
         batch_size,
         min_resize_value=None,
@@ -1117,60 +1402,106 @@ def input_get(dataset,
         num_readers=1,
         num_threads=1,
         dataset_split=None,
-        is_training=True,
-        model_variant=None):
-    """把dataset做一个分割split
-           这里分成了三步:
-           1. dataset_data_provider 函数会返回raw data.
-           2. 对raw data做预处理
-           3. 然后利用tf对预处理data做batching.
-       args:
-           dataset_split: 字符串,描述当前是train还是test
-    """
-    data_provider=dataset_data_provider.DatasetDataProvider(
-        dataset,
-        num_readers=num_readers,
-        num_epochs=None if is_training else 1,
-        shuffle=is_training)
-    # get_data:
-    # 拿到 image,label,image_name,height,width
-    image,height,width=data_provider.get('image','height','width')
-    if 'image_name' in data_provider.list_items():
-        image_name,=data_provider.get('image_name')
-    else:
-        image_name=tf.constant('')
-    if dataset_split !='test':
-        label,=data_provider.get([labels_class])
-    else:
-        label=None
-    
-    # 检查label格式
-    if label is not None:
-        if label.shape.ndims==2:
-            #[height,width]类型的.
-            label=tf.expand_dims(label,2)
-        elif label.shape.ndims==3 and label.shape.dims[2]==1:
-            #[height,widht,1]类型的,第三个通道可以存在,但必须是1.要么就不存在好了.
-            pass
+        is_training=True):
+        """
+        1. 返回raw data
+        2. 预处理 raw data
+        3. batching 预处理产生的data,其结果可直接被用作train,test
+        """
+        data_provider=dataset_data_provider.DatasetDataProvider(dataset,num_readers,num_epochs=None if is_training else 1, shuffle=is_training)
+        image, label, image_name, height, width=_get_data(data_provider,dataset_split)
+        print("image: shape:",image)
+        if label is not None:
+            if label.shape.ndims == 2:
+                label = tf.expand_dims(label, 2)
+            elif label.shape.ndims == 3 and label.shape.dims[2] == 1:
+                pass
         else:
-            raise("Label shoud be [h,w] or [h,w,1]")
+            raise ValueError('Input label shape must be [height, width], or '
+                             '[height, width, 1].')
+        label.set_shape([None, None, 1])
+        original_image, image, label=preprocess_image_and_label(
+            image,
+            label,
+            crop_height=crop_size[0],
+            crop_width=crop_size[1],
+            min_resize_value=min_resize_value,
+            max_resize_value=max_resize_value,
+            resize_factor=resize_factor,
+            min_scale_factor=min_scale_factor,
+            max_scale_factor=max_scale_factor,
+            scale_factor_step_size=scale_factor_step_size,
+            ignore_label=dataset.ignore_label,
+            is_training=is_training)
+        print("after preprocess image: shape:",image)
+        sample={
+            "image":image,
+            "image_name":image_name,
+            "height":height,
+            "width":width,
+        }
+        if label is not None:
+            sample["label"]=label
+        if not is_training:
+            sample["original_image"]=original_image
+            
+        return tf.train.batch(
+            sample,
+            batch_size=batch_size,
+            num_threads=num_threads,
+            capacity=32 * batch_size,
+            allow_smaller_final_batch=not is_training,
+            dynamic_pad=True)
     
-    # 对raw数据的pre process
-    process_image=tf.cast(image,tf.float32)
-    if label is not None:
-        label=tf.cast(label,tf.int32)
-    if min_resize_value is not None or max_resize_value is not None:
-        [processed_image,label]=(
-            resize_to_range(image=processed_image,
-                           label=label,
-                            min_size=min_resize_value,
-                            max_size=max_resize_value,
-                            factor=resize_factor, # factor的倍数+1
-                            align_corners=True))
+#---
+
+def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
+    """构建deeplab网络
+    inputs_queue:
+            输入sample
+    outputs_num_classes:
+            当前是几分类的网络
+    
+    return:
+            返回deeplab网络
+    """
+    samples=inputs_queue.dequeue() # 从队列中取出样本
+    # 添加一些助记名字
+    samples[common.IMAGE]=tf.identity(samples[common.IMAGE],name=common.IMAGE)
+    samples[common.LABEL]=tf.identity(samples[common.LABEL],name=common.LABEL)
+    
+    # setup
+    model_options=common.ModelOptions(
+        outputs_to_num_classes=outputs_to_num_classes,
+        crop_size=train_crop_size,
+        atrous_rates=atrous_rates,
+        output_stride=output_stride)
+    
+    # 几率表达式(其实是softmax的输出,可认为是概率)
+    outputs_to_scales_to_logits=multi_scale_logits(
+        samples[common.IMAGE],
+        model_options=model_options,
+        image_pyramid=image_pyramid,# image_pyramid=NULL
+        weight_decay=weight_decay,# 4e-05
+        is_training=True,
+        fine_tune_batch_norm=fine_tune_batch_norm)
+    # 添加一些助记名字
+    output_type_dict=outputs_to_scales_to_logits[common.OUTPUT_TYPE]
+    output_type_dict[MERGED_LOGITS_SCOPE]=tf.identity(
+        output_type_dict[MERGED_LOGITS_SCOPE],
+        name=common.OUTPUT_TYPE)
+    
+    for output,num_classes in six.iteritems(outputs_to_num_classes):
+        # softmax
+        train_utils.add_softmax_cross_entropy_loss_for_each_scale(
+            outputs_to_scales_to_logits[output],
+            samples[common.LABEL],
+            ignore_labels,
+            loss_weight=1.0,
+            upsampling_logits=upsample_logits, #Upsample logits during training
+            scope=output)
         
-                 
-                 
-    
+    return outputs_to_scales_to_logits
                  
 def train():
     tf.logging.set_verbosity(tf.logging.INFO)
@@ -1192,9 +1523,11 @@ def train():
     
     with tf.Graph().as_default() as graph:
         with tf.device(config.inputs_device()):
-            samples=input_generator.get(
+
+            samples=get_samples(
                 # 从数据集中拿到样本
                 dataset,
+                train_crop_size,
                 train_batch_size,
                 min_resize_value=min_resize_value,
                 max_resize_value=max_resize_value,
@@ -1203,10 +1536,23 @@ def train():
                 max_scale_factor=max_scale_factor,
                 scale_factor_step_size=scale_factor_step_size,
                 dataset_split=train_split,
-                is_training=True,
-                model_variant=model_variant)
-            # slim.prefetch_queue生成一个queue实例.
-            inputs_queue=prefetch_queue.prefetch_queue(samples,capacity=128*config.num_clones)
+                is_training=True)
+            # slim.prefetch_queue生成一个queue实例.            
+            print("get samples params:")
+            print(" dataset:",dataset)
+            print(" train_crop_size:",train_crop_size)
+            print(" train_batch_size:",train_batch_size)
+            print(" min_resize_value=min_resize_value:",min_resize_value)
+            print(" max_resize_value=max_resize_value:",max_resize_value)
+            print(" resize_factor=resize_factor:",resize_factor)
+            print(" min_scale_factor=min_scale_factor:",min_scale_factor)
+            print(" max_scale_factor=max_scale_factor:",max_scale_factor)
+            print(" scale_factor_step_size=scale_factor_step_size:",scale_factor_step_size)
+            print(" dataset_split:",train_split)
+            print(" is_training=",is_training)
+            print("samples:",samples)
+            
+            inputs_queue=prefetch_queue.prefetch_queue(samples,capacity=128 * config.num_clones)
             
         with tf.device(config.variables_device()):
             global_step=tf.train.get_or_create_global_step() # 为当前图获得(有必要的话去创建)一个全局步数计数的tensor,一个graph只有一个这样的tensor.

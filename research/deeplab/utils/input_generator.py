@@ -121,6 +121,7 @@ def get(dataset,
       shuffle=is_training)
   image, label, image_name, height, width = _get_data(data_provider,
                                                       dataset_split)
+  print("image:shape:",image)
   if label is not None:
     if label.shape.ndims == 2:
       label = tf.expand_dims(label, 2)
@@ -145,6 +146,7 @@ def get(dataset,
       ignore_label=dataset.ignore_label,
       is_training=is_training,
       model_variant=model_variant)
+  print("after preprocess image: shape:",image)
   sample = {
       common.IMAGE: image,
       common.IMAGE_NAME: image_name,

@@ -101,7 +101,7 @@ def preprocess_image_and_label(image,
     processed_image, label = preprocess_utils.randomly_scale_image_and_label(
         processed_image, label, scale)
     processed_image.set_shape([None, None, 3])
-
+  print("randomly_scale_image_and_label'process_image:",processed_image)
   # Pad image and label to have dimensions >= [crop_height, crop_width]
   image_shape = tf.shape(processed_image)
   image_height = image_shape[0]
@@ -115,16 +115,16 @@ def preprocess_image_and_label(image,
       feature_extractor.mean_pixel(model_variant), [1, 1, 3])
   processed_image = preprocess_utils.pad_to_bounding_box(
       processed_image, 0, 0, target_height, target_width, mean_pixel)
-
   if label is not None:
     label = preprocess_utils.pad_to_bounding_box(
         label, 0, 0, target_height, target_width, ignore_label)
+  print("pad_to_bounding_box'process_image:",processed_image)
 
   # Randomly crop the image and label.
   if is_training and label is not None:
     processed_image, label = preprocess_utils.random_crop(
         [processed_image, label], crop_height, crop_width)
-
+  print("random_crop'process_image:",processed_image)
   processed_image.set_shape([crop_height, crop_width, 3])
 
   if label is not None:
@@ -134,5 +134,6 @@ def preprocess_image_and_label(image,
     # Randomly left-right flip the image and label.
     processed_image, label, _ = preprocess_utils.flip_dim(
         [processed_image, label], _PROB_OF_FLIP, dim=1)
+  print("flip_dim'process_image:",processed_image)
 
   return original_image, processed_image, label
