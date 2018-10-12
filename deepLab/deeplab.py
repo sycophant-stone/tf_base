@@ -57,110 +57,8 @@ def stack_blocks_dense(net,
                     net=slim.utils.collect_named_outputs(outputs_collections,sc.name,net)
     
     return net
-                    
-    
 
-def xception(inputs,
-             blocks,
-             num_classes=None,
-             is_training=True,
-             global_pool=True,
-             keep_prob=0.5,
-             output_stride=None,
-             reuse=None,
-             scope=None):
-    """把Block描述的网络组织起来
-    args:
-        blocks: 描述了一系列的xception 网络block.
-    """
-    with tf.variable_scope(scope,'xception',
-                          [inputs],reuse=reuse) as sc:
-        end_points_collection=sc.original_name_scope+'end_points'
-        with slim.arg_scope([slim.conv2d,
-                            slim.separable_conv2d,
-                            xception_module,
-                            stack_blocks_dense],
-                           outputs_collections=end_points_collection):
-            with slim.arg_scope([slim.batch_norm],is_training=is_training):
-                net=inputs
-                if output_stride is not None:
-                    if output_stride%2!=0:
-                        raise ValueError('output_stride should be a mulitple of 2')
-                output_stride/=2
-                # xception的entry flow前面还有两个conv
-                net=resnet_utils.conv2d_same(net,32,3,stride=2,scope='entry_flow/conv1_1')
-                net=resnet_utils.conv2d_same(net,64,3,stride=1,scope='entry_flow/conv1_2')
-                
-                # 抽取blocks描述的网路
-                net=stack_blocks_dense(net,blocks,output_stride)
-                end_points=slim.utils.convert_collection_to_dict(end_points_collection,clear_collection=True)
-                
-                if global_pool:
-                    net=tf.reduce_mean(net,[1,2],name='global_pool',keepdim=True)
-                    end_points['global_pool']=net
-                if num_classes:
-                    net=slim.dropout(net,keep_prob=keep_prob,is_training=is_training,scope='prelogits_dropout')
-                    net=slim.conv2d(inputs=net,num_classes=num_classes,kernel_size=[1,1],activation_fn=None,
-                                   normalizer_fn=None,scope='logits')
-                    end_points[sc.name+'/logits']=net
-                    end_points['predictions']=slim.softmax(net,scope='predictions')
-                return net,end_points
-
-def separable_conv2d_same(inputs,
-                          num_outputs,
-                          kernel_size,
-                          depth_multiplier,
-                          stride,
-                          rate=1,
-                          use_explicit_padding=True,
-                          regularize_depthwise=False,
-                          scope=None,
-                          **kwargs):
-    """3x3的卷积,可分离卷积
-    """
-    # 两个辅助函数
-    def _seperable_conv2d(padding):
-        return slim.separable_conv2d(inputs,
-                                     num_outputs,
-                                     kernel_size,
-                                     depth_muliplier=depth_multiplier,
-                                     stride=stride,
-                                     rate=rate,
-                                     padding=padding,
-                                     scope=scope,
-                                     **kwargs)
-    
-    def _split_separable_conv2d(padding):
-        # 这个里边输出节点没有是num_outputs
-        outputs=slim.separable_conv2d(inputs,
-                                     None,
-                                     kernel_size,
-                                     depth_multiplier=depth_multiplier,
-                                     stride=stride,
-                                     rate=rate,
-                                     padding=padding,
-                                     scope=scope+'_depthwise',
-                                     **kwargs)
-        # 然后加一个1x1的小卷积做的num_outputs.
-        return slim.conv2d(outputs,
-                          num_outputs,
-                          1,
-                          scope=scope+'_pointwise',
-                          **kwargs)
-    if is_stride ==1 or not use_explicit_padding:
-        if regularize_depthwise:
-            # 加正则化,并不是downsampling,
-            outputs=_seperable_conv2d(padding='SAME')
-        else:
-            outputs=_split_separable_conv2d(padding='SAME')
-    else:
-        if regularize_depthwise:
-            outputs=_seperable_conv2d(padding='VALID')
-        else:
-            outputs=_split_separable_conv2d(padding='VALID')
-            
-    return outputs
-
+@slim.add_arg_scope
 def xception_module(inputs,
                     depth_list,
                     skip_connection_type,
@@ -225,7 +123,118 @@ def xception_module(inputs,
         return slim.utils.collect_named_outputs(outputs_collections,
                                                sc.name,
                                                outputs)
+
+@slim.add_arg_scop
+def stack_blocks_dense(net,
+                       blocks,
+                       output_stride=None,
+                       outputs_collections=None):
+    """"""
+        
     
+    
+@slim.add_arg_scope
+def xception(inputs,
+             blocks,
+             num_classes=None,
+             is_training=True,
+             global_pool=True,
+             keep_prob=0.5,
+             output_stride=None,
+             reuse=None,
+             scope=None):
+    """把Block描述的网络组织起来
+    args:
+        blocks: 描述了一系列的xception 网络block.
+    """
+    with tf.variable_scope(scope,'xception',
+                          [inputs],reuse=reuse) as sc:
+        end_points_collection=sc.original_name_scope+'end_points'
+        with slim.arg_scope([slim.conv2d,
+                            slim.separable_conv2d,
+                            xception_module,
+                            stack_blocks_dense],
+                           outputs_collections=end_points_collection):
+            with slim.arg_scope([slim.batch_norm],is_training=is_training):
+                net=inputs
+                if output_stride is not None:
+                    if output_stride%2!=0:
+                        raise ValueError('output_stride should be a mulitple of 2')
+                output_stride/=2
+                # xception的entry flow前面还有两个conv
+                net=resnet_utils.conv2d_same(net,32,3,stride=2,scope='entry_flow/conv1_1')
+                net=resnet_utils.conv2d_same(net,64,3,stride=1,scope='entry_flow/conv1_2')
+                
+                # 抽取blocks描述的网路
+                net=stack_blocks_dense(net,blocks,output_stride)
+                end_points=slim.utils.convert_collection_to_dict(end_points_collection,clear_collection=True)
+                
+                if global_pool:
+                    net=tf.reduce_mean(net,[1,2],name='global_pool',keepdim=True)
+                    end_points['global_pool']=net
+                if num_classes:
+                    net=slim.dropout(net,keep_prob=keep_prob,is_training=is_training,scope='prelogits_dropout')
+                    net=slim.conv2d(inputs=net,num_classes=num_classes,kernel_size=[1,1],activation_fn=None,
+                                   normalizer_fn=None,scope='logits')
+                    end_points[sc.name+'/logits']=net
+                    end_points['predictions']=slim.softmax(net,scope='predictions')
+                return net,end_points
+@slim.add_arg_scope
+def separable_conv2d_same(inputs,
+                          num_outputs,
+                          kernel_size,
+                          depth_multiplier,
+                          stride,
+                          rate=1,
+                          use_explicit_padding=True,
+                          regularize_depthwise=False,
+                          scope=None,
+                          **kwargs):
+    """3x3的卷积,可分离卷积
+    """
+    # 两个辅助函数
+    def _seperable_conv2d(padding):
+        return slim.separable_conv2d(inputs,
+                                     num_outputs,
+                                     kernel_size,
+                                     depth_muliplier=depth_multiplier,
+                                     stride=stride,
+                                     rate=rate,
+                                     padding=padding,
+                                     scope=scope,
+                                     **kwargs)
+    
+    def _split_separable_conv2d(padding):
+        # 这个里边输出节点没有是num_outputs
+        outputs=slim.separable_conv2d(inputs,
+                                     None,
+                                     kernel_size,
+                                     depth_multiplier=depth_multiplier,
+                                     stride=stride,
+                                     rate=rate,
+                                     padding=padding,
+                                     scope=scope+'_depthwise',
+                                     **kwargs)
+        # 然后加一个1x1的小卷积做的num_outputs.
+        return slim.conv2d(outputs,
+                          num_outputs,
+                          1,
+                          scope=scope+'_pointwise',
+                          **kwargs)
+    if is_stride ==1 or not use_explicit_padding:
+        if regularize_depthwise:
+            # 加正则化,并不是downsampling,
+            outputs=_seperable_conv2d(padding='SAME')
+        else:
+            outputs=_split_separable_conv2d(padding='SAME')
+    else:
+        if regularize_depthwise:
+            outputs=_seperable_conv2d(padding='VALID')
+        else:
+            outputs=_split_separable_conv2d(padding='VALID')
+            
+    return outputs
+
 
 class Block(collections.namedtuple('Block', ['scope', 'unit_fn', 'args'])):
     """xception模块 
@@ -253,7 +262,9 @@ def xception_block(scope,
       'stride': stride,
       'unit_rate_list': unit_rate_list,
   }] * num_units)
-    
+
+
+
 def xception_65(inputs,
                 num_classes=None,
                 is_training=True,
