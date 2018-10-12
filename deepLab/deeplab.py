@@ -1,10 +1,14 @@
 import os
 import tensorflow as tf
-slim=tf.contrib.slim
-prefetch_queue = slim.prefetch_queue
+import common
 import collections
 from tensorflow.contrib.slim.nets import resnet_utils
 from deployment import model_deploy
+
+slim=tf.contrib.slim
+prefetch_queue = slim.prefetch_queue
+
+
 LOGITS_SCOPE_NAME = 'logits'
 MERGED_LOGITS_SCOPE = 'merged_logits'
 IMAGE_POOLING_SCOPE = 'image_pooling'
@@ -28,6 +32,7 @@ max_resize_value=None
 resize_factor=None
 dataset_split="train"
 is_training=True
+image_pyramid=None
 
 #-----------------------xception65网络----------------------
 def stack_blocks_dense(net,
@@ -395,7 +400,10 @@ def get_network(network_name, preprocess_images, arg_scope=None):
 
 def local_extract_features(
     features,
-    model_options,
+    output_stride,
+    multi_grid,
+    model_variant,
+    depth_multiplier,
     weight_decay=0.0001,
     reuse=None,
     is_training=False,
@@ -435,14 +443,14 @@ def extract_features(features,
     """
     # 提取
     features,end_points=local_extract_features(
-        images,
+        features,
         output_stride=model_options.output_stride,
         multi_grid=model_options.multi_grid,
         model_variant=model_options.model_variant,
         depth_multiplier=model_options.depth_multiplier,
         weight_decay=weight_decay,
         reuse=reuse,
-        is_training=in_training,
+        is_training=is_training,
         fine_tune_batch_norm=fine_tune_batch_norm)
     
     if not model_options.aspp_with_batch_norm:
@@ -749,7 +757,7 @@ def get_branch_logits(features,
     
 
 def _get_logits(images,model_options,weight_decay=0.0001,reuse=None,is_training=False,
-               find_tune_batch_norm=False):
+               fine_tune_batch_norm=False):
     """生成logits网络.该网络应用到aspp,atrous spatial pyramid pooling.
     """
     # 提取features和end_points.
@@ -759,7 +767,7 @@ def _get_logits(images,model_options,weight_decay=0.0001,reuse=None,is_training=
         weight_decay=weight_decay,
         reuse=reuse,
         is_training=is_training,
-        find_tune_batch_norm=find_tune_batch_norm)
+        fine_tune_batch_norm=fine_tune_batch_norm)
     
     # 如果decoder 有特殊定义的stride.需要对decoder size做scale
     if model_option.decoder_output_stride is not None:
@@ -787,7 +795,7 @@ def _get_logits(images,model_options,weight_decay=0.0001,reuse=None,is_training=
             weight_decay=weight_decay,
             reuse=reuse,
             is_training=is_training,
-            fine_tune_batch_norm=find_tune_batch_norm)
+            fine_tune_batch_norm=fine_tune_batch_norm)
 
     # 获得batch的logits
     # batch_normalization作用:
@@ -1467,8 +1475,8 @@ def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
     """
     samples=inputs_queue.dequeue() # 从队列中取出样本
     # 添加一些助记名字
-    samples[common.IMAGE]=tf.identity(samples[common.IMAGE],name=common.IMAGE)
-    samples[common.LABEL]=tf.identity(samples[common.LABEL],name=common.LABEL)
+    samples["image"]=tf.identity(samples["image"],name="image")
+    samples["label"]=tf.identity(samples["label"],name="label")
     
     # setup
     model_options=common.ModelOptions(
@@ -1479,23 +1487,23 @@ def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
     
     # 几率表达式(其实是softmax的输出,可认为是概率)
     outputs_to_scales_to_logits=multi_scale_logits(
-        samples[common.IMAGE],
+        samples["image"],
         model_options=model_options,
         image_pyramid=image_pyramid,# image_pyramid=NULL
         weight_decay=weight_decay,# 4e-05
         is_training=True,
         fine_tune_batch_norm=fine_tune_batch_norm)
     # 添加一些助记名字
-    output_type_dict=outputs_to_scales_to_logits[common.OUTPUT_TYPE]
+    output_type_dict=outputs_to_scales_to_logits["semantic"]
     output_type_dict[MERGED_LOGITS_SCOPE]=tf.identity(
         output_type_dict[MERGED_LOGITS_SCOPE],
-        name=common.OUTPUT_TYPE)
+        name="semantic")
     
     for output,num_classes in six.iteritems(outputs_to_num_classes):
         # softmax
         train_utils.add_softmax_cross_entropy_loss_for_each_scale(
             outputs_to_scales_to_logits[output],
-            samples[common.LABEL],
+            samples["label"],
             ignore_labels,
             loss_weight=1.0,
             upsampling_logits=upsample_logits, #Upsample logits during training
@@ -1557,7 +1565,7 @@ def train():
         with tf.device(config.variables_device()):
             global_step=tf.train.get_or_create_global_step() # 为当前图获得(有必要的话去创建)一个全局步数计数的tensor,一个graph只有一个这样的tensor.
             model_args=(inputs_queue,{
-                common.OUTPUT_TYPE:dataset.num_classes
+                "semantic":dataset.num_classes
             },dataset.ignore_label)
             clones=model_deploy.create_clones(config,_build_deeplab,model_args)
             
