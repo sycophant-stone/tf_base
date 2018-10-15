@@ -429,7 +429,8 @@ def extract_features(images,
               aspp_features = slim.conv2d(
                   features, depth, 3, rate=rate, scope=scope)
             branch_logits.append(aspp_features)
-
+        for itm in branch_logits:
+            print(itm)
         # Merge branch logits.
         concat_logits = tf.concat(branch_logits, 3)
         concat_logits = slim.conv2d(

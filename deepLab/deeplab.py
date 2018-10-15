@@ -1,4 +1,4 @@
-#-*- coding: UTF-8 -*- 
+#-*- coding: UTF-8 -*-
 import os
 import tensorflow as tf
 import common
@@ -34,6 +34,30 @@ resize_factor=None
 dataset_split="train"
 is_training=True
 image_pyramid=None
+
+'''"jkcloud", "win10", "shiyan.ai" '''
+GLB_ENV="win10"
+
+if GLB_ENV=="win10":
+    print("WELCOM to Win10 env!!!")
+    dataset_dir="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\tfrecord"
+    train_logdir = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\output"
+    tf_initial_checkpoint = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\init_models\\deeplabv3_pascal_train_aug\\model.ckpt"
+elif GLB_ENV=="jkcloud":
+    print("WELCOM to jkcloud env!!!")
+    dataset_dir = "/work/gi/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
+    # Settings for logging.
+    train_logdir = "/output"  # jikecloud只有/output可以用tensorboard
+    tf_initial_checkpoint = None
+elif GLB_ENV=="shiyan.ai":
+    print("WELCOM to shiyan.ai env!!!")
+    dataset_dir = "/work/gi/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
+    train_logdir = "output"  # shiyan.ai没有根目录权限
+    tf_initial_checkpoint=None
+else:
+    raise ValueError('Please chose one Env to start!')
+
+
 
 #-----------------------xception65网络----------------------
 
@@ -390,7 +414,9 @@ def cal_scaled_dim_val(dim,scale_coeff):
     if isinstance(dim,tf.Tensor):
         return tf.cast((tf.tofloat(dim)-1.0)*scale_coeff+1.0,tf.int32) # 其实这里边的这个+1.0是为了向上取整
     else:
-        return (float(dim)-1.0)*scale_coeff+1.0
+        #BLOCK1_BUG: TypeError: Expected int32, got 33.0 of type 'float' instead.
+        # 定位到是计算scaled dim时候没有转成int类型.
+        return int((float(dim)-1.0)*scale_coeff+1.0)
 
 
 def xception_arg_scope(weight_decay=0.00004,
@@ -560,7 +586,7 @@ def extract_features(features,
                 image_feature=slim.conv2d(
                     image_feature_pooled,depth,1,scope=IMAGE_POOLING_SCOPE)
                 # 插值成resize的feature map
-                image_feature=tf.image.resize_bilinear(image_feature,[resize_height,resize_width],
+                image_feature=tf.image.resize_bilinear(image_feature,size=[resize_height,resize_width],
                                                       align_corners=True)
                 '''
                 if isinstance(resize_height,tf.Tensor):
@@ -578,7 +604,7 @@ def extract_features(features,
             
             # ASPP,的金字塔每层采用不同的atrous rates,此处构建这组atrous pyramid
             # 融合A部分(ASPP) 需要3x3 带artous.
-            if model_option.atrous_rates:
+            if model_options.atrous_rates:
                 # 3x3卷积
                 for i,rate in enumerate(model_options.atrous_rates,1):
                     scope=ASPP_SCOPE+str(i)
@@ -594,7 +620,9 @@ def extract_features(features,
                         aspp_features=slim.conv2d(features,depth,3,rate=rate,scope=scope)
                     
                     branch_logits.append(aspp_features)
-             
+
+            for itm in branch_logits:
+                print(itm)
             # 把这些组件组合起来
             concat_logits=tf.concat(branch_logits,3) # 在通道上增加了.增加了通道
             concat_logits=slim.conv2d(
@@ -986,11 +1014,6 @@ master=''   #'='BNS name of the tensorflow server')
 task=0# 'The task ID.')
 
 
-# Settings for logging.
-
-train_logdir="/output" #                    'Where the checkpoint and logs are stored.')
-
-
 log_steps=10 # Display logging information at every log_steps.')
 
 
@@ -1038,7 +1061,6 @@ last_layer_gradient_multiplier=1.0#                   'The gradient multiplier f
 upsample_logits=True # 'Upsample logits during training.')
 # Settings for fine-tuning the network.
 
-tf_initial_checkpoint=None#                    'The initial checkpoint in tensorflow format.')
 
 # Set to False if one does not want to re-use the trained classifier weights.
 initialize_last_layer=True#                     'Initialize the last layer.')
@@ -1075,7 +1097,7 @@ dataset_name='pascal_voc_seg'#                    'Name of the segmentation data
 train_split='train'#                    'Which split of the dataset to be used for training')
                  
 
-dataset_dir="/work/gi/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"  # 'Where the dataset reside.
+
                  
 #--train utils
 _ITEMS_TO_DESCRIPTIONS = {
