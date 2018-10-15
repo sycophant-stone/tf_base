@@ -37,6 +37,83 @@ image_pyramid=None
 
 #-----------------------xception65网络----------------------
 
+def fixed_padding(inputs, kernel_size, rate=1):
+    """添加pad
+    """
+    kernel_size_effective = kernel_size + (kernel_size - 1) * (rate - 1) # 和rate有关.
+    pad_total = kernel_size_effective - 1
+    pad_beg = pad_total // 2
+    pad_end = pad_total - pad_beg # 取出kernel 半径,然后计算出起始结束.
+    print("kernel_size_effective:%d, kernel_size:%d, rate:%d"%(kernel_size_effective,kernel_size,rate))
+    print("pad_total:%d, pad_beg:%d, pad_end:%d" %(pad_total,pad_beg,pad_end))
+    # 利用tf.pad做padding. pad_value是0.
+    padded_inputs = tf.pad(inputs, [[0, 0], [pad_beg, pad_end],
+                                    [pad_beg, pad_end], [0, 0]])
+    return padded_inputs
+
+@slim.add_arg_scope
+def separable_conv2d_same(inputs,
+                          num_outputs,
+                          kernel_size,
+                          depth_multiplier,
+                          stride,
+                          rate=1,
+                          use_explicit_padding=True,
+                          regularize_depthwise=False,
+                          scope=None,
+                          **kwargs):
+    """2D的SAME类型的.
+    stride>1且use_explicit_padding是True.先做一个zero padding,然后接一个VALID padding.
+    功能类似:
+       net = slim.separable_conv2d(inputs, num_outputs, 3,
+       depth_multiplier=1, stride=1, padding='SAME')
+       net = resnet_utils.subsample(net, factor=stride)
+    但这个会有even时候的错误.
+    
+    """
+    def _separable_conv2d(padding):
+        """Wrapper for separable conv2d."""
+        return slim.separable_conv2d(inputs,
+                                 num_outputs,
+                                 kernel_size,
+                                 depth_multiplier=depth_multiplier,
+                                 stride=stride,
+                                 rate=rate,
+                                 padding=padding,
+                                 scope=scope,
+                                 **kwargs)
+    
+    def _split_separable_conv2d(padding):
+        """Splits separable conv2d into depthwise and pointwise conv2d."""
+        outputs = slim.separable_conv2d(inputs,
+                                    None,# 这里只做depthwise
+                                    kernel_size,
+                                    depth_multiplier=depth_multiplier,
+                                    stride=stride,
+                                    rate=rate,
+                                    padding=padding,
+                                    scope=scope + '_depthwise',
+                                    **kwargs)
+        return slim.conv2d(outputs,
+                       num_outputs,
+                       1,
+                       scope=scope + '_pointwise',
+                       **kwargs)
+    if stride == 1 or not use_explicit_padding:
+        if regularize_depthwise:
+            outputs = _separable_conv2d(padding='SAME')
+        else:
+            outputs = _split_separable_conv2d(padding='SAME')
+    else:
+        '''stride!=1 并且 use_explicit_padding'''
+        inputs = fixed_padding(inputs, kernel_size, rate)
+        if regularize_depthwise:
+            outputs = _separable_conv2d(padding='VALID')
+        else:
+            outputs = _split_separable_conv2d(padding='VALID')
+            
+    return outputs
+    
 
 @slim.add_arg_scope
 def xception_module(inputs,
@@ -58,11 +135,16 @@ def xception_module(inputs,
                               sum是residual和shortcut加和.
                               none只采用residual.
     """
+    if len(depth_list) != 3:
+        raise ValueError('Expect three elements in depth_list.')
+    if unit_rate_list:
+        if len(unit_rate_list)!=3:
+            raise ValueError('Expect three elements in unit_rate_list.')
     with tf.variable_scope(scope,'xception_module',[inputs]) as sc:
         residual=inputs
         
         # 功能函数,处理relu在sperable conv前还是后.
-        def _separable_conv(features,depth,kernel_sise,depth_multiplier,
+        def _separable_conv(features,depth,kernel_size,depth_multiplier,
                             regularize_depthwise,rate,stride,scope):
             if activation_fn_in_separable_conv:
                 activation_fn=tf.nn.relu
@@ -94,17 +176,21 @@ def xception_module(inputs,
                                 stride=stride,
                                 activation_fn=None,
                                 scope='shortcut')
+            print("xception_module[residual]",residual)
+            print("xception_module[shortcut]",shortcut)
             outputs=residual+shortcut
         elif skip_connection_type=='sum':
-            outputs=residual+shortcut
-        else: # None, 表示没有shortcut这个捷径
+            outputs=residual+inputs
+        elif skip_connection_type == 'none':
             outputs=residual
+        else: # None, 表示没有shortcut这个捷径
+            raise ValueError('Unsupported skip connection type.')
         
         return slim.utils.collect_named_outputs(outputs_collections,
                                                sc.name,
                                                outputs)
 
-@slim.add_arg_scop
+@slim.add_arg_scope
 def stack_blocks_dense(net,
                        blocks,
                        output_stride=None,
@@ -166,7 +252,7 @@ def xception(inputs,
                 if output_stride is not None:
                     if output_stride%2!=0:
                         raise ValueError('output_stride should be a mulitple of 2')
-                output_stride/=2
+                    output_stride/=2 # 缩进
                 # xception的entry flow前面还有两个conv
                 net=resnet_utils.conv2d_same(net,32,3,stride=2,scope='entry_flow/conv1_1')
                 net=resnet_utils.conv2d_same(net,64,3,stride=1,scope='entry_flow/conv1_2')
@@ -185,62 +271,6 @@ def xception(inputs,
                     end_points[sc.name+'/logits']=net
                     end_points['predictions']=slim.softmax(net,scope='predictions')
                 return net,end_points
-@slim.add_arg_scope
-def separable_conv2d_same(inputs,
-                          num_outputs,
-                          kernel_size,
-                          depth_multiplier,
-                          stride,
-                          rate=1,
-                          use_explicit_padding=True,
-                          regularize_depthwise=False,
-                          scope=None,
-                          **kwargs):
-    """3x3的卷积,可分离卷积
-    """
-    # 两个辅助函数
-    def _seperable_conv2d(padding):
-        return slim.separable_conv2d(inputs,
-                                     num_outputs,
-                                     kernel_size,
-                                     depth_muliplier=depth_multiplier,
-                                     stride=stride,
-                                     rate=rate,
-                                     padding=padding,
-                                     scope=scope,
-                                     **kwargs)
-    
-    def _split_separable_conv2d(padding):
-        # 这个里边输出节点没有是num_outputs
-        outputs=slim.separable_conv2d(inputs,
-                                     None,
-                                     kernel_size,
-                                     depth_multiplier=depth_multiplier,
-                                     stride=stride,
-                                     rate=rate,
-                                     padding=padding,
-                                     scope=scope+'_depthwise',
-                                     **kwargs)
-        # 然后加一个1x1的小卷积做的num_outputs.
-        return slim.conv2d(outputs,
-                          num_outputs,
-                          1,
-                          scope=scope+'_pointwise',
-                          **kwargs)
-    if is_stride ==1 or not use_explicit_padding:
-        if regularize_depthwise:
-            # 加正则化,并不是downsampling,
-            outputs=_seperable_conv2d(padding='SAME')
-        else:
-            outputs=_split_separable_conv2d(padding='SAME')
-    else:
-        if regularize_depthwise:
-            outputs=_seperable_conv2d(padding='VALID')
-        else:
-            outputs=_split_separable_conv2d(padding='VALID')
-            
-    return outputs
-
 
 class Block(collections.namedtuple('Block', ['scope', 'unit_fn', 'args'])):
     """xception模块 
@@ -260,6 +290,13 @@ def xception_block(scope,
     num_units: 描述相同的该块有多少个.
     
     """
+    # BLOCK1_BUG: 启动异常.使用unit_rate_list时候,会报'NoneType' object is not subscriptable
+    # 这部分要给一个默认值,以避免unit_rate_list未赋值导致的异常.
+    # unit_rate_list 是对应xception模块需要的参数.决定该模块的unit rate,在的exit flow中会有对应的unit rate.这里
+    # 添加一个默认值.避免NoneType导致的异常.
+    if unit_rate_list==None:
+        unit_rate_list =[1, 1, 1] # _DEFAULT_MULTI_GRID
+
     return Block(scope, xception_module, [{
       'depth_list': depth_list,
       'skip_connection_type': skip_connection_type,
@@ -340,16 +377,6 @@ def xception_65(inputs,
                   output_stride=output_stride,
                   reuse=reuse,
                   scope=scope)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
@@ -478,13 +505,13 @@ def extract_features(features,
         batch_norm_params={
             'is_training':is_training and fine_tune_batch_norm,
             'decay':0.9997,
-            'spsilon':1e-5,
+            'epsilon':1e-5,
             'scale':True,
         }
     # slim.arg_scope对给定的op存储其param
     # 构建figure5里边的 Block4之后处理的ASPP部分.
     with slim.arg_scope(
-        [slim.cov2d,slim.separable_conv2d],
+        [slim.conv2d,slim.separable_conv2d],
         weights_regularizer=slim.l2_regularizer(weight_decay),
         activation_fn=tf.nn.relu,
         normalizer_fn=slim.batch_norm,
@@ -518,7 +545,7 @@ def extract_features(features,
                     # crop size 也需要做一下scale
                     resize_height=cal_scaled_dim_val(model_options.crop_size[0],
                                                     1.0/model_options.output_stride)
-                    resize_width=cal_scaled_dim_val(model_ooptions.crop_size[1],
+                    resize_width=cal_scaled_dim_val(model_options.crop_size[1],
                                                    1.0/model_options.output_stride)
                 else:
                     # 没有crop的size,做一个global的pooling

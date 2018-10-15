@@ -280,6 +280,8 @@ def xception_module(inputs,
                              stride=stride,
                              activation_fn=None,
                              scope='shortcut')
+      print("xception_module[residual]",residual)
+      print("xception_module[shortcut]",shortcut)
       outputs = residual + shortcut
     elif skip_connection_type == 'sum':
       outputs = residual + inputs
