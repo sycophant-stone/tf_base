@@ -1,10 +1,11 @@
+#-*- coding: UTF-8 -*- 
 import os
 import tensorflow as tf
 import common
 import collections
 from tensorflow.contrib.slim.nets import resnet_utils
 from deployment import model_deploy
-
+import tensorflow.contrib.slim as slim
 slim=tf.contrib.slim
 prefetch_queue = slim.prefetch_queue
 
@@ -35,28 +36,7 @@ is_training=True
 image_pyramid=None
 
 #-----------------------xception65网络----------------------
-def stack_blocks_dense(net,
-                       blocks,
-                       output_stride=None,
-                       outputs_collections=None):
-    """实现block描述的net
-       其中unit_fn是xception_module函数
-    """
-    current_stride=1
-    rate=1
-    for block in blocks:
-        with tf.variable_scope(block.scope,'block',[net]) as sc:
-            for i,unit in enumerate(block.args):
-                with tf.variable_scope('unit_%d'%(i+1),values=[net]):
-                    if output_stride is not None and current_stride==output_stride:
-                        net=block.unit_fn(net,rate=rate,**dict(unit,stride=1))
-                        rate*=unit.get('stride',1)
-                    else:
-                        net=block.unit_fn(net,rate=1,**unit)
-                        current_stride=unit.get('stride',1)
-                    net=slim.utils.collect_named_outputs(outputs_collections,sc.name,net)
-    
-    return net
+
 
 @slim.add_arg_scope
 def xception_module(inputs,
@@ -129,9 +109,35 @@ def stack_blocks_dense(net,
                        blocks,
                        output_stride=None,
                        outputs_collections=None):
-    """"""
-        
+    """Extract features for entry_flow, middle_flow, and exit_flow.
+    args:
+        net: tensor bhwc
+        blocks: 描述xception的block
+        output_stride: 输出的strides.
+    """
+    current_stride=1 # 初始值
+    rate=1
+    for block in blocks: #遍历所有的blocks 
+         with tf.variable_scope(block.scope,'block',[net]) as sc:
+                for idx,unit in enumerate(block.args):
+                    if output_stride is not None and current_stride>output_stride:
+                        raise ValueError('The output_stride can not be reached')
+                    with tf.variable_scope('unit_%d'%(idx+1),values=[net]):
+                        #多次执行xception_module来构建,结束条件:
+                        #    如果达到期望的output_strides,就可以结束,同时更新rate.
+                        #    如果没有到output_strides,就多执行几个xception_module
+                        # net是一个tensor, bhwc
+                        if output_stride is not None and current_stride == output_stride:
+                            net=block.unit_fn(net,rate=rate,**dict(unit,stride=1))#xception_module
+                            rate*=unit.get('stride',1)
+                        else:
+                            net=block.unit_fn(net,rate=1,**unit)#xception_module
+                            current_stride*=unit.get('stride',1)
+                net=slim.utils.collect_named_outputs(outputs_collections,sc.name,net)
+    if output_stride is not None and current_stride!=output_stride:
+        raise ValueError('The target output_stride cannot be reached.')
     
+    return net
     
 @slim.add_arg_scope
 def xception(inputs,

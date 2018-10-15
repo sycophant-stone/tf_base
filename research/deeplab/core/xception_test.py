@@ -79,13 +79,16 @@ class UtilityFunctionTest(tf.test.TestCase):
     y4_expected = tf.to_float([[48, 37],
                                [37, 22]])
     y4_expected = tf.reshape(y4_expected, [1, n2, n2, 1])
-
     with self.test_session() as sess:
       sess.run(tf.global_variables_initializer())
       self.assertAllClose(y1.eval(), y1_expected.eval())
       self.assertAllClose(y2.eval(), y2_expected.eval())
       self.assertAllClose(y3.eval(), y3_expected.eval())
       self.assertAllClose(y4.eval(), y4_expected.eval())
+      print("y1:%s, y1_expected:%s " %(y1.eval(), y1_expected.eval()))
+      print("y2:%s, y2_expected:%s " %(y2.eval(), y2_expected.eval()))
+      print("y3:%s, y3_expected:%s " %(y3.eval(), y3_expected.eval()))
+      print("y4:%s, y4_expected:%s " %(y4.eval(), y4_expected.eval()))
 
   def testSeparableConv2DSameWithInputOddSize(self):
     n, n2 = 5, 3
