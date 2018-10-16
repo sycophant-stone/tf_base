@@ -36,7 +36,7 @@ is_training=True
 image_pyramid=None
 
 '''"jkcloud", "win10", "shiyan.ai" '''
-GLB_ENV="win10"
+GLB_ENV="shiyan.ai"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
@@ -51,7 +51,7 @@ elif GLB_ENV=="jkcloud":
     tf_initial_checkpoint = None
 elif GLB_ENV=="shiyan.ai":
     print("WELCOM to shiyan.ai env!!!")
-    dataset_dir = "/work/gi/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
+    dataset_dir = "/home/deeplearning/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
     train_logdir = "output"  # shiyan.ai没有根目录权限
     tf_initial_checkpoint=None
 else:
