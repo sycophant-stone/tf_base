@@ -36,7 +36,7 @@ is_training=True
 image_pyramid=None
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV="jkcloud"
+GLB_ENV="win10"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
@@ -192,6 +192,7 @@ def xception_module(inputs,
                                     rate=rate*unit_rate_list[i],
                                     stride=stride if i==2 else 1,
                                     scope='separable_conv'+str(i+1))
+            print("[xception_module]:i:%d,input_stride:%d,stirde:%d,residual:%s"%(i,stride,stride if i==2 else 1, residual))
         
         if skip_connection_type =='conv':
             shortcut=slim.conv2d(inputs,
@@ -237,6 +238,7 @@ def stack_blocks_dense(net,
                         #    如果达到期望的output_strides,就可以结束,同时更新rate.
                         #    如果没有到output_strides,就多执行几个xception_module
                         # net是一个tensor, bhwc
+                        print("[stack_blocks_dense]:output_stride:%d,current_stride:%d"%(output_stride,current_stride))
                         if output_stride is not None and current_stride == output_stride:
                             net=block.unit_fn(net,rate=rate,**dict(unit,stride=1))#xception_module
                             rate*=unit.get('stride',1)
@@ -320,7 +322,7 @@ def xception_block(scope,
     # 添加一个默认值.避免NoneType导致的异常.
     if unit_rate_list==None:
         unit_rate_list =[1, 1, 1] # _DEFAULT_MULTI_GRID
-
+    print("scope:%s,stride:%d"%(scope,stride))
     return Block(scope, xception_module, [{
       'depth_list': depth_list,
       'skip_connection_type': skip_connection_type,
@@ -360,12 +362,12 @@ def xception_65(inputs,
                        num_units=1,
                        stride=2),
         xception_block('entry_flow/block3',
-                      depth_list=[728,728,728],
-                      skip_connection_type='conv',
-                      activation_fn_in_separable_conv=False,
-                      regularize_depthwise=regularize_depthwise,
-                      num_units=1,
-                      stride=2),
+                       depth_list=[728,728,728],
+                       skip_connection_type='conv',
+                       activation_fn_in_separable_conv=False,
+                       regularize_depthwise=regularize_depthwise,
+                       num_units=1,
+                       stride=2),
         
         xception_block('middle_flow/block1',
                       depth_list=[728,728,728],
@@ -467,17 +469,22 @@ def get_network(network_name, preprocess_images, arg_scope=None):
                               *args,**kwargs)
     return network_fn
     
+#BLOCK1_BUG: 对extract_features返回的features经aspp后做concat时遇到tensor size不一致问题.
+#            定位根源是: `stack_blocks_dense`函数会从1成比例跨到到期望的output_stride,如果满足的话,以后的block就会用
+#                         stride=1的参数去做了.这也是合理的,否则的话网络的stride会大于期望的output_stride.
+#                         如果不明白的话,要注意它们这些entry,middle,exit flow是 级联的.
 
 def local_extract_features(
-    features,
-    output_stride,
-    multi_grid,
-    model_variant,
-    depth_multiplier,
-    weight_decay=0.0001,
-    reuse=None,
-    is_training=False,
-    fine_tune_batch_norm=False):
+        features,
+        output_stride=8,
+        multi_grid=None,
+        depth_multiplier=1.0,
+        weight_decay=0.0001,
+        reuse=None,
+        is_training=False,
+        fine_tune_batch_norm=False,
+        regularize_depthwise=False):
+
     """对于特定的模型抽取features
     
     """
@@ -485,13 +492,13 @@ def local_extract_features(
     arg_scope=xception_arg_scope(weight_decay=weight_decay,batch_norm_decay=0.9997,
                                batch_norm_epsilon=1e-3,
                                batch_norm_scale=True,
-                               regularize_depthwise=False)
+                               regularize_depthwise=regularize_depthwise)
     temp_network=get_network(network_name="exception",preprocess_images=True,arg_scope=arg_scope)
     features,endpoints=temp_network(inputs=features,
                  num_classes=None,
                 is_training=is_training,
                 global_pool=False,
-                 output_stride=8,
+                 output_stride=output_stride, ### BLOCK1_BUG: 此处不能是8,应该采用传入的值16.
                  multi_grid=None,
                  reuse=reuse,
                  scope='xception_65')
@@ -516,7 +523,6 @@ def extract_features(features,
         features,
         output_stride=model_options.output_stride,
         multi_grid=model_options.multi_grid,
-        model_variant=model_options.model_variant,
         depth_multiplier=model_options.depth_multiplier,
         weight_decay=weight_decay,
         reuse=reuse,

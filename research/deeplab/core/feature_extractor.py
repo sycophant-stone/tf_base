@@ -246,6 +246,22 @@ def extract_features(images,
   Raises:
     ValueError: Unrecognized model variant.
   """
+
+  print("extract_features: images=%s",images)
+  print("extract_features: output_stride=%s",  output_stride)
+  print("extract_features: multi_grid=%s",  multi_grid)
+  print("extract_features: depth_multiplier=%s",  depth_multiplier)
+  print("extract_features: final_endpoint=%s",  final_endpoint)
+  print("extract_features: model_variant=%s",  model_variant)
+  print("extract_features: weight_decay=%s",  weight_decay)
+  print("extract_features: reuse=%s",  reuse)
+  print("extract_features: is_training=%s",  is_training)
+  print("extract_features: fine_tune_batch_norm=%s",  fine_tune_batch_norm)
+  print("extract_features: regularize_depthwise=%s",  regularize_depthwise)
+  print("extract_features: preprocess_images=%s",  preprocess_images)
+  print("extract_features: num_classes=%s",  num_classes)
+  print("extract_features: global_pool=%s",  global_pool)
+
   if 'resnet' in model_variant:
     arg_scope = arg_scopes_map[model_variant](
         weight_decay=weight_decay,
