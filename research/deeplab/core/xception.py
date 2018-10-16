@@ -339,7 +339,6 @@ def stack_blocks_dense(net,
 
   # The atrous convolution rate parameter.
   rate = 1
-
   for block in blocks:
     with tf.variable_scope(block.scope, 'block', [net]) as sc:
       for i, unit in enumerate(block.args):

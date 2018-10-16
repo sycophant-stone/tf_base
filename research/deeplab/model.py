@@ -645,9 +645,17 @@ def get_branch_logits(features,
   """
   # When using batch normalization with ASPP, ASPP has been applied before
   # in extract_features, and thus we simply apply 1x1 convolution here.
+  print("[get_branch_logits]:features:" , features)
+  #print("[get_branch_logits]:num_classes:" , num_classes)
+  #print("[get_branch_logits]:atrous_rates:" , atrous_rates)
+  #print("[get_branch_logits]:aspp_with_batch_norm:",  aspp_with_batch_norm)
+  print("[get_branch_logits]:kernel_size:" , kernel_size)
+  #print("[get_branch_logits]:weight_decay:" , weight_decay)
+  #print("[get_branch_logits]:reuse:" , reuse)
+  #print("[get_branch_logits]:scope_suffix:",  scope_suffix)
   if aspp_with_batch_norm or atrous_rates is None:
     if kernel_size != 1:
-      raise ValueError('Kernel size must be 1 when atrous_rates is None or '
+      raise ValueError('Kernel size must be 1 whe#n atrous_rates is None or '
                        'using aspp_with_batch_norm. Gets %d.' % kernel_size)
     atrous_rates = [1]
 

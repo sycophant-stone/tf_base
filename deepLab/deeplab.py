@@ -34,6 +34,7 @@ resize_factor=None
 dataset_split="train"
 is_training=True
 image_pyramid=None
+atrous_rates=[6,12,18]
 
 '''"jkcloud", "win10", "shiyan_ai" '''
 GLB_ENV="win10"
@@ -850,8 +851,8 @@ def _get_logits(images,model_options,weight_decay=0.0001,reuse=None,is_training=
         fine_tune_batch_norm=fine_tune_batch_norm)
     
     # 如果decoder 有特殊定义的stride.需要对decoder size做scale
-    if model_option.decoder_output_stride is not None:
-        if model_option.crop_size is None:
+    if model_options.decoder_output_stride is not None:
+        if model_options.crop_size is None:
             height=tf.shape(images)[1]
             width=tf.shape(images)[2]
         else:
