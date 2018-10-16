@@ -409,7 +409,8 @@ def extract_features(images,
             resize_width = None
           image_feature.set_shape([None, resize_height, resize_width, depth])
           branch_logits.append(image_feature)
-
+        
+        print(features)
         # Employ a 1x1 convolution.
         branch_logits.append(slim.conv2d(features, depth, 1,
                                          scope=ASPP_SCOPE + str(0)))

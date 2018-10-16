@@ -35,8 +35,8 @@ dataset_split="train"
 is_training=True
 image_pyramid=None
 
-'''"jkcloud", "win10", "shiyan.ai" '''
-GLB_ENV="shiyan.ai"
+'''"jkcloud", "win10", "shiyan_ai" '''
+GLB_ENV="jkcloud"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
@@ -49,7 +49,7 @@ elif GLB_ENV=="jkcloud":
     # Settings for logging.
     train_logdir = "/output"  # jikecloud只有/output可以用tensorboard
     tf_initial_checkpoint = None
-elif GLB_ENV=="shiyan.ai":
+elif GLB_ENV=="shiyan_ai":
     print("WELCOM to shiyan.ai env!!!")
     dataset_dir = "/home/deeplearning/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
     train_logdir = "output"  # shiyan.ai没有根目录权限
@@ -588,17 +588,19 @@ def extract_features(features,
                 # 插值成resize的feature map
                 image_feature=tf.image.resize_bilinear(image_feature,size=[resize_height,resize_width],
                                                       align_corners=True)
-                '''
+                
                 if isinstance(resize_height,tf.Tensor):
                     resize_height=None
                 if isinstance(resize_width,tf.Tensor):
                     resize_width=None
-                '''
+                
                 image_feature.set_shape([None,resize_height,resize_width,depth])
+                print("image_feature:%s "%(image_feature))
                 branch_logits.append(image_feature)
             
             # step 2 对features做1x1卷积,注意此处并不是对经过pooling的image_feature做1x1卷积.
             # 融合A部分(ASPP) 需要1x1
+            print("features:",features)
             temp=slim.conv2d(features,depth,1,scope=ASPP_SCOPE+str(0))
             branch_logits.append(temp)
             
