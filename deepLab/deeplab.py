@@ -3,6 +3,7 @@ import os
 import tensorflow as tf
 import common
 import collections
+import six
 from tensorflow.contrib.slim.nets import resnet_utils
 from deployment import model_deploy
 import tensorflow.contrib.slim as slim
@@ -37,7 +38,7 @@ image_pyramid=None
 atrous_rates=[6,12,18]
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV="win10"
+GLB_ENV="shiyan_ai"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
@@ -802,15 +803,15 @@ def get_branch_logits(features,
     """
     # 当aspp应用bn时,在extract_features之前就用上aspp,这里采用1x1的conv
     if aspp_with_batch_norm or atrous_rates is None:
-        if atrous_rates!=1:
+        if kernel_size!=1:
             #如果有bn的atrous也有,证明是aspp.需要加一个1x1的conv
             raise ValueError('kernel size must be 1')
         atrous_rates=[1]
     
     with slim.arg_scope(# slim.arg_scope作用就是我们可以预先写一些个参数,以后再调用op的时候可以不用写了,减少书写.
         [slim.conv2d],
-        weight_regularizer=slim.l2_regularizer(weight_decay),
-        weight_initializer=tf.truncated_normal_initializer(stddev=0.01),
+        weights_regularizer=slim.l2_regularizer(weight_decay),
+        weights_initializer=tf.truncated_normal_initializer(stddev=0.01),
         reuse=reuse):
         with tf.variable_scope(LOGITS_SCOPE_NAME,LOGITS_SCOPE_NAME,[features]):
             branch_logits=[] # 对每个atrous算一个分支,对于每个分支都存一个logits.
@@ -971,7 +972,7 @@ def multi_scale_logits(images,
         if len(image_pyramid)==1:
             for output in sorted(model_options.outputs_to_num_classes):
                 # 第k个scaler fractor对应的LOGITS_SCOPE_NAME,AKA,"logits"
-                outputs_to_scales_to_logits[output][LOGITS_SCOPE_NAME]=outputs_to_logits[output]
+                outputs_to_scales_to_logits[output][MERGED_LOGITS_SCOPE]=outputs_to_logits[output]
             
             return outputs_to_scales_to_logits
         
@@ -1570,8 +1571,8 @@ def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
         fine_tune_batch_norm=fine_tune_batch_norm)
     # 添加一些助记名字
     output_type_dict=outputs_to_scales_to_logits["semantic"]
-    output_type_dict[MERGED_LOGITS_SCOPE]=tf.identity(
-        output_type_dict[MERGED_LOGITS_SCOPE],
+    output_type_dict["merged_logits"]=tf.identity(
+        output_type_dict["merged_logits"],
         name="semantic")
     
     for output,num_classes in six.iteritems(outputs_to_num_classes):
