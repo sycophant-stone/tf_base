@@ -790,6 +790,7 @@ def refine_by_decoder(features,
         
     
 #-------------------------------------------------------------------------------
+
 def get_branch_logits(features,
                       num_class,
                       atrous_rates=None,
@@ -1539,6 +1540,43 @@ def get_samples(dataset,
     
 #---
 
+
+def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
+                                                  labels,
+                                                  num_classes,
+                                                  ignore_label,
+                                                  loss_weight=1.0,
+                                                  upsample_logits=True,
+                                                  scope=None):
+    """构建loss function
+    """
+    if labels is None:
+        print("[add_softmax_cross_entropy_loss_for_each_scale]: label is needed.")
+        raise ValueError('No label for softmax cross entropy loss.')
+    
+    for scale,logits in six.iteritems(scales_to_logits):
+        print("[add_softmax_cross_entropy_loss_for_each_scale]: scale:%s, logits:%s"%(scale,logits))
+        loss_scope=None
+        if scope:
+            loss_scope='%s_%s'%(scope,scale)
+            print("loss_scope:%s",loss_scope)
+        if upsample_logits:
+            print("Label is not downsampled, and instead we upsample logits.")
+            logits=tf.image.resize_bilinear(logits,resolve_shape(labels,4)[1:3],align_corners=True)
+            scaled_labels=labels
+        else:
+            print("Label is downsampled to the same size as logits.")
+            scaled_labels=tf.image.resize_nearest_neighbor(labels,resolve_shape(logits,4)[1:3],align_corners=True)
+        scaled_labels=tf.shape(scaled_labels,shape=[-1])
+        not_ignore_mask = tf.to_float(tf.not_equal(scaled_labels,ignore_label)) * loss_weight
+        one_hot_labels = slim.one_hot_encoding(scaled_labels, num_classes, on_value=1.0, off_value=0.0)
+        tf.losses.softmax_cross_entropy(
+            one_hot_labels,
+            tf.reshape(logits, shape=[-1, num_classes]),
+            weights=not_ignore_mask,
+            scope=loss_scope)
+
+
 def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
     """构建deeplab网络
     inputs_queue:
@@ -1577,7 +1615,7 @@ def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
     
     for output,num_classes in six.iteritems(outputs_to_num_classes):
         # softmax
-        train_utils.add_softmax_cross_entropy_loss_for_each_scale(
+        add_softmax_cross_entropy_loss_for_each_scale(
             outputs_to_scales_to_logits[output],
             samples["label"],
             ignore_labels,
