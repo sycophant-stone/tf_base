@@ -228,6 +228,7 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
 def main(unused_argv):
   tf.logging.set_verbosity(tf.logging.INFO)
   # Set up deployment (i.e., multi-GPUs and/or multi-replicas).
+  FLAGS.tf_initial_checkpoint = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\init_models\\deeplabv3_pascal_train_aug\\model.ckpt"
   config = model_deploy.DeploymentConfig(
       num_clones=FLAGS.num_clones,
       clone_on_cpu=FLAGS.clone_on_cpu,
@@ -295,7 +296,7 @@ def main(unused_argv):
       # the updates for the batch_norm variables created by model_fn.
       first_clone_scope = config.clone_scope(0)
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, first_clone_scope)
-
+      print("tf.GraphKeys.UPDATE_OPS: update_ops",update_ops)
     # Gather initial summaries.
     summaries = set(tf.get_collection(tf.GraphKeys.SUMMARIES))
 

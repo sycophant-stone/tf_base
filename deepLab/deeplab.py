@@ -38,7 +38,7 @@ image_pyramid=None
 atrous_rates=[6,12,18]
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV="shiyan_ai"
+GLB_ENV="win10"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
@@ -1013,7 +1013,7 @@ clone_on_cpu=False# 'Use CPUs to deploy clones.')
 num_replicas=1# 'Number of worker replicas.')
 
 
-startup_delay_steps=15#                     'Number of training steps between replicas startup.')
+startup_delay_steps=15 #                     'Number of training steps between replicas startup.')
 
 
 num_ps_tasks=0#                     'The number of parameter servers. If the value is 0# then '                     'the parameters are handled locally by the worker.')
@@ -1022,7 +1022,7 @@ num_ps_tasks=0#                     'The number of parameter servers. If the val
 master=''   #'='BNS name of the tensorflow server')
 
 
-task=0# 'The task ID.')
+task=0 # 'The task ID.')
 
 
 log_steps=10 # Display logging information at every log_steps.')
@@ -1041,7 +1041,7 @@ learning_policy='poly'#                  'Learning rate policy for training.')
 
 # Use 0.007 when training on PASCAL augmented training set# train_aug. When
 # fine-tuning on PASCAL trainval set# use learning rate=0.0001.
-base_learning_rate=.0001#                   'The base learning rate for model training.')
+base_learning_rate=0.0001#                   'The base learning rate for model training.')
 
 learning_rate_decay_factor=0.1#                   'The rate to decay the base learning rate.')
 
@@ -1230,7 +1230,7 @@ _PROB_OF_FLIP = 0.5
 def resolve_shape(tensor, rank=None, scope=None):
     """返回该tensor的full shape
     """
-    with tf.name_scope(scope,'resolve_shape',[tendor]):
+    with tf.name_scope(scope,'resolve_shape',[tensor]):
         if rank is not None:
             shape=tensor.get_shape().with_rank(rank).as_list()
         else:
@@ -1569,7 +1569,7 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
             print("Label is downsampled to the same size as logits.")
             print("logits:%s,after resolve logits:%s"%(logits,resolve_shape(logits,4)))
             scaled_labels=tf.image.resize_nearest_neighbor(labels,resolve_shape(logits,4)[1:3],align_corners=True)
-        scaled_labels=tf.shape(scaled_labels,shape=[-1])
+        scaled_labels=tf.reshape(scaled_labels,shape=[-1])# shape=[-1]将把目标展平成1D的尺寸.
         not_ignore_mask = tf.to_float(tf.not_equal(scaled_labels,ignore_label)) * loss_weight
         one_hot_labels = slim.one_hot_encoding(scaled_labels, num_classes, on_value=1.0, off_value=0.0)
         tf.losses.softmax_cross_entropy(
@@ -1599,15 +1599,15 @@ def get_model_learning_rate(
                                    global_step,
                                    learning_rate_decay_step,
                                    learning_rate_decay_factor)
-    elif learing_policy=='poly':
-        learning_rate=tf.train.exponential_decay(base_learing_rate,
+    elif learning_policy=='poly':
+        learning_rate=tf.train.polynomial_decay(base_learning_rate,
                                                 global_step,
                                                 training_number_of_steps,
                                                 end_learning_rate=0,
                                                 power=learning_power)
     else:
         raise ValueError('Unknown learning policy.')
-    print("[get_model_learning_rate]:global_step:%s,slow_start_step:%d,current_learning_rate:%d,slow_start_learing_rate:%d"%(global_step,slow_start_step,slow_start_learning_rate))
+    print("[get_model_learning_rate]:global_step:%s,slow_start_step:%s,current_learning_rate:%s,slow_start_learing_rate:%s"%(global_step,slow_start_step,learning_rate,slow_start_learning_rate))
     return tf.where(global_step < slow_start_step, slow_start_learning_rate,
                   learning_rate)
 
@@ -1711,9 +1711,10 @@ def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
         add_softmax_cross_entropy_loss_for_each_scale(
             outputs_to_scales_to_logits[output],
             samples["label"],
-            ignore_labels,
+            num_classes,
+            ignore_label=ignore_labels,
             loss_weight=1.0,
-            upsampling_logits=upsample_logits, #Upsample logits during training
+            upsample_logits=upsample_logits, #Upsample logits during training
             scope=output)
         
     return outputs_to_scales_to_logits
@@ -1753,24 +1754,25 @@ def train():
                 dataset_split=train_split,
                 is_training=True)
             # slim.prefetch_queue生成一个queue实例.            
-            print("get samples params:")
-            print(" dataset:",dataset)
-            print(" train_crop_size:",train_crop_size)
-            print(" train_batch_size:",train_batch_size)
-            print(" min_resize_value=min_resize_value:",min_resize_value)
-            print(" max_resize_value=max_resize_value:",max_resize_value)
-            print(" resize_factor=resize_factor:",resize_factor)
-            print(" min_scale_factor=min_scale_factor:",min_scale_factor)
-            print(" max_scale_factor=max_scale_factor:",max_scale_factor)
-            print(" scale_factor_step_size=scale_factor_step_size:",scale_factor_step_size)
-            print(" dataset_split:",train_split)
-            print(" is_training=",is_training)
-            print("samples:",samples)
+            #print("get samples params:")
+            #print(" dataset:",dataset)
+            #print(" train_crop_size:",train_crop_size)
+            #print(" train_batch_size:",train_batch_size)
+            #print(" min_resize_value=min_resize_value:",min_resize_value)
+            #print(" max_resize_value=max_resize_value:",max_resize_value)
+            #print(" resize_factor=resize_factor:",resize_factor)
+            #print(" min_scale_factor=min_scale_factor:",min_scale_factor)
+            #print(" max_scale_factor=max_scale_factor:",max_scale_factor)
+            #print(" scale_factor_step_size=scale_factor_step_size:",scale_factor_step_size)
+            #print(" dataset_split:",train_split)
+            #print(" is_training=",is_training)
+            #print("samples:",samples)
             
             inputs_queue=prefetch_queue.prefetch_queue(samples,capacity=128 * config.num_clones)
             
         with tf.device(config.variables_device()):
             global_step=tf.train.get_or_create_global_step() # 为当前图获得(有必要的话去创建)一个全局步数计数的tensor,一个graph只有一个这样的tensor.
+            print("[train]:Define the model and create clones.")
             model_args=(inputs_queue,{
                 "semantic":dataset.num_classes
             },dataset.ignore_label)
@@ -1778,24 +1780,26 @@ def train():
             
             # 收集第一个clone的updates,可能有bn变量的update.
             first_clone_scope=config.clone_scope(0)
-            update_ops=tf.get_collection(tf.Graphkeys.UPDATE_OPS,first_clone_scope)
+            print("tf.Graphkeys.UPDATE_OPS",tf.GraphKeys.UPDATE_OPS)
+            update_ops=tf.get_collection(tf.GraphKeys.UPDATE_OPS,first_clone_scope)
+
             
         # 创建opt
         with tf.device(config.optimizer_device()):
-            learing_rate=get_model_learning_rate(
-                learing_policy,
-                base_learing_rate,
-                learing_rate_decay_step,
-                learing_rate_decay_factor,
+            learning_rate=get_model_learning_rate(
+                learning_policy,
+                base_learning_rate,
+                learning_rate_decay_step,
+                learning_rate_decay_factor,
                 training_number_of_steps,
                 learning_power,
                 slow_start_step,
-                slow_start_learing_rate)
-            optimizer=tf.train.MomentumOptimizer(learing_rate,momentum)
+                slow_start_learning_rate)
+            optimizer=tf.train.MomentumOptimizer(learning_rate,momentum)
             # add summary
-        startup_delay_steps=task*startup_delay_steps
+        startup_delay_steps=15*task #startup_delay_steps=15#
         # loss和opt
-        with tf.device(config.variables_devices()):
+        with tf.device(config.variables_device()):
             total_loss,grads_and_vars=model_deploy.optimize_clones(clones,optimizer)
             total_loss=tf.check_numerics(total_loss,'total loss is inf or nan')
             # summary total loss
@@ -1822,11 +1826,11 @@ def train():
             grads_update=optimizer.apply_gradients(grads_and_vars,global_step=global_step)
             update_ops.append(grads_update)
             update_op=tf.group(*update_ops) # 把这些op组合在一起.
-            with tf.control_dependencies[update_op]:
+            with tf.control_dependencies([update_op]): # BLOCK1_BUG:注意这里是()引用.
                 train_tensor=tf.identity(total_loss,name="train_op")
             
             session_config=tf.ConfigProto(allow_soft_placement=True,log_device_placement=False)
-            slim.learn.train(
+            slim.learning.train(
                 train_tensor,
                 logdir=train_logdir,
                 log_every_n_steps=log_steps,
@@ -1841,7 +1845,7 @@ def train():
                     initialize_last_layer,
                     last_layers,
                     ignore_missing_vars=True),
-                summary_op=summary_op,
+                #summary_op=summary_op,
                 save_summaries_secs=save_summaries_secs,
                 save_interval_secs=save_interval_secs
             )

@@ -113,6 +113,7 @@ def get_model_init_fn(train_logdir,
   variables_to_restore = slim.get_variables_to_restore(exclude=exclude_list)
 
   if variables_to_restore:
+    print("[get_model_init_fn]:variables_to_restore", variables_to_restore)
     return slim.assign_from_checkpoint_fn(
         tf_initial_checkpoint,
         variables_to_restore,
