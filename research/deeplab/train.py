@@ -186,7 +186,7 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
       'logits_1.50'.
   """
   samples = inputs_queue.dequeue()
-
+  print("[_build_deeplab]:inputs_queue:%s,samples:%s" % (inputs_queue, samples))
   # Add name to input and label nodes so we can add to summary.
   samples[common.IMAGE] = tf.identity(
       samples[common.IMAGE], name=common.IMAGE)
@@ -280,7 +280,7 @@ def main(unused_argv):
       print("samples:",samples)        
       inputs_queue = prefetch_queue.prefetch_queue(
           samples, capacity=128 * config.num_clones)
-
+      print("[train]: num_clones:%s,samples:%s,inputs_queue:%s" % (config.num_clones, samples, inputs_queue))
     # Create the global step on the device storing the variables.
     with tf.device(config.variables_device()):
       global_step = tf.train.get_or_create_global_step()

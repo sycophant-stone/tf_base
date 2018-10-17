@@ -43,8 +43,9 @@ GLB_ENV="win10"
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
     dataset_dir="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\tfrecord"
-    train_logdir = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\output"
-    tf_initial_checkpoint = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\init_models\\deeplabv3_pascal_train_aug\\model.ckpt"
+    train_logdir = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\output_new"
+    #tf_initial_checkpoint = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\init_models\\deeplabv3_pascal_train_aug\\model.ckpt"
+    tf_initial_checkpoint = None
 elif GLB_ENV=="jkcloud":
     print("WELCOM to jkcloud env!!!")
     dataset_dir = "/work/gi/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
@@ -1680,7 +1681,9 @@ def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
     return:
             返回deeplab网络
     """
+
     samples=inputs_queue.dequeue() # 从队列中取出样本
+    print("[_build_deeplab]:inputs_queue:%s,samples:%s"%(inputs_queue,samples))
     # 添加一些助记名字
     samples["image"]=tf.identity(samples["image"],name="image")
     samples["label"]=tf.identity(samples["label"],name="label")
@@ -1769,7 +1772,7 @@ def train():
             #print("samples:",samples)
             
             inputs_queue=prefetch_queue.prefetch_queue(samples,capacity=128 * config.num_clones)
-            
+            print("[train]: num_clones:%s,samples:%s,inputs_queue:%s"%(config.num_clones,samples,inputs_queue))
         with tf.device(config.variables_device()):
             global_step=tf.train.get_or_create_global_step() # 为当前图获得(有必要的话去创建)一个全局步数计数的tensor,一个graph只有一个这样的tensor.
             print("[train]:Define the model and create clones.")
@@ -1846,7 +1849,7 @@ def train():
                     last_layers,
                     ignore_missing_vars=True),
                 #summary_op=summary_op,
-                save_summaries_secs=save_summaries_secs,
+                #save_summaries_secs=save_summaries_secs,
                 save_interval_secs=save_interval_secs
             )
 
