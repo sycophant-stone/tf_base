@@ -1553,7 +1553,7 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
     if labels is None:
         print("[add_softmax_cross_entropy_loss_for_each_scale]: label is needed.")
         raise ValueError('No label for softmax cross entropy loss.')
-    
+    print("[add_softmax_cross_entropy_loss_for_each_scale]:scales_to_logits is a map: %s",scales_to_logits)
     for scale,logits in six.iteritems(scales_to_logits):
         print("[add_softmax_cross_entropy_loss_for_each_scale]: scale:%s, logits:%s"%(scale,logits))
         loss_scope=None
@@ -1562,10 +1562,12 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
             print("loss_scope:%s",loss_scope)
         if upsample_logits:
             print("Label is not downsampled, and instead we upsample logits.")
+            print("label:%s,after resolve label:%s"%(labels,resolve_shape(labels,4)))
             logits=tf.image.resize_bilinear(logits,resolve_shape(labels,4)[1:3],align_corners=True)
             scaled_labels=labels
         else:
             print("Label is downsampled to the same size as logits.")
+            print("logits:%s,after resolve logits:%s"%(logits,resolve_shape(logits,4)))
             scaled_labels=tf.image.resize_nearest_neighbor(labels,resolve_shape(logits,4)[1:3],align_corners=True)
         scaled_labels=tf.shape(scaled_labels,shape=[-1])
         not_ignore_mask = tf.to_float(tf.not_equal(scaled_labels,ignore_label)) * loss_weight
@@ -1576,7 +1578,98 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
             weights=not_ignore_mask,
             scope=loss_scope)
 
+def get_model_learning_rate(
+    learning_policy, base_learning_rate, learning_rate_decay_step,
+    learning_rate_decay_factor, training_number_of_steps, learning_power,
+    slow_start_step, slow_start_learning_rate):
+    """获得model的learning rate.
+    args:
+        learning_policy: 学习策略,分step和poly两种.
+        learning_rate_decay_step: 以固定大小decay学习率
+        step模式:
+        current_learning_rate = base_learning_rate *learning_rate_decay_factor ^ (global_step / learning_rate_decay_step)
+        poly模式:
+        current_learning_rate = base_learning_rate * (1 - global_step / training_number_of_steps) ^ learning_power
+        slow_start_step: `开始几步用比较小的学习率`对应的开始的步数
+        slow_start_learning_rate: `开始几步用较小的学习率`对应的学习率
+    """
+    global_step=tf.train.get_or_create_global_step()
+    if learning_policy=='step':
+        learning_rate=tf.train.exponential_decay(base_learning_rate,
+                                   global_step,
+                                   learning_rate_decay_step,
+                                   learning_rate_decay_factor)
+    elif learing_policy=='poly':
+        learning_rate=tf.train.exponential_decay(base_learing_rate,
+                                                global_step,
+                                                training_number_of_steps,
+                                                end_learning_rate=0,
+                                                power=learning_power)
+    else:
+        raise ValueError('Unknown learning policy.')
+    print("[get_model_learning_rate]:global_step:%s,slow_start_step:%d,current_learning_rate:%d,slow_start_learing_rate:%d"%(global_step,slow_start_step,slow_start_learning_rate))
+    return tf.where(global_step < slow_start_step, slow_start_learning_rate,
+                  learning_rate)
 
+def get_model_gradient_multipliers(last_layers, last_layer_gradient_multiplier):
+    """不同的layer拥有不同梯度系数.便于收敛.
+    args:
+        last_layers:最后一个layers.
+    """
+    gradient_multipliers={}
+    print("[get_model_gradient_multipliers]:all model variables")
+    for var in slim.get_model_variables():
+        print("[get_model_gradient_multipliers]:var:",var)
+        if 'biases' in var.op.name:
+            print("Double the learning rate for biases.")
+            gradient_multipliers[var.op.name]=2.
+        print("Use larger learning rate for last layer variables.")
+        for layer in last_layers:
+            print("[get_model_gradient_multipliers]: last layers:",layer)
+            if layer in var.op.name and 'biases' in var.op.name:
+                print("last layer's biase")
+                gradient_multipliers[var.op.name] = 2 * last_layer_gradient_multiplier
+            elif layer in var.op.name:
+                print("other last layers")
+                gradient_multipliers[var.op.name] = last_layer_gradient_multiplier
+                break
+    
+    return gradient_multipliers
+
+def get_model_init_fn(train_logdir,
+                      tf_initial_checkpoint,
+                      initialize_last_layer,
+                      last_layers,
+                      ignore_missing_vars=False):
+    """从checkpoint得到模型的初始化变量
+    args:
+        initialize_last_layer: 是否用checkpoint值初始化最后一层.这里在fine-tune时候不需要
+        ignore_missing_vars: 忽略checkpoint中的missing的变量
+    """
+    if tf_initial_checkpoint is None:
+        tf.logging.info('Not initializing the model from a checkpoint.')
+        return None
+    if tf.train.latest_checkpoint(train_logdir):
+        tf.logging.info('Ignoring initialization; other checkpoint exists')
+        return None
+    tf.logging.info('Initializing model from path: %s', tf_initial_checkpoint)
+    
+    exclude_list=['global_step']
+    print("Variables that will not be restored.")
+    if not initialize_last_layer:
+        exclude_list.extend(last_layers)
+    print("Excluded var:",exclude_list)
+    variables_to_restore = slim.get_variables_to_restore(exclude=exclude_list)
+    if variables_to_restore:
+        print("[get_model_init_fn]:variables_to_restore",variables_to_restore)
+        return slim.assign_from_checkpoint_fn(
+            tf_initial_checkpoint,
+            variables_to_restore,
+            ignore_missing_vars=ignore_missing_vars)
+    
+    return None
+    
+    
 def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
     """构建deeplab网络
     inputs_queue:
@@ -1689,7 +1782,7 @@ def train():
             
         # 创建opt
         with tf.device(config.optimizer_device()):
-            learing_rate=train_utils.get_module_learning_rate(
+            learing_rate=get_model_learning_rate(
                 learing_policy,
                 base_learing_rate,
                 learing_rate_decay_step,
@@ -1718,7 +1811,7 @@ def train():
                     'decoder',
                 ]
             # 如果梯度需要按照不同的layer自定义存在.
-            grad_mul=train_utils.get_model_gradient_multipliers(
+            grad_mul=get_model_gradient_multipliers(
                 last_layers,last_layer_gradient_multiplier
             )
             
@@ -1742,7 +1835,7 @@ def train():
                 is_chief=(task == 0),
                 session_config=session_config,
                 startup_delay_steps=startup_delay_steps,
-                init_fn=train_utils.get_model_init_fn(
+                init_fn=get_model_init_fn(
                     train_logdir,
                     tf_initial_checkpoint,
                     initialize_last_layer,
@@ -1753,18 +1846,7 @@ def train():
                 save_interval_secs=save_interval_secs
             )
 
-            
-
-                 
-                  
-                  
-            
     
 if __name__ == "__main__":
     print("main")
     train()
-                
-    
-            
-            
-    
