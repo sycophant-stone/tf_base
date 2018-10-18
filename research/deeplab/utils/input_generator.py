@@ -107,6 +107,20 @@ def get(dataset,
     ValueError: dataset_split is None, failed to find labels, or label shape
       is not valid.
   """
+  print("[get_samples]:dataset",dataset)
+  print("[get_samples]:crop_size",crop_size)
+  print("[get_samples]:batch_size",batch_size)
+  print("[get_samples]:min_resize_value",min_resize_value)
+  print("[get_samples]:max_resize_value",max_resize_value)
+  print("[get_samples]:resize_factor",resize_factor)
+  print("[get_samples]:min_scale_factor",min_scale_factor)
+  print("[get_samples]:max_scale_factor",max_scale_factor)
+  print("[get_samples]:scale_factor_step_size",scale_factor_step_size)
+  print("[get_samples]:num_readers",num_readers)
+  print("[get_samples]:num_threads",num_threads)
+  print("[get_samples]:dataset_split",dataset_split)
+  print("[get_samples]:is_training",is_training)
+
   if dataset_split is None:
     raise ValueError('Unknown dataset split.')
   if model_variant is None:
@@ -121,7 +135,12 @@ def get(dataset,
       shuffle=is_training)
   image, label, image_name, height, width = _get_data(data_provider,
                                                       dataset_split)
-  print("image:shape:",image)
+  
+  print("[get_samples]:image:",image)
+  print("[get_samples]:label:",label)
+  print("[get_samples]:image_name:",image_name)
+  print("[get_samples]:height:",height)
+  print("[get_samples]:width:",width)
   if label is not None:
     if label.shape.ndims == 2:
       label = tf.expand_dims(label, 2)

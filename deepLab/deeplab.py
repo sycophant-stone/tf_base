@@ -38,7 +38,7 @@ image_pyramid=None
 atrous_rates=[6,12,18]
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV="win10"
+GLB_ENV="shiyan_ai"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
@@ -1210,14 +1210,14 @@ def _get_data(data_provider,dataset_split):
     """
     if "labels_class" not in data_provider.list_items():
         raise ValueError("labels_class not in dataset")
-    
+    print("[_get_data]:data_provider.list_items():",data_provider.list_items())
     image,height,width=data_provider.get(["image","height","width"])
     logger.debug('_get_data,image:%s'%image)
     logger.debug('_get_data,height:%s'%height)
     logger.debug('_get_data,widht:%s'%width)
     
     if "image_name" in data_provider.list_items():
-        image_name=data_provider.get(["image_name"])
+        image_name,=data_provider.get(["image_name"]) #要有","号.
     else:
         image_name=tf.constant('')
     label=None
@@ -1494,9 +1494,28 @@ def get_samples(dataset,
         2. 预处理 raw data
         3. batching 预处理产生的data,其结果可直接被用作train,test
         """
+        print("[get_samples]:dataset",dataset)
+        print("[get_samples]:crop_size",crop_size)
+        print("[get_samples]:batch_size",batch_size)
+        print("[get_samples]:min_resize_value",min_resize_value)
+        print("[get_samples]:max_resize_value",max_resize_value)
+        print("[get_samples]:resize_factor",resize_factor)
+        print("[get_samples]:min_scale_factor",min_scale_factor)
+        print("[get_samples]:max_scale_factor",max_scale_factor)
+        print("[get_samples]:scale_factor_step_size",scale_factor_step_size)
+        print("[get_samples]:num_readers",num_readers)
+        print("[get_samples]:num_threads",num_threads)
+        print("[get_samples]:dataset_split",dataset_split)
+        print("[get_samples]:is_training",is_training)
+
         data_provider=dataset_data_provider.DatasetDataProvider(dataset,num_readers,num_epochs=None if is_training else 1, shuffle=is_training)
         image, label, image_name, height, width=_get_data(data_provider,dataset_split)
-        print("image: shape:",image)
+        print("[get_samples]:image:",image)
+        print("[get_samples]:label:",label)
+        print("[get_samples]:image_name:",image_name)
+        print("[get_samples]:height:",height)
+        print("[get_samples]:width:",width)
+        print("[get_samples]:label.shape.ndims:%d,label.shape.dims[2]:%d"%(label.shape.ndims,label.shape.dims[2]))
         if label is not None:
             if label.shape.ndims == 2:
                 label = tf.expand_dims(label, 2)
@@ -1505,7 +1524,8 @@ def get_samples(dataset,
         else:
             raise ValueError('Input label shape must be [height, width], or '
                              '[height, width, 1].')
-        label.set_shape([None, None, 1])
+            label.set_shape([None, None, 1]) #注意缩进等级
+            
         original_image, image, label=preprocess_image_and_label(
             image,
             label,
@@ -1519,18 +1539,20 @@ def get_samples(dataset,
             scale_factor_step_size=scale_factor_step_size,
             ignore_label=dataset.ignore_label,
             is_training=is_training)
-        print("after preprocess image: shape:",image)
         sample={
             "image":image,
             "image_name":image_name,
             "height":height,
-            "width":width,
+            "width":width
         }
         if label is not None:
             sample["label"]=label
         if not is_training:
             sample["original_image"]=original_image
-            
+        print("[get_samples]:after preprocess original_image:",original_image)
+        print("[get_samples]:after preprocess image:",image)
+        print("[get_samples]:after preprocess label:",label)
+        print("[get_samples]:after preprocess sample:",sample)
         return tf.train.batch(
             sample,
             batch_size=batch_size,
@@ -1681,8 +1703,10 @@ def _build_deeplab(inputs_queue,outputs_to_num_classes,ignore_labels):
     return:
             返回deeplab网络
     """
-
-    samples=inputs_queue.dequeue() # 从队列中取出样本
+    print("[_build_deeplab]:inputs_queue",inputs_queue)
+    print("[_build_deeplab]:outputs_to_num_classes",outputs_to_num_classes)
+    print("[_build_deeplab]:ignore_labels",ignore_labels)
+    samples=inputs_queue.dequeue() 
     print("[_build_deeplab]:inputs_queue:%s,samples:%s"%(inputs_queue,samples))
     # 添加一些助记名字
     samples["image"]=tf.identity(samples["image"],name="image")
@@ -1772,14 +1796,20 @@ def train():
             #print("samples:",samples)
             
             inputs_queue=prefetch_queue.prefetch_queue(samples,capacity=128 * config.num_clones)
+            #samples_try=inputs_queue.dequeue()
+            #print("[train]:samples_try",samples_try)
             print("[train]: num_clones:%s,samples:%s,inputs_queue:%s"%(config.num_clones,samples,inputs_queue))
+            
         with tf.device(config.variables_device()):
             global_step=tf.train.get_or_create_global_step() # 为当前图获得(有必要的话去创建)一个全局步数计数的tensor,一个graph只有一个这样的tensor.
             print("[train]:Define the model and create clones.")
+            model_fn = _build_deeplab
             model_args=(inputs_queue,{
                 "semantic":dataset.num_classes
             },dataset.ignore_label)
-            clones=model_deploy.create_clones(config,_build_deeplab,model_args)
+            print("[train]:model_fn",model_fn)
+            print("[train]:model_args",model_args)
+            clones=model_deploy.create_clones(config=config,model_fn=model_fn,args=model_args)
             
             # 收集第一个clone的updates,可能有bn变量的update.
             first_clone_scope=config.clone_scope(0)
