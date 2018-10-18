@@ -182,7 +182,10 @@ def get_dataset(dataset_name, split_name, dataset_dir):
           format_key='image/segmentation/class/format',
           channels=1),
   }
-
+  print("[get_dataset]:splite_size:%s,num_classes:%s,ignore_label:%s"%(splits_to_sizes,num_classes,ignore_label))
+  print("[get_dataset]:file_pattern:%s"%(file_pattern))
+  print("[get_dataset]:keys_to_features:%s"%(keys_to_features))
+  print("[get_dataset]:items_to_handlers:%s"%(items_to_handlers))    
   decoder = tfexample_decoder.TFExampleDecoder(
       keys_to_features, items_to_handlers)
 

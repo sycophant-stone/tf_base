@@ -38,7 +38,7 @@ image_pyramid=None
 atrous_rates=[6,12,18]
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV="shiyan_ai"
+GLB_ENV="jkcloud"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
@@ -48,10 +48,11 @@ if GLB_ENV=="win10":
     tf_initial_checkpoint = None
 elif GLB_ENV=="jkcloud":
     print("WELCOM to jkcloud env!!!")
-    dataset_dir = "/work/gi/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
+    dataset_dir = "/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
     # Settings for logging.
     train_logdir = "/output"  # jikecloud只有/output可以用tensorboard
-    tf_initial_checkpoint = None
+    #tf_initial_checkpoint = None
+    tf_initial_checkpoint="/work/tf_base/research/deeplab/datasets/pascal_voc_seg/init_models/deeplabv3_pascal_train_aug/model.ckpt"
 elif GLB_ENV=="shiyan_ai":
     print("WELCOM to shiyan.ai env!!!")
     dataset_dir = "/home/deeplearning/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
@@ -1120,18 +1121,31 @@ _ITEMS_TO_DESCRIPTIONS = {
 datasetDescriptor=collections.namedtuple(
     'DatasetDescriptor',
     [
-        'splits_to_size',
+        'splits_to_sizes',
         'num_classes', # 分类,包含背景类.例如pascal是20分类+1个背景
         'ignore_label'
     ]
 )
+##BLOCK1_BUG:
+#    提示input_queue.dequeue()出错误. 定位到这里,应该是dataset本身解析就有错误.采用错误的数据格式解析得到错误的值.
+#    因此会导致get samples时候报错误.
+#_PASCAL_VOC=datasetDescriptor(
+#    splits_to_size={
+#        'train':2975,
+#        'val':500,
+#    },
+#    num_classes=19,
+#    ignore_label=255,
+#)
 
-_PASCAL_VOC=datasetDescriptor(
-    splits_to_size={
-        'train':2975,
-        'val':500,
+_PASCAL_VOC = datasetDescriptor(
+    splits_to_sizes={
+        'train': 1464,
+        'train_aug': 10582,
+        'trainval': 2913,
+        'val': 1449,
     },
-    num_classes=19,
+    num_classes=21,
     ignore_label=255,
 )
 
@@ -1152,13 +1166,16 @@ dataset_data_provider = slim.dataset_data_provider
 def get_dataset(dataset_name,split_name,dataset_dir):
     """获得slim dataset实例
     """
-    splite_size=_PASCAL_VOC.splits_to_size
+    splite_size=_PASCAL_VOC.splits_to_sizes
     num_classes=_PASCAL_VOC.num_classes
     ignore_label=_PASCAL_VOC.ignore_label
+    print("[get_dataset]:splite_size:%s,num_classes:%s,ignore_label:%s"%(splite_size,num_classes,ignore_label))
     
+    if split_name not in splite_size:
+        raise ValueError('data split name %s not recognized' % split_name)
     # file pattern
     file_pattern=os.path.join(dataset_dir,'%s-*' % split_name)
-    
+    print("[get_dataset]:file_pattern:%s"%(file_pattern))
     # TF 解码协议
     keys_to_features={
         'image/encoded':tf.FixedLenFeature(
@@ -1184,6 +1201,8 @@ def get_dataset(dataset_name,split_name,dataset_dir):
             format_key='image/segmentation/class/format',
             channels=1),
     }
+    print("[get_dataset]:keys_to_features:%s"%(keys_to_features))
+    print("[get_dataset]:items_to_handlers:%s"%(items_to_handlers))
     decoder=tfexample_decoder.TFExampleDecoder(
         keys_to_features,
         items_to_handlers)
@@ -1671,17 +1690,23 @@ def get_model_init_fn(train_logdir,
     """
     if tf_initial_checkpoint is None:
         tf.logging.info('Not initializing the model from a checkpoint.')
+        print("[get_model_init_fn]:Not initializing the model from a checkpoint")
         return None
     if tf.train.latest_checkpoint(train_logdir):
         tf.logging.info('Ignoring initialization; other checkpoint exists')
+        print("[get_model_init_fn]:Ignoring initialization; other checkpoint exists")
         return None
     tf.logging.info('Initializing model from path: %s', tf_initial_checkpoint)
-    
+    print("[get_model_init_fn]:train_logdir",train_logdir)
+    print("[get_model_init_fn]:tf_initial_checkpoint",tf_initial_checkpoint)
+    print("[get_model_init_fn]:initialize_last_layer",initialize_last_layer)
+    print("[get_model_init_fn]:last_layers",last_layers)
+    print("[get_model_init_fn]:ignore_missing_vars",ignore_missing_vars)
     exclude_list=['global_step']
-    print("Variables that will not be restored.")
+    print("[get_model_init_fn]:Variables that will not be restored.")
     if not initialize_last_layer:
         exclude_list.extend(last_layers)
-    print("Excluded var:",exclude_list)
+    print("[get_model_init_fn]:Excluded var:",exclude_list)
     variables_to_restore = slim.get_variables_to_restore(exclude=exclude_list)
     if variables_to_restore:
         print("[get_model_init_fn]:variables_to_restore",variables_to_restore)
@@ -1881,7 +1906,7 @@ def train():
                 #summary_op=summary_op,
                 #save_summaries_secs=save_summaries_secs,
                 save_interval_secs=save_interval_secs
-            )
+                )
 
     
 if __name__ == "__main__":
