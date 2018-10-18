@@ -415,6 +415,7 @@ def extract_features(images,
         branch_logits.append(slim.conv2d(features, depth, 1,
                                          scope=ASPP_SCOPE + str(0)))
 
+        print("[extract_features]:model_options.atrous_rates:", model_options.atrous_rates)
         if model_options.atrous_rates:
           # Employ 3x3 convolutions with different atrous rates.
           for i, rate in enumerate(model_options.atrous_rates, 1):
@@ -431,17 +432,20 @@ def extract_features(images,
                   features, depth, 3, rate=rate, scope=scope)
             branch_logits.append(aspp_features)
         for itm in branch_logits:
-            print(itm)
+            print("[extract_features]:branch_logits:",itm)
+
         # Merge branch logits.
         concat_logits = tf.concat(branch_logits, 3)
+        print("[extract_features]:concat the branch_logits: ", concat_logits)
         concat_logits = slim.conv2d(
             concat_logits, depth, 1, scope=CONCAT_PROJECTION_SCOPE)
+        print("[extract_features]:after slim.conv2d: ", concat_logits)
         concat_logits = slim.dropout(
             concat_logits,
             keep_prob=0.9,
             is_training=is_training,
             scope=CONCAT_PROJECTION_SCOPE + '_dropout')
-
+        print("[extract_features]:after slim.dropout: ", concat_logits)
         return concat_logits, end_points
 
 

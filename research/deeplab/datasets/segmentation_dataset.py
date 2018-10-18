@@ -188,7 +188,14 @@ def get_dataset(dataset_name, split_name, dataset_dir):
   print("[get_dataset]:items_to_handlers:%s"%(items_to_handlers))    
   decoder = tfexample_decoder.TFExampleDecoder(
       keys_to_features, items_to_handlers)
-
+  print("[dataset.Dataset]:data_sources:", file_pattern)
+  print("[dataset.Dataset]:decoder:", decoder)
+  print("[dataset.Dataset]:num_samples:", splits_to_sizes[split_name])
+  print("[dataset.Dataset]:items_to_descriptions:", _ITEMS_TO_DESCRIPTIONS)
+  print("[dataset.Dataset]:ignore_label:", ignore_label)
+  print("[dataset.Dataset]:num_classes:", num_classes)
+  print("[dataset.Dataset]:name:", dataset_name)
+  print("[dataset.Dataset]:multi_label:", True)
   return dataset.Dataset(
       data_sources=file_pattern,
       reader=tf.TFRecordReader,

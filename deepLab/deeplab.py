@@ -9,8 +9,10 @@ from deployment import model_deploy
 import tensorflow.contrib.slim as slim
 slim=tf.contrib.slim
 prefetch_queue = slim.prefetch_queue
-
-
+tfexample_decoder = slim.tfexample_decoder
+dataset = slim.dataset
+dataset_data_provider = slim.dataset_data_provider
+dataset_data_provider = slim.dataset_data_provider
 LOGITS_SCOPE_NAME = 'logits'
 MERGED_LOGITS_SCOPE = 'merged_logits'
 IMAGE_POOLING_SCOPE = 'image_pooling'
@@ -35,17 +37,21 @@ resize_factor=None
 dataset_split="train"
 is_training=True
 image_pyramid=None
+# For `xception_65`# use atrous_rates = [12# 24# 36] if output_stride = 8# or
+# rates = [6# 12# 18] if output_stride = 16. For `mobilenet_v2`# use None. Note
+# one could use different atrous_rates/output_stride during training/evaluation.
 atrous_rates=[6,12,18]
 
+
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV="jkcloud"
+GLB_ENV="win10"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
     dataset_dir="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\tfrecord"
     train_logdir = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\output_new"
-    #tf_initial_checkpoint = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\init_models\\deeplabv3_pascal_train_aug\\model.ckpt"
-    tf_initial_checkpoint = None
+    tf_initial_checkpoint = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\init_models\\deeplabv3_pascal_train_aug\\model.ckpt"
+    #tf_initial_checkpoint = None
 elif GLB_ENV=="jkcloud":
     print("WELCOM to jkcloud env!!!")
     dataset_dir = "/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
@@ -613,7 +619,8 @@ def extract_features(features,
             print("features:",features)
             temp=slim.conv2d(features,depth,1,scope=ASPP_SCOPE+str(0))
             branch_logits.append(temp)
-            
+
+            print("[extract_features]:model_options.atrous_rates:", model_options.atrous_rates)
             # ASPP,的金字塔每层采用不同的atrous rates,此处构建这组atrous pyramid
             # 融合A部分(ASPP) 需要3x3 带artous.
             if model_options.atrous_rates:
@@ -634,13 +641,16 @@ def extract_features(features,
                     branch_logits.append(aspp_features)
 
             for itm in branch_logits:
-                print(itm)
+                print("[extract_features]:branch_logits:",itm)
             # 把这些组件组合起来
             concat_logits=tf.concat(branch_logits,3) # 在通道上增加了.增加了通道
+            print("[extract_features]:concat the branch_logits: ",concat_logits)
             concat_logits=slim.conv2d(
                 concat_logits,depth,1,scope=CONCAT_PROJECTION_SCOPE)
+            print("[extract_features]:after slim.conv2d: ", concat_logits)
             concat_logits=slim.dropout(concat_logits,keep_prob=0.9,is_training=is_training,
                                       scope=CONCAT_PROJECTION_SCOPE+'_dropout')
+            print("[extract_features]:after slim.dropout: ", concat_logits)
             
     return concat_logits,end_points
                 
@@ -679,16 +689,16 @@ def split_separable_conv2d(inputs,
         weights_initializer=tf.truncated_normal_initializer(
             stddev=depthwise_weights_initializer_stddev
         ),
-        weight_regularizer=None,
+        weights_regularizer=None,
         scope=scope+'_depthwise')
     return slim.conv2d(
         outputs,# 上一层的输出,接着做1x1xfilters的point wise阶段
         filters, # 输出的filter的个数
         1,
-        weight_initializer=tf.truncated_normal_initializer(
+        weights_initializer=tf.truncated_normal_initializer(
             stddev=pointwise_weights_initializer_stddev
         ),
-        weight_regularizer=slim.l2_regularizer(weight_decay),
+        weights_regularizer=slim.l2_regularizer(weight_decay),
         scope=scope+'_pointwise')
     
 
@@ -714,7 +724,7 @@ def refine_by_decoder(features,
     
     with slim.arg_scope(
         [slim.conv2d,slim.separable_conv2d],
-        weight_regularizer=slim.l2_regualarizer(weight_decay),
+        weights_regularizer=slim.l2_regualarizer(weight_decay),
         activation_fn=tf.nn.relu,
         normalizer_fn=slim.batch_norm,
         padding='SAME',
@@ -861,7 +871,7 @@ def _get_logits(images,model_options,weight_decay=0.0001,reuse=None,is_training=
             width=tf.shape(images)[2]
         else:
             # crop存在
-            height,width=model_option.crop_size
+            height,width=model_options.crop_size
         
         # 求decoder使用的size.这个是经过decoder_output_stride之后的.
         decoder_height=cal_scaled_dim_val(height,1.0/model_options.decoder_output_stride)
@@ -1095,10 +1105,6 @@ max_scale_factor=2.#                   'Maximum scale factor for data augmentati
 
 scale_factor_step_size=0.25#                   'Scale factor step size for data augmentation.')
 
-# For `xception_65`# use atrous_rates = [12# 24# 36] if output_stride = 8# or
-# rates = [6# 12# 18] if output_stride = 16. For `mobilenet_v2`# use None. Note
-# one could use different atrous_rates/output_stride during training/evaluation.
-atrous_rates=None#                           'Atrous rates for atrous spatial pyramid pooling.')
 
 output_stride=16#                     'The ratio of input to output spatial resolution.')
                  
@@ -1118,7 +1124,7 @@ _ITEMS_TO_DESCRIPTIONS = {
     'labels_class': ('A semantic segmentation label whose size matches image.'
                      'Its values range from 0 (background) to num_classes.'),
 }
-datasetDescriptor=collections.namedtuple(
+DatasetDescriptor=collections.namedtuple(
     'DatasetDescriptor',
     [
         'splits_to_sizes',
@@ -1138,7 +1144,7 @@ datasetDescriptor=collections.namedtuple(
 #    ignore_label=255,
 #)
 
-_PASCAL_VOC = datasetDescriptor(
+_PASCAL_VOC = DatasetDescriptor(
     splits_to_sizes={
         'train': 1464,
         'train_aug': 10582,
@@ -1160,53 +1166,66 @@ train_batch_size=1
 #####--
 
 
-tfexample_decoder = slim.tfexample_decoder
-dataset = slim.dataset
-dataset_data_provider = slim.dataset_data_provider                 
+
 def get_dataset(dataset_name,split_name,dataset_dir):
     """获得slim dataset实例
     """
     splite_size=_PASCAL_VOC.splits_to_sizes
     num_classes=_PASCAL_VOC.num_classes
     ignore_label=_PASCAL_VOC.ignore_label
-    print("[get_dataset]:splite_size:%s,num_classes:%s,ignore_label:%s"%(splite_size,num_classes,ignore_label))
+
     
     if split_name not in splite_size:
         raise ValueError('data split name %s not recognized' % split_name)
     # file pattern
     file_pattern=os.path.join(dataset_dir,'%s-*' % split_name)
-    print("[get_dataset]:file_pattern:%s"%(file_pattern))
+
     # TF 解码协议
-    keys_to_features={
-        'image/encoded':tf.FixedLenFeature(
-            (),tf.string,default_value=''),
-        'image/filename':tf.FixedLenFeature((),tf.string,default_value=''),
-        'image/format':tf.FixedLenFeature((),tf.string,default_value='jpeg'),
-        'image/height':tf.FixedLenFeature((),tf.int64,default_value=0),
-        'image/width':tf.FixedLenFeature((),tf.int64,default_value=0),
-        'image/height':tf.FixedLenFeature((),tf.int64,default_value=0),
-        'image/segmentation/class/encoded':tf.FixedLenFeature((),tf.string,default_value=''),
-        'image/segmentation/class/format':tf.FixedLenFeature((),tf.string,default_value='png'),
+    keys_to_features = {
+        'image/encoded': tf.FixedLenFeature(
+            (), tf.string, default_value=''),
+        'image/filename': tf.FixedLenFeature(
+            (), tf.string, default_value=''),
+        'image/format': tf.FixedLenFeature(
+            (), tf.string, default_value='jpeg'),
+        'image/height': tf.FixedLenFeature(
+            (), tf.int64, default_value=0),
+        'image/width': tf.FixedLenFeature(
+            (), tf.int64, default_value=0),
+        'image/segmentation/class/encoded': tf.FixedLenFeature(
+            (), tf.string, default_value=''),
+        'image/segmentation/class/format': tf.FixedLenFeature(
+            (), tf.string, default_value='png'),
     }
-    items_to_handlers={
-        'image':tfexample_decoder.Image(
+    items_to_handlers = {
+        'image': tfexample_decoder.Image(
             image_key='image/encoded',
             format_key='image/format',
             channels=3),
-        'image_name':tfexample_decoder.Tensor('image/filename'),
-        'height':tfexample_decoder.Tensor('image/height'),
-        'width':tfexample_decoder.Tensor('image/width'),
-        'labels_class':tfexample_decoder.Image(
+        'image_name': tfexample_decoder.Tensor('image/filename'),
+        'height': tfexample_decoder.Tensor('image/height'),
+        'width': tfexample_decoder.Tensor('image/width'),
+        'labels_class': tfexample_decoder.Image(
             image_key='image/segmentation/class/encoded',
             format_key='image/segmentation/class/format',
             channels=1),
     }
+
+    print("[get_dataset]:splite_size:%s,num_classes:%s,ignore_label:%s" % (splite_size, num_classes, ignore_label))
+    print("[get_dataset]:file_pattern:%s"%(file_pattern))
     print("[get_dataset]:keys_to_features:%s"%(keys_to_features))
     print("[get_dataset]:items_to_handlers:%s"%(items_to_handlers))
     decoder=tfexample_decoder.TFExampleDecoder(
         keys_to_features,
         items_to_handlers)
-    
+    print("[dataset.Dataset]:data_sources:", file_pattern)
+    print("[dataset.Dataset]:decoder:", decoder)
+    print("[dataset.Dataset]:num_samples:", splite_size[split_name])
+    print("[dataset.Dataset]:items_to_descriptions:", _ITEMS_TO_DESCRIPTIONS)
+    print("[dataset.Dataset]:ignore_label:", ignore_label)
+    print("[dataset.Dataset]:num_classes:", num_classes)
+    print("[dataset.Dataset]:name:", dataset_name)
+    print("[dataset.Dataset]:multi_label:", True)
     return dataset.Dataset(
         data_sources=file_pattern,
         reader=tf.TFRecordReader,
@@ -1222,7 +1241,7 @@ def get_dataset(dataset_name,split_name,dataset_dir):
 #---
 # input get samples
 
-dataset_data_provider = slim.dataset_data_provider
+
 
 def _get_data(data_provider,dataset_split):
     """data_provider的list_items()中含有数据内容.
@@ -1805,20 +1824,20 @@ def train():
                 scale_factor_step_size=scale_factor_step_size,
                 dataset_split=train_split,
                 is_training=True)
-            # slim.prefetch_queue生成一个queue实例.            
-            #print("get samples params:")
-            #print(" dataset:",dataset)
-            #print(" train_crop_size:",train_crop_size)
-            #print(" train_batch_size:",train_batch_size)
-            #print(" min_resize_value=min_resize_value:",min_resize_value)
-            #print(" max_resize_value=max_resize_value:",max_resize_value)
-            #print(" resize_factor=resize_factor:",resize_factor)
-            #print(" min_scale_factor=min_scale_factor:",min_scale_factor)
-            #print(" max_scale_factor=max_scale_factor:",max_scale_factor)
-            #print(" scale_factor_step_size=scale_factor_step_size:",scale_factor_step_size)
-            #print(" dataset_split:",train_split)
-            #print(" is_training=",is_training)
-            #print("samples:",samples)
+            # slim.prefetch_queue生成一个queue实例.
+            print("get samples params:")
+            print(" dataset:",dataset)
+            print(" train_crop_size:",train_crop_size)
+            print(" train_batch_size:",train_batch_size)
+            print(" min_resize_value=min_resize_value:",min_resize_value)
+            print(" max_resize_value=max_resize_value:",max_resize_value)
+            print(" resize_factor=resize_factor:",resize_factor)
+            print(" min_scale_factor=min_scale_factor:",min_scale_factor)
+            print(" max_scale_factor=max_scale_factor:",max_scale_factor)
+            print(" scale_factor_step_size=scale_factor_step_size:",scale_factor_step_size)
+            print(" dataset_split:",train_split)
+            print(" is_training=",is_training)
+            print("samples:",samples)
             
             inputs_queue=prefetch_queue.prefetch_queue(samples,capacity=128 * config.num_clones)
             #samples_try=inputs_queue.dequeue()
@@ -1902,11 +1921,12 @@ def train():
                     tf_initial_checkpoint,
                     initialize_last_layer,
                     last_layers,
-                    ignore_missing_vars=True),
+                    ignore_missing_vars=True,
+                    ),
                 #summary_op=summary_op,
                 #save_summaries_secs=save_summaries_secs,
-                save_interval_secs=save_interval_secs
-                )
+                #save_interval_secs=save_interval_secs
+                ignore_live_threads=True)
 
     
 if __name__ == "__main__":
