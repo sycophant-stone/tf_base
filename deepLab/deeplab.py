@@ -44,7 +44,7 @@ atrous_rates=[6,12,18]
 
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV="win10"
+GLB_ENV="shiyan_ai"
 
 if GLB_ENV=="win10":
     print("WELCOM to Win10 env!!!")
@@ -61,9 +61,11 @@ elif GLB_ENV=="jkcloud":
     tf_initial_checkpoint="/work/tf_base/research/deeplab/datasets/pascal_voc_seg/init_models/deeplabv3_pascal_train_aug/model.ckpt"
 elif GLB_ENV=="shiyan_ai":
     print("WELCOM to shiyan.ai env!!!")
-    dataset_dir = "/home/deeplearning/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
+    #dataset_dir = "/home/deeplearning/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
+    dataset_dir = "datasets/pascal_voc_seg/tfrecord/"
     train_logdir = "output"  # shiyan.ai没有根目录权限
-    tf_initial_checkpoint=None
+    #tf_initial_checkpoint=None
+    tf_initial_checkpoint="/home/deeplearning/work/tf_base/research/deeplab/init_models/deeplabv3_pascal_train_aug/model.ckpt"
 else:
     raise ValueError('Please chose one Env to start!')
 
@@ -1825,19 +1827,19 @@ def train():
                 dataset_split=train_split,
                 is_training=True)
             # slim.prefetch_queue生成一个queue实例.
-            print("get samples params:")
-            print(" dataset:",dataset)
-            print(" train_crop_size:",train_crop_size)
-            print(" train_batch_size:",train_batch_size)
-            print(" min_resize_value=min_resize_value:",min_resize_value)
-            print(" max_resize_value=max_resize_value:",max_resize_value)
-            print(" resize_factor=resize_factor:",resize_factor)
-            print(" min_scale_factor=min_scale_factor:",min_scale_factor)
-            print(" max_scale_factor=max_scale_factor:",max_scale_factor)
-            print(" scale_factor_step_size=scale_factor_step_size:",scale_factor_step_size)
-            print(" dataset_split:",train_split)
-            print(" is_training=",is_training)
-            print("samples:",samples)
+            print("[train]: get samples params:")
+            print("[train]: dataset:",dataset)
+            print("[train]: train_crop_size:",train_crop_size)
+            print("[train]: train_batch_size:",train_batch_size)
+            print("[train]: min_resize_value=min_resize_value:",min_resize_value)
+            print("[train]: max_resize_value=max_resize_value:",max_resize_value)
+            print("[train]: resize_factor=resize_factor:",resize_factor)
+            print("[train]: min_scale_factor=min_scale_factor:",min_scale_factor)
+            print("[train]: max_scale_factor=max_scale_factor:",max_scale_factor)
+            print("[train]: scale_factor_step_size=scale_factor_step_size:",scale_factor_step_size)
+            print("[train]: dataset_split:",train_split)
+            print("[train]: is_training=",is_training)
+            print("[train]: samples:",samples)
             
             inputs_queue=prefetch_queue.prefetch_queue(samples,capacity=128 * config.num_clones)
             #samples_try=inputs_queue.dequeue()
@@ -1926,7 +1928,8 @@ def train():
                 #summary_op=summary_op,
                 #save_summaries_secs=save_summaries_secs,
                 #save_interval_secs=save_interval_secs
-                ignore_live_threads=True)
+                #ignore_live_threads=True)
+            )
 
     
 if __name__ == "__main__":
