@@ -61,8 +61,8 @@ elif GLB_ENV=="jkcloud":
     tf_initial_checkpoint="/work/tf_base/research/deeplab/datasets/pascal_voc_seg/init_models/deeplabv3_pascal_train_aug/model.ckpt"
 elif GLB_ENV=="shiyan_ai":
     print("WELCOM to shiyan.ai env!!!")
-    #dataset_dir = "/home/deeplearning/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
-    dataset_dir = "datasets/pascal_voc_seg/tfrecord/"
+    dataset_dir = "/home/deeplearning/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
+    #dataset_dir = "datasets/pascal_voc_seg/tfrecord/"
     train_logdir = "output"  # shiyan.ai没有根目录权限
     #tf_initial_checkpoint=None
     tf_initial_checkpoint="/home/deeplearning/work/tf_base/research/deeplab/init_models/deeplabv3_pascal_train_aug/model.ckpt"
@@ -1286,7 +1286,7 @@ def resolve_shape(tensor, rank=None, scope=None):
     
     
     
-def resize_to_range(image,
+def resize_to_range_1(image,
                     label=None,
                     min_size=None,
                     max_size=None,
@@ -1298,6 +1298,16 @@ def resize_to_range(image,
     """
     
     """
+    print("[resize_to_range]: label:",label)
+    print("[resize_to_range]: min_size:",min_size)
+    print("[resize_to_range]: max_size:",max_size)
+    print("[resize_to_range]: factor:",factor)
+    print("[resize_to_range]: label_layout_is_chw:",label_layout_is_chw)
+    print("[resize_to_range]: scope:",scope)
+    print("[resize_to_range]: image:",image)
+    print("[resize_to_range]: new_size:",new_size)
+    print("[resize_to_range]: method:",method)
+    print("[resize_to_range]: align_corners:",align_corners)
     with tf.name_scope(scope,'resize_to_range',[image]):
         new_tensor_list=[]
         min_size=tf.to_float(min_size)
@@ -1474,12 +1484,16 @@ def preprocess_image_and_label(image,
     # 保存origin image
     origin_image=image
     process_image=tf.cast(image,tf.float32)
+    print("[preprocess_image_and_label] min_resize_value:",min_resize_value)
+    print("[preprocess_image_and_label] max_resize_value:",max_resize_value)
     if label is not None:
         label=tf.cast(label,tf.int32)
     if min_resize_value is not None or max_resize_value is not None:
-        [process_image,label]=resize_to_range(image=process_image,label=label,min_size=min_resize_value,max_size=max_resize_value,
+        print("[preprocess_image_and_label]: before resize_to_range")
+        [process_image,label]=resize_to_range_1(image=process_image,label=label,min_size=min_resize_value,max_size=max_resize_value,
                                              factor=resize_factor,align_corners=True)
         original_image=tf.identity(process_image) # origin描述的变成了resize之后的.
+        print("[preprocess_image_and_label]: after resize_to_range")
     
     # 随机缩放 以 达到数据增强
     
@@ -1487,7 +1501,7 @@ def preprocess_image_and_label(image,
         argu_scale=get_random_scale(min_scale_factor,max_scale_factor,scale_factor_step_size)
         process_image,label=randomly_scale_image_and_label(process_image,label,argu_scale)
         process_image.set_shape([None,None,3])# 3个chn
-    print("randomly_scale_image_and_label'process_image:",process_image)
+    print("[preprocess_image_and_label]:randomly_scale_image_and_label'process_image:",process_image)
     image_shape=tf.shape(process_image)
     image_height=image_shape[0]
     image_width=image_shape[1]
@@ -1500,11 +1514,11 @@ def preprocess_image_and_label(image,
     processed_image=pad_to_bounding_box(process_image,0,0,target_height,target_width,meanpixel)
     if label is not None:
         label=pad_to_bounding_box(label,0,0,target_height,target_width,ignore_label)
-    print("pad_to_bounding_box'process_image:",process_image)
+    print("[preprocess_image_and_label]:pad_to_bounding_box'process_image:",process_image)
     # 随机裁剪
     if is_training and label is not None:
         process_image,label=random_crop([process_image,label],crop_height,crop_width)
-    print("random_crop'process_image:",process_image)
+    print("[preprocess_image_and_label]:random_crop'process_image:",process_image)
     process_image.set_shape([crop_height,crop_width,3])
     if label is not None:
         label.set_shape([crop_height,crop_width,1])
@@ -1512,7 +1526,7 @@ def preprocess_image_and_label(image,
     # 随机左右颠倒
     if is_training:
         process_image,label,_=flip_dim([process_image,label],_PROB_OF_FLIP,dim=1) # 这个`_`号描述的是is_flipped信息,这里我们不关心,就省略掉了.
-    print("flip_dim'process_image:",process_image)   
+    print("[preprocess_image_and_label]:flip_dim'process_image:",process_image)   
     return origin_image, process_image, label   #!!!!!!请注意这个拼写错误:::processed_image, label
     
 
@@ -1565,7 +1579,7 @@ def get_samples(dataset,
             raise ValueError('Input label shape must be [height, width], or '
                              '[height, width, 1].')
             label.set_shape([None, None, 1]) #注意缩进等级
-            
+        print("[get_samples]:before preprocess_image_and_label")
         original_image, image, label=preprocess_image_and_label(
             image,
             label,

@@ -179,7 +179,10 @@ def get(dataset,
     # Original image is only used during visualization.
     sample[common.ORIGINAL_IMAGE] = original_image,
     num_threads = 1
-
+  print("[get_samples]:after preprocess original_image:",original_image)
+  print("[get_samples]:after preprocess image:",image)
+  print("[get_samples]:after preprocess label:",label)
+  print("[get_samples]:after preprocess sample:",sample)
   return tf.train.batch(
       sample,
       batch_size=batch_size,
