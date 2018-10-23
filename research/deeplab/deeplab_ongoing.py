@@ -1085,7 +1085,7 @@ log_steps = 10  # Display logging information at every log_steps.')
 
 save_interval_secs = 1200  # 'How often# in seconds# we save the model to disk.')
 
-save_summaries_secs = 600  # 'How often# in seconds# we compute the summaries.')
+save_summaries_secs = 60  # 'How often# in seconds# we compute the summaries.')
 
 save_summaries_images = False  # 'Save sample inputs# labels# and semantic predictions as '                     'images to summary.')
 
@@ -1939,6 +1939,29 @@ def train():
             print("tf.Graphkeys.UPDATE_OPS", tf.GraphKeys.UPDATE_OPS)
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, first_clone_scope)
 
+        summaries=set(tf.get_collection(tf.GraphKeys.SUMMARIES,first_clone_scope))
+        # 添加模型的变量
+        #for model_var in slim.get_model_variables():
+        #    summaries.add(tf.summary.histogram(model_var.op.name,model_var))
+
+        if save_summaries_images:
+            summary_image=graph.get_tensor_by_name( ('%s/%s:0' %(first_clone_scope,"image")).strip('/'))
+            summaries.add(tf.summary.image('sample/%s'%("image"),summary_image))
+            first_clone_label = graph.get_tensor_by_name(
+            ('%s/%s:0' % (first_clone_scope, "label")).strip('/'))
+            pixel_scaling = max(1, 255 // dataset.num_classes)
+            summary_label = tf.cast(first_clone_label * pixel_scaling, tf.uint8)
+            summaries.add(
+                tf.summary.image('samples/%s' % ("label"), summary_label))
+            first_clone_output=graph.get_tensor_by_name(('%s/%s:0'%(first_clone_scope,"semantic").strip('/')))
+            prediction=tf.expand_dims(tf.argmax(first_clone_output,3),-1) # 先输出top3,然后整理成一列.
+            summary_prediction=tf.cast(prediction*pixel_scaling,tf.uint8)
+            summaries.add(tf.summary.image('samples/%s'% ("semantic"),summary_prediction))
+        for loss in tf.get_collection(tf.GraphKeys.LOSSES):
+            summaries.add(tf.summary.scalar('losses/%s' % loss.op.name,loss))
+
+
+
         # åˆ›å»ºopt
         with tf.device(config.optimizer_device()):
             learning_rate = get_model_learning_rate(
@@ -1952,12 +1975,15 @@ def train():
                 slow_start_learning_rate)
             optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
             # add summary
+            summaries.add(tf.summary.scalar('learning_rate', learning_rate))
+
         startup_delay_steps = 15 * task  # startup_delay_steps=15#
         # losså’Œopt
         with tf.device(config.variables_device()):
             total_loss, grads_and_vars = model_deploy.optimize_clones(clones, optimizer)
             total_loss = tf.check_numerics(total_loss, 'total loss is inf or nan')
             # summary total loss
+            summaries.add(tf.summary.scalar('total_loss', total_loss))
             # æ‹¿åˆ°æœ€åŽä¸€å±‚çš„vars
             if last_layers_contain_logits_only:
                 last_layers = ['logits']
@@ -1985,6 +2011,9 @@ def train():
                 train_tensor = tf.identity(total_loss, name="train_op")
 
             session_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+            summaries|=set(tf.get_collection(tf.GraphKeys.SUMMARIES,first_clone_scope))
+            summary_op=tf.summary.merge(list(summaries)) # 需要个list
+
             slim.learning.train(
                 train_tensor,
                 logdir=train_logdir,
@@ -2001,10 +2030,9 @@ def train():
                     last_layers,
                     ignore_missing_vars=True,
                 ),
-                # summary_op=summary_op,
-                # save_summaries_secs=save_summaries_secs,
-                # save_interval_secs=save_interval_secs
-                # ignore_live_threads=True)
+                summary_op=summary_op,
+                save_summaries_secs=save_summaries_secs,
+                save_interval_secs=save_interval_secs
             )
 
 
