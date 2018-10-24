@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import os
+import sys
 import tensorflow as tf
 #import common
 import collections
@@ -105,6 +106,7 @@ if GLB_ENV == "win10":
     dataset_dir = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\tfrecord"
     train_logdir = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\output_new"
     tf_initial_checkpoint = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\init_models\\deeplabv3_pascal_train_aug\\model.ckpt"
+    eval_logdir="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\eval_output"
     # tf_initial_checkpoint = None
 elif GLB_ENV == "jkcloud":
     print("WELCOM to jkcloud env!!!")
@@ -2036,6 +2038,54 @@ def train():
             )
 
 
+def eval():
+    tf.logging.set_verbosity(tf.logging.INFO)
+    eval_split='val' # val的数据集
+    eval_crop_size=[513, 513]
+    eval_batch_size=1
+    min_resize_value=None
+    max_resize_value=None
+    resize_factor=None
+    eval_scales=1.0
+    dataset=get_dataset(dataset_name,eval_split,dataset_dir)
+    tf.gfile.MakeDirs(eval_logdir)
+    tf.logging.info('Evaluating on %s set', eval_split)
+    with tf.Graph().as_default():
+        samples=input_generator.get(dataset,
+        eval_crop_size,
+        eval_batch_size,
+        min_resize_value=min_resize_value,
+        max_resize_value=max_resize_value,
+        resize_factor=resize_factor,
+        dataset_split=eval_split,
+        is_training=False,
+        model_variant="xception_65")
+
+
 if __name__ == "__main__":
-    print("main")
-    train()
+    if len(sys.argv) < 2:
+        print("NO action specified.")
+        sys.exit()
+    if sys.argv[1].startswith('--'):
+        option = sys.argv[1][2:]
+        if option == 'version':
+            print("version 1.2 ")
+        elif option == 'help':
+            print("This program prints files to the standard output.\
+                     Any number of files can be specified.\
+                     Options include:\
+                     --version : Prints the version number\
+                     --train: train \
+                     --eval:  eval \
+                     --vis:   visual those picture's segmentation \
+                     --help     : Display this help")
+        elif option == 'train':
+            print("start training")
+            train()
+        elif option == 'eval':
+            print("start evaluating")
+        elif option == 'vis':
+            print("start visualizing")
+        else:
+            raise ValueError("Unknow option.")
+            sys.exit()
