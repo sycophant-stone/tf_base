@@ -98,7 +98,7 @@ local_image_pyramid = None
 atrous_rates = [6, 12, 18]
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV = "win10"
+GLB_ENV = "shiyan_ai"
 
 if GLB_ENV == "win10":
     print("WELCOM to Win10 env!!!")
@@ -117,7 +117,7 @@ elif GLB_ENV == "shiyan_ai":
     print("WELCOM to shiyan.ai env!!!")
     dataset_dir = "/home/deeplearning/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
     # dataset_dir = "datasets/pascal_voc_seg/tfrecord/"
-    train_logdir = "output"  # shiyan.aiæ²¡æœ‰æ ¹ç›®å½•æƒé™
+    train_logdir = "deeplab/output"  # shiyan.aiæ²¡æœ‰æ ¹ç›®å½•æƒé™
     # tf_initial_checkpoint=None
     tf_initial_checkpoint = "/home/deeplearning/work/tf_base/research/deeplab/init_models/deeplabv3_pascal_train_aug/model.ckpt"
 else:
