@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import os
 import sys
+import math
 import tensorflow as tf
 #import common
 import collections
@@ -99,7 +100,7 @@ local_image_pyramid = None
 atrous_rates = [6, 12, 18]
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV = "shiyan_ai"
+GLB_ENV = "win10"
 
 if GLB_ENV == "win10":
     print("WELCOM to Win10 env!!!")
@@ -108,6 +109,8 @@ if GLB_ENV == "win10":
     tf_initial_checkpoint = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\init_models\\deeplabv3_pascal_train_aug\\model.ckpt"
     eval_logdir="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\eval_output"
     # tf_initial_checkpoint = None
+    checkpoint_dir = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\output"
+    eval_logdir = "D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\deeplab\\datasets\\pascal_voc_seg\\eval_output"
 elif GLB_ENV == "jkcloud":
     print("WELCOM to jkcloud env!!!")
     dataset_dir = "/work/tf_base/research/deeplab/datasets/pascal_voc_seg/tfrecord/"
@@ -970,11 +973,14 @@ def multi_scale_logits(images,
                        weight_decay=0.0001,
                        is_training=False,
                        fine_tune_batch_norm=False):
-    """æž„å»ºlogitsæ–¹æ³•
-    args:
-        model_options: ç½‘ç»œé…ç½®çš„å®šä¹‰ä¿¡æ¯.
-        local_image_pyramid: å›¾åƒé‡‘å­—å¡”
-        weight_decay: æƒé‡è¡°å‡
+    """
+
+    :param images: 输入图
+    :param local_image_pyramid:图像金字塔
+    :param weight_decay: r2的权重是否衰减
+    :param is_training: train or test
+    :param fine_tune_batch_norm: 是否是fine tune模式
+    :return:返回网络的预测,图像经过xception+aspp+decoder+upsampling4
     """
     if not local_image_pyramid:
         local_image_pyramid = [1.0]  # list
@@ -999,26 +1005,26 @@ def multi_scale_logits(images,
         for k in local_outputs_to_num_classes
     }
 
-    # step 1 å¯¹äºŽæ¯ä¸€ä¸ªç¼©ç•¥å›¾
+    # step 1  对于每一个缩略图
     for image_scale in local_image_pyramid:
         if image_scale != 1.0:
-            # ä¸æ˜¯åŽŸå›¾,éœ€è¦ç¼©æ”¾
-            # æœ‰äº†ç¼©æ”¾å› å­,éœ€è¦è®¡ç®—å¯¹åº”çš„ç¼©æ”¾å°ºå¯¸
+            # 不是原图,需要缩放
+            # 有了缩放因子,需要计算对应的缩放尺寸
             scaled_height = cal_scaled_dim_val(crop_height, image_scale)
             scaled_width = cal_scaled_dim_val(crop_width, image_scale)
             scaled_crop_size = [scaled_height, scaled_width]
-            # æœ‰äº†ç¼©æ”¾å°ºå¯¸,éœ€è¦å¯¹åŽŸå›¾åšç¼©æ”¾äº†
+            # 有了缩放尺寸,需要对原图做缩放了
             scaled_images = tf.image.resize_bilinear(images, scaled_crop_size, align_corners=True)
 
             if local_crops_size:
                 scaled_images.set_shape([None, scaled_height, scale_width,
-                                         3])  # å¦‚æžœéœ€è¦crop sizeçš„è¯,æˆ‘ä»¬æŠŠscaled_images reshapeæˆ3ä¸ªchnçš„.
+                                         3])  # 如果需要crop size的话,我们把scaled_images reshape成3个chn的.
         else:
-            # åŽŸå›¾
+            # 原图
             scaled_crop_size = local_crop_size
             scaled_images = images
 
-        # ç”¨åšè¿‡scaleçš„å°ºå¯¸æ›¿æ¢å‚æ•°ä¸­çš„crop_size,ç„¶åŽç”Ÿæˆç½‘ç»œ
+        # 用做过scale的尺寸替换参数中的crop_size,然后生成网络
         #updated_options = local_replace(crop_size=scaled_crop_size)
         loca_crop_size = scaled_crop_size
         outputs_to_logits = _get_logits(
@@ -1027,39 +1033,39 @@ def multi_scale_logits(images,
             reuse=tf.AUTO_REUSE,
             is_training=is_training,
             fine_tune_batch_norm=fine_tune_batch_norm)
-        # æ­¤æ—¶æ‹¿åˆ°ç»“æžœ.å¯¹ç»“æžœåšä¸€ä¸ªreshape,ä»¥ä¾¿å’Œå…¶ä»–çš„scale pyramidåšèžåˆä½¿å°ºå¯¸æ˜¯åˆç†çš„.
+        # 此时拿到结果.对结果做一个reshape,以便和其他的scale pyramid做融合使尺寸是合理的.
         for output in sorted(outputs_to_logits):
             outputs_to_logits[output] = tf.image.resize_bilinear(
                 outputs_to_logits[output],
                 [logit_height, logit_width],
                 align_corners=True)
 
-        # åªæœ‰ä¸€å±‚pyramid,å°±å¯ä»¥è¿”å›ž
+        # 只有一层pyramid,就可以返回
         if len(local_image_pyramid) == 1:
             for output in sorted(local_outputs_to_num_classes):
-                # ç¬¬kä¸ªscaler fractorå¯¹åº”çš„LOGITS_SCOPE_NAME,AKA,"logits"
+                # 第k个scaler fractor对应的LOGITS_SCOPE_NAME,AKA,"logits"
                 outputs_to_scales_to_logits[output][MERGED_LOGITS_SCOPE] = outputs_to_logits[output]
 
             return outputs_to_scales_to_logits
 
-        # å¦‚æžœæœ‰å¤šä¸ªpyramid fractor,éœ€è¦æŒ‰ç…§å¯¹åº”çš„æ ‡ç­¾ä¿å­˜
+        # 如果有多个pyramid fractor,需要按照对应的标签保存
         for output in sorted(local_outputs_to_num_classes):
             outputs_to_scales_to_logits[output]['logits_%.2f' % image_scale] = outputs_to_logits[output]
 
-    # æŠŠå¤šä¸ªpyramid fractorèžåˆ
-    # éœ€è¦æ–°åˆ›å»ºä¸€ä¸ªç»´åº¦,è¯¥ç»´åº¦ä¸ºäº†èžåˆä½¿ç”¨
+    # 把多个pyramid fractor融合
+    # 需要新创建一个维度,该维度为了融合使用
     for output in local_outputs_to_num_classes:
         all_logits = [
             tf.expand_dims(logits, axis=4)
             for logits in outputs_to_scales_to_logits[output].values()
         ]
-        # åœ¨è¿™ä¸ªæ–°ç»´åº¦ä¸Šåšconcat( ç†è§£ä¸ºè¿žæŽ¥)
+        # 在这个新维度上做concat( 理解为连接)
         all_logits = tf.concat(all_logits, axis=4)
-        # æ ¹æ®ä¸åŒçš„èžåˆæ–¹æ³•é‡‡ç”¨ä¸åŒçš„tfçš„èžåˆæ–¹æ³•
+        # 根据不同的融合方法采用不同的tf的融合方法
         merge_fn = (
             tf.reduce_max
             if local_merge_method == 'max' else tf.reduce_mean)
-        # åœ¨æ–°å¢žç»´åº¦ä¸Šèžåˆ.
+        # 在新增维度上融合.
         outputs_to_scales_to_logits[output][MERGED_LOGITS_SCOPE] = merge_fn(all_logits, axis=4)
 
     return outputs_to_scales_to_logits
@@ -1819,6 +1825,7 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_labels):
     print("[_build_deeplab]:ignore_labels", ignore_labels)
     samples = inputs_queue.dequeue()
     print("[_build_deeplab]:inputs_queue:%s,samples:%s" % (inputs_queue, samples))
+    print("[_build_deeplab]:fine_tune_batch_norm:%s" % (fine_tune_batch_norm))
     # æ·»åŠ ä¸€äº›åŠ©è®°åå­—
     samples["image"] = tf.identity(samples["image"], name="image")
     samples["label"] = tf.identity(samples["label"], name="label")
@@ -2038,6 +2045,32 @@ def train():
             )
 
 
+def predict_labels(images,image_pyramid,fine_tune_batch_norm=False):
+    """
+    :param images: 输入图像数据.
+    :param image_pyramid: 是否采用图像金字塔
+    :return: 返回对应的预测的区域图.
+    """
+    tf.logging.info("[predict_labels] images:%s" % (images))
+    tf.logging.info("[predict_labels] image_pyramid:%s" % (image_pyramid))
+    tf.logging.info("[predict_labels] fine_tune_batch_norm:%s" % (fine_tune_batch_norm))
+
+    _predict_output = multi_scale_logits(images=images,local_image_pyramid=image_pyramid,
+                       weight_decay=0.0001,
+                       is_training=True,
+                       fine_tune_batch_norm=fine_tune_batch_norm)
+    tf.logging.info("[predict_labels] _predict_output:%s"%(_predict_output))
+    predictions={}
+    for output in sorted(_predict_output):
+        scales=_predict_output[output]
+        tf.logging.info("[predict_labels] output:%s,sorted(_predict_output):%s, scales:%s,imagesize:%s" % (output, sorted(_predict_output),scales,tf.shape(images)[1:3]))
+        logits=tf.image.resize_bilinear(scales["merged_logits"],size=tf.shape(images)[1:3],align_corners=True,)
+        predictions[output]=tf.argmax(logits,3)
+    tf.logging.info("[predict_labels] predictions:%s"%(predictions))
+    return predictions
+
+
+
 def eval():
     tf.logging.set_verbosity(tf.logging.INFO)
     eval_split='val' # val的数据集
@@ -2046,7 +2079,8 @@ def eval():
     min_resize_value=None
     max_resize_value=None
     resize_factor=None
-    eval_scales=1.0
+    max_number_of_evaluations=0
+    eval_scales=[1.0] # 注意这里是list类型
     dataset=get_dataset(dataset_name,eval_split,dataset_dir)
     tf.gfile.MakeDirs(eval_logdir)
     tf.logging.info('Evaluating on %s set', eval_split)
@@ -2060,6 +2094,48 @@ def eval():
         dataset_split=eval_split,
         is_training=False,
         model_variant="xception_65")
+        if tuple(eval_scales)==(1.0,):
+            tf.logging.info("single scale")
+            _predict_logits=predict_labels(samples["image"],local_image_pyramid,fine_tune_batch_norm=True)
+        else:
+            tf.logging.info("multi scales")
+
+        _predict_logits=_predict_logits["semantic"]
+        _predict_logits=tf.reshape(_predict_logits,shape=[-1])
+        labels=tf.reshape(samples["label"],shape=[-1])
+        tf.logging.info("[eval] labels:%s, _predict_logits:%s"%(labels,_predict_logits))
+        weights=tf.to_float( tf.not_equal(labels,dataset.ignore_label)) # dataset.ignore_label==255
+        tf.logging.info("[eval] weights:%s, dataset.ignore_label:%s, tf.no_equal(labels,dataset.ignore_label):%s" % (weights, dataset.ignore_label, tf.not_equal(labels,dataset.ignore_label)))
+        tf.logging.info("[eval] tf.equal(labels,dataset.ignore_label):%s, tf.zeros_like(labels):%s" % (tf.equal(labels,dataset.ignore_label), tf.zeros_like(labels)))
+        labels=tf.where(tf.equal(labels,dataset.ignore_label), tf.zeros_like(labels), labels)
+        tf.logging.info("[eval] after tf.where, labels:%s " %(labels))
+
+        # 计算miou
+        metric_map={}
+        metric_map["miou_1.0"]=tf.metrics.mean_iou(_predict_logits,labels,dataset.num_classes,weights=weights)
+        tf.logging.info("[eval] metric_map:%s " % (metric_map))
+        metric_vals,metrics_update=(tf.contrib.metrics.aggregate_metric_map(metric_map))
+        tf.logging.info("[eval] metric_vals:%s ,metrics_update:%s" % (metric_vals,metrics_update))
+
+        # summary
+        for metric_name,metric_val in six.iteritems(metric_vals):
+            slim.summaries.add_scalar_summary(metric_val,metric_name,print_summary=True)
+        num_batches=int(math.ceil(dataset.num_samples/float(eval_batch_size)))
+        tf.logging.info("[eval] num_batches:%s ,num_samples:%s, eval_batch_size:%s" % (num_batches, dataset.num_samples,eval_batch_size))
+
+        num_eval_iterations=None
+        if max_number_of_evaluations>0:
+            num_eval_iterations=max_number_of_evaluations
+        slim.evaluation.evaluation_loop(
+            master=master,
+            checkpoint_dir=checkpoint_dir,
+            logdir=eval_logdir,
+            num_evals=num_batches,
+            eval_op=list(metrics_update.values()),
+            max_number_of_evaluations=num_eval_iterations,
+            eval_interval_secs= 60 * 5)
+
+
 
 
 if __name__ == "__main__":
@@ -2084,6 +2160,7 @@ if __name__ == "__main__":
             train()
         elif option == 'eval':
             print("start evaluating")
+            eval()
         elif option == 'vis':
             print("start visualizing")
         else:
