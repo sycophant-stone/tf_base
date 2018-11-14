@@ -157,7 +157,7 @@ def _process_image(filename, coder):
       width: integer, image width in pixels.
     """
     # Read the image file.
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='ISO-8859-15') as f:
         image_data = f.read()
 
     # Convert any PNG to JPEG's for consistency.
@@ -204,7 +204,7 @@ def _process_image_files_batch(coder, thread_index, ranges, name, filenames,
     num_files_in_thread = ranges[thread_index][1] - ranges[thread_index][0]
 
     counter = 0
-    for s in xrange(num_shards_per_batch):
+    for s in range(num_shards_per_batch):
         # Generate a sharded version of the file name, e.g. 'train-00002-of-00010'
         shard = thread_index * num_shards_per_batch + s
         output_filename = '%s_%s_%.5d-of-%.5d.tfrecord' % (command_args.dataset_name, name, shard, num_shards)
@@ -256,7 +256,7 @@ def _process_image_files(name, filenames, texts, labels, num_shards, command_arg
     # Break all images into batches with a [ranges[i][0], ranges[i][1]].
     spacing = np.linspace(0, len(filenames), command_args.num_threads + 1).astype(np.int)
     ranges = []
-    for i in xrange(len(spacing) - 1):
+    for i in range(len(spacing) - 1):
         ranges.append([spacing[i], spacing[i + 1]])
 
     # Launch a thread for each batch.
@@ -270,7 +270,7 @@ def _process_image_files(name, filenames, texts, labels, num_shards, command_arg
     coder = ImageCoder()
 
     threads = []
-    for thread_index in xrange(len(ranges)):
+    for thread_index in range(len(ranges)):
         args = (coder, thread_index, ranges, name, filenames,
                 texts, labels, num_shards, command_args)
         t = threading.Thread(target=_process_image_files_batch, args=args)
@@ -336,7 +336,7 @@ def _find_image_files(data_dir, labels_file, command_args):
     # Shuffle the ordering of all image files in order to guarantee
     # random ordering of the images with respect to label in the
     # saved TFRecord files. Make the randomization repeatable.
-    shuffled_index = range(len(filenames))
+    shuffled_index = list(range(len(filenames)))
     random.seed(12345)
     random.shuffle(shuffled_index)
 
