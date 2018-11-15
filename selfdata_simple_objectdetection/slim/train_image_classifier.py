@@ -551,7 +551,7 @@ def main(_):
 
     # Merge all summaries together.
     summary_op = tf.summary.merge(list(summaries), name='summary_op')
-
+    session_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
     ###########################
     # Kicks off the training. #
     ###########################
@@ -562,6 +562,7 @@ def main(_):
         is_chief=(FLAGS.task == 0),
         init_fn=_get_init_fn(),
         summary_op=summary_op,
+        session_config=session_config,
         number_of_steps=FLAGS.max_number_of_steps,
         log_every_n_steps=FLAGS.log_every_n_steps,
         save_summaries_secs=FLAGS.save_summaries_secs,
