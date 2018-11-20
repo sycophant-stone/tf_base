@@ -52,7 +52,7 @@ local_multi_grid= None
 
 local_depth_multiplier= 1.0
 
-local_decoder_output_stride=None
+local_decoder_output_stride=4
 
 local_decoder_use_separable_conv=True
 
@@ -100,7 +100,7 @@ local_image_pyramid = None
 atrous_rates = [6, 12, 18]
 
 '''"jkcloud", "win10", "shiyan_ai" '''
-GLB_ENV = "jkcloud"
+GLB_ENV = "win10"
 
 if GLB_ENV == "win10":
     print("WELCOM to Win10 env!!!")
@@ -776,6 +776,55 @@ def split_separable_conv2d(inputs,
         weights_regularizer=slim.l2_regularizer(weight_decay),
         scope=scope + '_pointwise')
 
+# A map from feature extractor name to the network name scope used in the
+# ImageNet pretrained versions of these models.
+name_scope = {
+    'mobilenet_v2': 'MobilenetV2',
+    'resnet_v1_50': 'resnet_v1_50',
+    'resnet_v1_50_beta': 'resnet_v1_50',
+    'resnet_v1_101': 'resnet_v1_101',
+    'resnet_v1_101_beta': 'resnet_v1_101',
+    'xception_41': 'xception_41',
+    'xception_65': 'xception_65',
+    'xception_71': 'xception_71',
+}
+# A dictionary from network name to a map of end point features.
+DECODER_END_POINTS = 'decoder_end_points'
+networks_to_feature_maps = {
+    'mobilenet_v2': {
+        DECODER_END_POINTS: ['layer_4/depthwise_output'],
+    },
+    'resnet_v1_50': {
+        DECODER_END_POINTS: ['block1/unit_2/bottleneck_v1/conv3'],
+    },
+    'resnet_v1_50_beta': {
+        DECODER_END_POINTS: ['block1/unit_2/bottleneck_v1/conv3'],
+    },
+    'resnet_v1_101': {
+        DECODER_END_POINTS: ['block1/unit_2/bottleneck_v1/conv3'],
+    },
+    'resnet_v1_101_beta': {
+        DECODER_END_POINTS: ['block1/unit_2/bottleneck_v1/conv3'],
+    },
+    'xception_41': {
+        DECODER_END_POINTS: [
+            'entry_flow/block2/unit_1/xception_module/'
+            'separable_conv2_pointwise',
+        ],
+    },
+    'xception_65': {
+        DECODER_END_POINTS: [
+            'entry_flow/block2/unit_1/xception_module/'
+            'separable_conv2_pointwise',
+        ],
+    },
+    'xception_71': {
+        DECODER_END_POINTS: [
+            'entry_flow/block2/unit_1/xception_module/'
+            'separable_conv2_pointwise',
+        ],
+    },
+}
 
 def refine_by_decoder(features,
                       end_points,
@@ -799,7 +848,7 @@ def refine_by_decoder(features,
 
     with slim.arg_scope(
             [slim.conv2d, slim.separable_conv2d],
-            weights_regularizer=slim.l2_regualarizer(weight_decay),
+            weights_regularizer=slim.l2_regularizer(weight_decay),
             activation_fn=tf.nn.relu,
             normalizer_fn=slim.batch_norm,
             padding='SAME',
@@ -807,10 +856,10 @@ def refine_by_decoder(features,
             reuse=reuse):
         with slim.arg_scope([slim.batch_norm], **batch_norm_params):
             with tf.variable_scope(DECODER_SCOPE, DECODER_SCOPE, [features]):
-                feature_list = feature_extractor.networks_to_feature_maps[
-                    local_model_variant][feature_extractor.DECODER_END_POINTS]
+                feature_list = networks_to_feature_maps[
+                    local_model_variant][DECODER_END_POINTS]
                 if feature_list is None:
-                    tf.logging.info('Not found')
+                    tf.logging.info('[refine_by_decoder]:Not found')
                     return features
                 else:
                     decoder_features = features
@@ -820,7 +869,7 @@ def refine_by_decoder(features,
                             feature_name = name
                         else:
                             feature_name = '{}/{}'.format(
-                                feature_extractor.name_scope[local_model_variant],
+                                name_scope[local_model_variant],
                                 name)
                         decoder_features_list.append(
                             slim.conv2d(
@@ -832,7 +881,7 @@ def refine_by_decoder(features,
                         # resize
                         for j, feature in enumerate(decoder_features_list):
                             decoder_features_list[j] = tf.image.resize_bilinear(
-                                feature, [decoder_height, decoder_widht],
+                                feature, [decoder_height, decoder_width],
                                 align_corners=True)
                             h = (None if isinstance(decoder_height, tf.Tensor)
                                  else decoder_height)
@@ -840,7 +889,7 @@ def refine_by_decoder(features,
                                  else decoder_width)
                             decoder_features_list[j].set_shape([None, h, w, None])
                         decoder_depth = 256
-
+                        print("[refine_by_decoder]: decoder_height:%s, decoder_width:%s,decoder_features_list:%s" %(decoder_height, decoder_width, decoder_features_list))
                         if local_decoder_use_separable_conv:
                             decoder_features = split_separable_conv2d(
                                 tf.concat(decoder_features_list, 3),
@@ -849,7 +898,7 @@ def refine_by_decoder(features,
                                 weight_decay=weight_decay,
                                 scope='decoder_conv0')
                             decoder_features = split_separable_conv2d(
-                                tf.concat(decoder_features_list, 3),
+                                decoder_features,
                                 filters=decoder_depth,
                                 rate=1,
                                 weight_decay=weight_decay,
@@ -936,7 +985,7 @@ def _get_logits(images, weight_decay=0.0001, reuse=None, is_training=False,
 
         # æ±‚decoderä½¿ç”¨çš„size.è¿™ä¸ªæ˜¯ç»è¿‡local_decoder_output_strideä¹‹åŽçš„.
         decoder_height = cal_scaled_dim_val(height, 1.0 / local_decoder_output_stride)
-        decoder_width = cal_scaled_dim_val(wid, 1.0 / local_decoder_output_stride)
+        decoder_width = cal_scaled_dim_val(width, 1.0 / local_decoder_output_stride)
 
         # å¯¹featuresåšé‡æ–°refine
         # æ·»åŠ decodeéƒ¨åˆ†,ä¹‹å‰çš„deeplabé‡‡ç”¨äº†crf,åœ¨deeplabV3ä¸­æ²¡æœ‰ä½¿ç”¨crf.åˆ©ç”¨sep conv2dæ›¿ä»£.
@@ -945,7 +994,7 @@ def _get_logits(images, weight_decay=0.0001, reuse=None, is_training=False,
             features,
             end_points,
             decoder_height=decoder_height,
-            decoder_widht=decoder_width,
+            decoder_width=decoder_width,
             local_decoder_use_separable_conv=local_decoder_use_separable_conv,  # ä½¿ç”¨ç¦»æ•£å·ç§¯
             local_model_variant=local_model_variant,
             weight_decay=weight_decay,
