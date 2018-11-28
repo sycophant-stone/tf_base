@@ -36,7 +36,7 @@ def preprecess(image,height,width,central_crop_factor=0.875,scope=None):
         image=tf.multiply(image,2.0)
         return image
             
-            
+    
 class NodeLookup(object):
   def __init__(self, label_lookup_path=None):
     self.node_lookup = self.load(label_lookup_path)
@@ -64,24 +64,27 @@ def test_obd_one_image():
         with tf.Session() as sess:
             image_data = sess.run(image_data)
         
-        #create_graph()
-    with tf.gfile.FastGFile("satellite/inception_v3_inf_graph.pb",'rb') as f:
+    #create_graph()
+    # [BUG000] 需要打开froze的pb,当前这个pb是不能打开的.这里边缺少关键参数.
+    #          因为相当于你只有一个graph,但是graph里边weight的参数你是没有保存的.
+    with tf.gfile.FastGFile("satellite/frozen_graph.pb",'rb') as f:
         graphdef=tf.GraphDef()
         graphdef.ParseFromString(f.read())
         tf.import_graph_def(graphdef,name='')
     
     with tf.Session() as sess:
         softmax_tensor=sess.graph.get_tensor_by_name('InceptionV3/Logits/SpatialSqueeze:0')
+        print("[test_obd_one_image]:softmax_tensor:",softmax_tensor)
         predictions=sess.run(softmax_tensor,{'input:0':image_data}) #给input:0传入image_data
         print("[test_obd_one_image]: predictions",predictions)
-        predictions=np.sequeeze(predictions)
+        predictions=np.squeeze(predictions)
         print("[test_obd_one_image]: predictions after sequeeze",predictions)
         nodelookup=NodeLookup("satellite/data/label.txt")
         
         top_k=predictions.argsort()[-5:][::-1]
         for nodeid in top_k:
-            human_reading=nodelookup.id_to_string(node_id)
-            score=predictions[node_id]
+            human_reading=nodelookup.id_to_string(nodeid)
+            score=predictions[nodeid]
             print("%s (score = %.5f)" %(human_reading, score))
 
 if __name__ == '__main__':
