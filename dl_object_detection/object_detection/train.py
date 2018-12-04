@@ -143,21 +143,29 @@ def main(_):
     model_config, train_config, input_config = get_configs_from_pipeline_file()
   else:
     model_config, train_config, input_config = get_configs_from_multiple_files()
-
+  print("[main]: model_config:",model_config)
+  print("[main]: train_config:",train_config)
+  print("[main]: input_config:",input_config)
   model_fn = functools.partial(
       model_builder.build,
       model_config=model_config,
       is_training=True)
+    
+  print("[main]: model_fn:",model_fn)
 
   create_input_dict_fn = functools.partial(
       input_reader_builder.build, input_config)
-
+  print("[main]: create_input_dict_fn:",create_input_dict_fn)
   env = json.loads(os.environ.get('TF_CONFIG', '{}'))
   cluster_data = env.get('cluster', None)
   cluster = tf.train.ClusterSpec(cluster_data) if cluster_data else None
   task_data = env.get('task', None) or {'type': 'master', 'index': 0}
   task_info = type('TaskSpec', (object,), task_data)
-
+  print("[main]: cluster_data:",cluster_data)
+  print("[main]: cluster:",cluster)
+  print("[main]: task_data:",task_data)
+  print("[main]: task_info:",task_info)
+  
   # Parameters for a single worker.
   ps_tasks = 0
   worker_replicas = 1
@@ -188,6 +196,19 @@ def main(_):
     task = task_info.index
     is_chief = (task_info.type == 'master')
     master = server.target
+    
+  print("[main]: create_input_dict_fn:",create_input_dict_fn)
+  print("[main]: model_fn:",model_fn)
+  print("[main]: train_config:",train_config)
+  print("[main]: master:",master)
+  print("[main]: task:",task)
+  print("[main]: FLAGS.num_clones:",FLAGS.num_clones)
+  print("[main]: worker_replicas:",worker_replicas)
+  print("[main]: FLAGS.clone_on_cpu:",FLAGS.clone_on_cpu)
+  print("[main]: ps_tasks:",ps_tasks)
+  print("[main]: worker_job_name:",worker_job_name)
+  print("[main]: is_chief:",is_chief)
+  print("[main]: train_dir:",FLAGS.train_dir)
 
   trainer.train(create_input_dict_fn, model_fn, train_config, master, task,
                 FLAGS.num_clones, worker_replicas, FLAGS.clone_on_cpu, ps_tasks,
