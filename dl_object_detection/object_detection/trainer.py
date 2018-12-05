@@ -129,10 +129,17 @@ def _create_losses(input_queue, create_model_fn):
                                       groundtruth_classes_list,
                                       groundtruth_masks_list)
   prediction_dict = detection_model.predict(images)
-
   losses_dict = detection_model.loss(prediction_dict)
   for loss_tensor in losses_dict.values():
     tf.losses.add_loss(loss_tensor)
+    
+  print("[_create_losses]: detection_model:",detection_model)
+  print("[_create_losses]: images:",images)
+  print("[_create_losses]: groundtruth_boxes_list:",groundtruth_boxes_list)
+  print("[_create_losses]: groundtruth_classes_list:",groundtruth_classes_list)
+  print("[_create_losses]: groundtruth_masks_list:",groundtruth_masks_list)
+  print("[_create_losses]: prediction_dict:",prediction_dict)
+  print("[_create_losses]: loss_tensor:",loss_tensor)    
 
 
 def train(create_tensor_dict_fn, create_model_fn, train_config, master, task,

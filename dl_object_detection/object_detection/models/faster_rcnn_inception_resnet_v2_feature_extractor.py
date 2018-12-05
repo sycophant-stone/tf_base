@@ -69,6 +69,7 @@ class FasterRCNNInceptionResnetV2FeatureExtractor(
         tensor representing a batch of images.
 
     """
+    print("faster_rcnn_inception_resnetv2 [preprocess]: resized_inputs",resized_inputs)
     return (2.0 / 255.0) * resized_inputs - 1.0
 
   def _extract_proposal_features(self, preprocessed_inputs, scope):
