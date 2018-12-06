@@ -536,7 +536,8 @@ class FasterRCNNMetaArch(model.DetectionModel):
         rpn_objectness_predictions_with_background,
         'anchors': anchors
     }
-
+	print("[FasterRCNNMetaArch.predict] prediction_dict: ",prediction_dict)
+	
     if not self._first_stage_only:
       prediction_dict.update(self._predict_second_stage(
           rpn_box_encodings,
