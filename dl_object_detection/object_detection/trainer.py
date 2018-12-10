@@ -138,7 +138,7 @@ def _create_losses(input_queue, create_model_fn):
   print("[_create_losses]: groundtruth_boxes_list:",groundtruth_boxes_list)
   print("[_create_losses]: groundtruth_classes_list:",groundtruth_classes_list)
   print("[_create_losses]: groundtruth_masks_list:",groundtruth_masks_list)
-  print("[_create_losses]: prediction_dict:",prediction_dict)
+  print("[_create_losses]: [USING PREDICT] prediction_dict:",prediction_dict)
   print("[_create_losses]: loss_tensor:",loss_tensor)    
 
 

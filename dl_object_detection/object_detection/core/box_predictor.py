@@ -501,14 +501,14 @@ class ConvolutionalBoxPredictor(BoxPredictor):
     """
     features_depth = static_shape.get_depth(image_features.get_shape())
     depth = max(min(features_depth, self._max_depth), self._min_depth)
-	print("[ConvolutionalBoxPredictor._predict] image_features",image_features)
-	print("[ConvolutionalBoxPredictor._predict] num_predictions_per_location",num_predictions_per_location)
-	print("[ConvolutionalBoxPredictor._predict] features_depth:%s,depth:%s"%(features_depth,depth))
+    print("[ConvolutionalBoxPredictor._predict] image_features",image_features)
+    print("[ConvolutionalBoxPredictor._predict] num_predictions_per_location",num_predictions_per_location)
+    print("[ConvolutionalBoxPredictor._predict] features_depth:%s,depth:%s"%(features_depth,depth))
 
     # Add a slot for the background class.
     num_class_slots = self.num_classes + 1
     net = image_features
-	print("[ConvolutionalBoxPredictor._predict] num_class_slots",num_class_slots)
+    print("[ConvolutionalBoxPredictor._predict] num_class_slots",num_class_slots)
     with slim.arg_scope(self._conv_hyperparams), \
          slim.arg_scope([slim.dropout], is_training=self._is_training):
       # Add additional conv layers before the predictor.
@@ -516,14 +516,14 @@ class ConvolutionalBoxPredictor(BoxPredictor):
         for i in range(self._num_layers_before_predictor):
           net = slim.conv2d(
               net, depth, [1, 1], scope='Conv2d_%d_1x1_%d' % (i, depth))
-		  print("[ConvolutionalBoxPredictor._predict] conv2d :%s depth:%s"%('Conv2d_%d_1x1_%d' % (i, depth)),depth)
+          print("[ConvolutionalBoxPredictor._predict] conv2d :%s depth:%s"%('Conv2d_%d_1x1_%d' % (i, depth)),depth)
       with slim.arg_scope([slim.conv2d], activation_fn=None,
                           normalizer_fn=None, normalizer_params=None):
         box_encodings = slim.conv2d(
             net, num_predictions_per_location * self._box_code_size,
             [self._kernel_size, self._kernel_size],
             scope='BoxEncodingPredictor')
-			print("[ConvolutionalBoxPredictor._predict] conv2d :%s _kernel_size:%s, output :%d "%('BoxEncodingPredictor',_kernel_size,num_predictions_per_location * self._box_code_size))
+        print("[ConvolutionalBoxPredictor._predict] conv2d :%s _kernel_size:%s, output :%s "%('BoxEncodingPredictor',self._kernel_size,num_predictions_per_location * self._box_code_size))
         if self._use_dropout:
           net = slim.dropout(net, keep_prob=self._dropout_keep_prob)
         class_predictions_with_background = slim.conv2d(
@@ -541,6 +541,8 @@ class ConvolutionalBoxPredictor(BoxPredictor):
                                  combined_feature_map_shape[2] *
                                  num_predictions_per_location,
                                  1, self._box_code_size]))
+    print("[ConvolutionalBoxPredictor._predict] box_encodings ",box_encodings)
+    print("[ConvolutionalBoxPredictor._predict] combined_feature_map_shape ",combined_feature_map_shape)
     class_predictions_with_background = tf.reshape(
         class_predictions_with_background,
         tf.stack([combined_feature_map_shape[0],
