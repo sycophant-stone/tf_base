@@ -181,7 +181,9 @@ def train(create_tensor_dict_fn, create_model_fn, train_config, master, task,
     # Place the global step on the device storing the variables.
     with tf.device(deploy_config.variables_device()):
       global_step = slim.create_global_step()
-
+    print("[train] tf.device")
+    print("[train] deploy_config.variables_device()",deploy_config.variables_device())#/device:CPU:0
+    print("[train] deploy_config.inputs_device()",deploy_config.inputs_device())#/device:CPU:0
     with tf.device(deploy_config.inputs_device()):
       input_queue = _create_input_queue(train_config.batch_size // num_clones,
                                         create_tensor_dict_fn,
@@ -287,6 +289,13 @@ def train(create_tensor_dict_fn, create_model_fn, train_config, master, task,
     saver = tf.train.Saver(
         keep_checkpoint_every_n_hours=keep_checkpoint_every_n_hours)
 
+    #with tf.Session() as sess:
+        #rpn_box_predictor_features=tf.Graph().get_tensor_by_name('Conv/Relu6:0')
+        #rpn_features_to_crop=tf.Graph().get_tensor_by_name('detection_boxes:0')
+        #print("[train] rpn_box_predictor_features:",sess.run[rpn_box_predictor_features])
+        #print("[train] rpn_features_to_crop:",sess.run[rpn_features_to_crop])
+        
+        
     slim.learning.train(
         train_tensor,
         logdir=train_dir,

@@ -537,7 +537,11 @@ class FasterRCNNMetaArch(model.DetectionModel):
         'anchors': anchors
     }
     print("[FasterRCNNMetaArch.predict] prediction_dict: ",prediction_dict)
-	
+    '''
+    with tf.device("/device:CPU:0"):
+        with tf.Session() as sess:
+            print("[rpn_box_predictor_features_map]:",sess.run(rpn_box_predictor_features))
+      '''  
     if not self._first_stage_only:
       prediction_dict.update(self._predict_second_stage(
           rpn_box_encodings,
