@@ -117,7 +117,7 @@ tf_record_input_reader {
   input_path: "voc/pascal_train.record"
 }
 
-[main]: model_fn: functools.partial(<function build at 0x7f3f3e4fc268>, model_config=faster_rcnn {
+[main]: model_fn: functools.partial(<function build at 0x7f7ef4973c80>, model_config=faster_rcnn {
   num_classes: 21
   image_resizer {
     keep_aspect_ratio_resizer {
@@ -198,7 +198,7 @@ tf_record_input_reader {
   second_stage_classification_loss_weight: 1.0
 }
 , is_training=True)
-[main]: create_input_dict_fn: functools.partial(<function build at 0x7f3f3e4f6e18>, label_map_path: "voc/pascal_label_map.pbtxt"
+[main]: create_input_dict_fn: functools.partial(<function build at 0x7f7ef4973840>, label_map_path: "voc/pascal_label_map.pbtxt"
 tf_record_input_reader {
   input_path: "voc/pascal_train.record"
 }
@@ -207,12 +207,12 @@ tf_record_input_reader {
 [main]: cluster: None
 [main]: task_data: {'type': 'master', 'index': 0}
 [main]: task_info: <class '__main__.TaskSpec'>
-[main]: create_input_dict_fn: functools.partial(<function build at 0x7f3f3e4f6e18>, label_map_path: "voc/pascal_label_map.pbtxt"
+[main]: create_input_dict_fn: functools.partial(<function build at 0x7f7ef4973840>, label_map_path: "voc/pascal_label_map.pbtxt"
 tf_record_input_reader {
   input_path: "voc/pascal_train.record"
 }
 )
-[main]: model_fn: functools.partial(<function build at 0x7f3f3e4fc268>, model_config=faster_rcnn {
+[main]: model_fn: functools.partial(<function build at 0x7f7ef4973c80>, model_config=faster_rcnn {
   num_classes: 21
   image_resizer {
     keep_aspect_ratio_resizer {
@@ -335,7 +335,37 @@ num_steps: 200000
 [main]: worker_job_name: lonely_worker
 [main]: is_chief: True
 [main]: train_dir: voc/train_dir/
+[anchor_generator_builder.build] grid_anchor_generator_config:  height_stride: 8
+width_stride: 8
+scales: 0.25
+scales: 0.5
+scales: 1.0
+scales: 2.0
+aspect_ratios: 0.5
+aspect_ratios: 1.0
+aspect_ratios: 2.0
+
+[anchor_generator_builder.build] gird_aspect_ratios:  [0.5, 1.0, 2.0]
+[anchor_generator_builder.build] gird_base_anchor_size:  [256, 256]
+[anchor_generator_builder.build] gird_anchor_stride:  [8, 8]
+[anchor_generator_builder.build] gird_anchor_offset:  [0, 0]
+[anchor_generator_builder.build] grid_anchor_generator_config:  height_stride: 8
+width_stride: 8
+scales: 0.25
+scales: 0.5
+scales: 1.0
+scales: 2.0
+aspect_ratios: 0.5
+aspect_ratios: 1.0
+aspect_ratios: 2.0
+
+[anchor_generator_builder.build] gird_aspect_ratios:  [0.5, 1.0, 2.0]
+[anchor_generator_builder.build] gird_base_anchor_size:  [256, 256]
+[anchor_generator_builder.build] gird_anchor_stride:  [8, 8]
+[anchor_generator_builder.build] gird_anchor_offset:  [0, 0]
 faster_rcnn_inception_resnetv2 [preprocess]: resized_inputs Tensor("Preprocessor/map/TensorArrayStack/TensorArrayGatherV3:0", shape=(1, ?, ?, 3), dtype=float32)
+[faster_rcnn_meta_arch]._extract_rpn_feature_maps: feature_map_shape[1]:Tensor("strided_slice:0", shape=(), dtype=int32, device=/device:GPU:0), feature_map_shape[0]:Tensor("strided_slice_1:0", shape=(), dtype=int32, device=/device:GPU:0) 
+[faster_rcnn_meta_arch]._extract_rpn_feature_maps: anchors:  <object_detection.core.box_list.BoxList object at 0x7f7ee94196a0>
 [ConvolutionalBoxPredictor._predict] image_features Tensor("Conv/Relu6:0", shape=(1, ?, ?, 512), dtype=float32, device=/device:GPU:0)
 [ConvolutionalBoxPredictor._predict] num_predictions_per_location 12
 [ConvolutionalBoxPredictor._predict] features_depth:512,depth:0
@@ -344,7 +374,7 @@ faster_rcnn_inception_resnetv2 [preprocess]: resized_inputs Tensor("Preprocessor
 [ConvolutionalBoxPredictor._predict] box_encodings  Tensor("FirstStageBoxPredictor/Reshape:0", shape=(1, ?, 1, 4), dtype=float32, device=/device:GPU:0)
 [ConvolutionalBoxPredictor._predict] combined_feature_map_shape  [1, <tf.Tensor 'FirstStageBoxPredictor/strided_slice:0' shape=() dtype=int32>, <tf.Tensor 'FirstStageBoxPredictor/strided_slice_1:0' shape=() dtype=int32>, 512]
 [FasterRCNNMetaArch.predict] prediction_dict:  {'rpn_box_predictor_features': <tf.Tensor 'Conv/Relu6:0' shape=(1, ?, ?, 512) dtype=float32>, 'rpn_features_to_crop': <tf.Tensor 'FirstStageFeatureExtractor/InceptionResnetV2/InceptionResnetV2/Repeat_1/block17_20/Relu:0' shape=(1, ?, ?, 1088) dtype=float32>, 'image_shape': <tf.Tensor 'Shape_11:0' shape=(4,) dtype=int32>, 'rpn_box_encodings': <tf.Tensor 'map/TensorArrayStack/TensorArrayGatherV3:0' shape=(1, ?, 4) dtype=float32>, 'rpn_objectness_predictions_with_background': <tf.Tensor 'map_1/TensorArrayStack/TensorArrayGatherV3:0' shape=(1, ?, 2) dtype=float32>, 'anchors': <tf.Tensor 'PruneOutsideWindow/Gather/GatherV2:0' shape=(?, 4) dtype=float32>}
-[_create_losses]: detection_model: <object_detection.meta_architectures.faster_rcnn_meta_arch.FasterRCNNMetaArch object at 0x7f3f3e205048>
+[_create_losses]: detection_model: <object_detection.meta_architectures.faster_rcnn_meta_arch.FasterRCNNMetaArch object at 0x7f7ef36475c0>
 [_create_losses]: images: Tensor("concat_1:0", shape=(1, ?, ?, 3), dtype=float32, device=/device:GPU:0)
 [_create_losses]: groundtruth_boxes_list: (<tf.Tensor 'Slice_4:0' shape=(?, 4) dtype=float32>,)
 [_create_losses]: groundtruth_classes_list: (<tf.Tensor 'Reshape_9:0' shape=(?, 21) dtype=float32>,)

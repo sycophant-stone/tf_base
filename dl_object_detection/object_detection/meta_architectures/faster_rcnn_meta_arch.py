@@ -653,10 +653,10 @@ class FasterRCNNMetaArch(model.DetectionModel):
         preprocessed_inputs, scope=self.first_stage_feature_extractor_scope)
 
     feature_map_shape = tf.shape(rpn_features_to_crop)
-	print("[faster_rcnn_meta_arch]._extract_rpn_feature_maps: feature_map_shape[1]:%d, feature_map_shape[0]:%d "%(feature_map_shape[1],feature_map_shape[0])
-	anchors = self._first_stage_anchor_generator.generate(
+    print("[faster_rcnn_meta_arch]._extract_rpn_feature_maps: feature_map_shape[1]:%s, feature_map_shape[0]:%s "%(feature_map_shape[1],feature_map_shape[0]))
+    anchors = self._first_stage_anchor_generator.generate(
         [(feature_map_shape[1], feature_map_shape[2])])
-	print("[faster_rcnn_meta_arch]._extract_rpn_feature_maps: anchors: ",anchors)
+    print("[faster_rcnn_meta_arch]._extract_rpn_feature_maps: anchors: ",anchors)
     with slim.arg_scope(self._first_stage_box_predictor_arg_scope):
       kernel_size = self._first_stage_box_predictor_kernel_size
       rpn_box_predictor_features = slim.conv2d(

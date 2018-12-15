@@ -40,27 +40,27 @@ def build(anchor_generator_config):
   if anchor_generator_config.WhichOneof(
       'anchor_generator_oneof') == 'grid_anchor_generator':
     grid_anchor_generator_config = anchor_generator_config.grid_anchor_generator
-	grid_scales=[float(scale) for scale in grid_anchor_generator_config.scales]
-	gird_aspect_ratios=[float(aspect_ratio)
+    grid_scales=[float(scale) for scale in grid_anchor_generator_config.scales]
+    gird_aspect_ratios=[float(aspect_ratio)
                        for aspect_ratio
-                       in grid_anchor_generator_config.aspect_ratios],
+                       in grid_anchor_generator_config.aspect_ratios]
     gird_base_anchor_size=[grid_anchor_generator_config.height,
-                          grid_anchor_generator_config.width],
+                          grid_anchor_generator_config.width]
     gird_anchor_stride=[grid_anchor_generator_config.height_stride,
-                       grid_anchor_generator_config.width_stride],
-	gird_anchor_offset=[grid_anchor_generator_config.height_offset,
+                       grid_anchor_generator_config.width_stride]
+    gird_anchor_offset=[grid_anchor_generator_config.height_offset,
                        grid_anchor_generator_config.width_offset]
-	print("[anchor_generator_builder.build] grid_anchor_generator_config: ",grid_anchor_generator_config)
-	print("[anchor_generator_builder.build] gird_aspect_ratios: ",gird_aspect_ratios)
-	print("[anchor_generator_builder.build] gird_base_anchor_size: ",gird_base_anchor_size)
-	print("[anchor_generator_builder.build] gird_anchor_stride: ",gird_anchor_stride)
-	print("[anchor_generator_builder.build] gird_anchor_offset: ",gird_anchor_offset)
+    print("[anchor_generator_builder.build] grid_anchor_generator_config: ",grid_anchor_generator_config)
+    print("[anchor_generator_builder.build] gird_aspect_ratios: ",gird_aspect_ratios)
+    print("[anchor_generator_builder.build] gird_base_anchor_size: ",gird_base_anchor_size)
+    print("[anchor_generator_builder.build] gird_anchor_stride: ",gird_anchor_stride)
+    print("[anchor_generator_builder.build] gird_anchor_offset: ",gird_anchor_offset)
     return grid_anchor_generator.GridAnchorGenerator(
         scales=grid_scales,
-		aspect_ratios=gird_aspect_ratios,
-		base_anchor_size=gird_base_anchor_size,
-		anchor_stride=gird_anchor_stride,
-		anchor_offset=gird_anchor_offset)
+        aspect_ratios=gird_aspect_ratios,
+        base_anchor_size=gird_base_anchor_size,
+        anchor_stride=gird_anchor_stride,
+        anchor_offset=gird_anchor_offset)
   elif anchor_generator_config.WhichOneof(
       'anchor_generator_oneof') == 'ssd_anchor_generator':
     ssd_anchor_generator_config = anchor_generator_config.ssd_anchor_generator
