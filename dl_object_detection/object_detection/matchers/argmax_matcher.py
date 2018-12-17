@@ -30,7 +30,7 @@ factory function for popular implementations.
 import tensorflow as tf
 
 from object_detection.core import matcher
-
+from object_detection import tfprint
 
 class ArgMaxMatcher(matcher.Matcher):
   """Matcher based on highest value.
@@ -109,7 +109,8 @@ class ArgMaxMatcher(matcher.Matcher):
     Returns:
       Match object with corresponding matches for each of M columns.
     """
-
+    
+    tfprint.tfp_similarity_matrix = tf.Print(similarity_matrix,["argmax_matcher's input : similarity_matrix\n",similarity_matrix],message="[trainning  info]")
     def _match_when_rows_are_empty():
       """Performs matching when the rows of similarity matrix are empty.
 

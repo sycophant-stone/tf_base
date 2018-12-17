@@ -79,6 +79,12 @@ class TargetAssigner(object):
       raise ValueError('matcher must be a Matcher')
     if not isinstance(box_coder, bcoder.BoxCoder):
       raise ValueError('box_coder must be a BoxCoder')
+    print("[target_assigner.__init__]: similarity_calc",similarity_calc)
+    print("[target_assigner.__init__]: matcher",matcher)
+    print("[target_assigner.__init__]: box_coder",box_coder)
+    print("[target_assigner.__init__]: positive_class_weight",positive_class_weight)
+    print("[target_assigner.__init__]: negative_class_weight",negative_class_weight)
+    print("[target_assigner.__init__]: unmatched_cls_target",unmatched_cls_target)
     self._similarity_calc = similarity_calc
     self._matcher = matcher
     self._box_coder = box_coder
@@ -135,7 +141,11 @@ class TargetAssigner(object):
       raise ValueError('anchors must be an BoxList')
     if not isinstance(groundtruth_boxes, box_list.BoxList):
       raise ValueError('groundtruth_boxes must be an BoxList')
-
+    print("[target_assigner.assign] anchors:",anchors)
+    print("[target_assigner.assign] groundtruth_boxes:",groundtruth_boxes)
+    print("[target_assigner.assign] groundtruth_labels:",groundtruth_labels)
+    print("[target_assigner.assign] params:",**params)
+    print("[target_assigner.assign] num_anchors:",anchors.num_boxes_static())
     if groundtruth_labels is None:
       groundtruth_labels = tf.ones(tf.expand_dims(groundtruth_boxes.num_boxes(),
                                                   0))

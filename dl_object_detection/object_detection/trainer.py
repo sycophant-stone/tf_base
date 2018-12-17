@@ -31,7 +31,7 @@ from object_detection.core import standard_fields as fields
 from object_detection.utils import ops as util_ops
 from object_detection.utils import variables_helper
 from deployment import model_deploy
-
+from object_detection import tfprint
 slim = tf.contrib.slim
 
 
@@ -297,7 +297,7 @@ def train(create_tensor_dict_fn, create_model_fn, train_config, master, task,
         
         
     slim.learning.train(
-        train_tensor,
+        [train_tensor,tfprint.tfp_similarity_matrix],
         logdir=train_dir,
         master=master,
         is_chief=is_chief,
