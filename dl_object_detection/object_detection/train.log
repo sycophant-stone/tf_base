@@ -117,7 +117,7 @@ tf_record_input_reader {
   input_path: "voc/pascal_train.record"
 }
 
-[main]: model_fn: functools.partial(<function build at 0x7f2b38c19048>, model_config=faster_rcnn {
+[main]: model_fn: functools.partial(<function build at 0x7f73665ac048>, model_config=faster_rcnn {
   num_classes: 21
   image_resizer {
     keep_aspect_ratio_resizer {
@@ -198,7 +198,7 @@ tf_record_input_reader {
   second_stage_classification_loss_weight: 1.0
 }
 , is_training=True)
-[main]: create_input_dict_fn: functools.partial(<function build at 0x7f2b38c05b70>, label_map_path: "voc/pascal_label_map.pbtxt"
+[main]: create_input_dict_fn: functools.partial(<function build at 0x7f7366592b70>, label_map_path: "voc/pascal_label_map.pbtxt"
 tf_record_input_reader {
   input_path: "voc/pascal_train.record"
 }
@@ -207,12 +207,12 @@ tf_record_input_reader {
 [main]: cluster: None
 [main]: task_data: {'type': 'master', 'index': 0}
 [main]: task_info: <class '__main__.TaskSpec'>
-[main]: create_input_dict_fn: functools.partial(<function build at 0x7f2b38c05b70>, label_map_path: "voc/pascal_label_map.pbtxt"
+[main]: create_input_dict_fn: functools.partial(<function build at 0x7f7366592b70>, label_map_path: "voc/pascal_label_map.pbtxt"
 tf_record_input_reader {
   input_path: "voc/pascal_train.record"
 }
 )
-[main]: model_fn: functools.partial(<function build at 0x7f2b38c19048>, model_config=faster_rcnn {
+[main]: model_fn: functools.partial(<function build at 0x7f73665ac048>, model_config=faster_rcnn {
   num_classes: 21
   image_resizer {
     keep_aspect_ratio_resizer {
@@ -349,15 +349,23 @@ aspect_ratios: 2.0
 [anchor_generator_builder.build] gird_base_anchor_size:  [256, 256]
 [anchor_generator_builder.build] gird_anchor_stride:  [8, 8]
 [anchor_generator_builder.build] gird_anchor_offset:  [0, 0]
-[target_assigner.__init__]: similarity_calc <object_detection.core.region_similarity_calculator.IouSimilarity object at 0x7f2b383abda0>
-[target_assigner.__init__]: matcher <object_detection.matchers.argmax_matcher.ArgMaxMatcher object at 0x7f2b383abd68>
-[target_assigner.__init__]: box_coder <object_detection.box_coders.faster_rcnn_box_coder.FasterRcnnBoxCoder object at 0x7f2b383abfd0>
+[argmax_matcher.__init__] _force_match_for_each_row: True
+[argmax_matcher.__init__] _negatives_lower_than_unmatched: True
+[argmax_matcher.__init__] _matched_threshold: 0.7
+[argmax_matcher.__init__] _unmatched_threshold: 0.3
+[target_assigner.__init__]: similarity_calc <object_detection.core.region_similarity_calculator.IouSimilarity object at 0x7f7365ccd0f0>
+[target_assigner.__init__]: matcher <object_detection.matchers.argmax_matcher.ArgMaxMatcher object at 0x7f7365ccd0b8>
+[target_assigner.__init__]: box_coder <object_detection.box_coders.faster_rcnn_box_coder.FasterRcnnBoxCoder object at 0x7f7365ccd358>
 [target_assigner.__init__]: positive_class_weight 1.0
 [target_assigner.__init__]: negative_class_weight 1.0
 [target_assigner.__init__]: unmatched_cls_target None
-[target_assigner.__init__]: similarity_calc <object_detection.core.region_similarity_calculator.IouSimilarity object at 0x7f2b3833c0f0>
-[target_assigner.__init__]: matcher <object_detection.matchers.argmax_matcher.ArgMaxMatcher object at 0x7f2b3833c080>
-[target_assigner.__init__]: box_coder <object_detection.box_coders.faster_rcnn_box_coder.FasterRcnnBoxCoder object at 0x7f2b3833c320>
+[argmax_matcher.__init__] _force_match_for_each_row: False
+[argmax_matcher.__init__] _negatives_lower_than_unmatched: True
+[argmax_matcher.__init__] _matched_threshold: 0.5
+[argmax_matcher.__init__] _unmatched_threshold: None
+[target_assigner.__init__]: similarity_calc <object_detection.core.region_similarity_calculator.IouSimilarity object at 0x7f7365ccd400>
+[target_assigner.__init__]: matcher <object_detection.matchers.argmax_matcher.ArgMaxMatcher object at 0x7f7365ccd320>
+[target_assigner.__init__]: box_coder <object_detection.box_coders.faster_rcnn_box_coder.FasterRcnnBoxCoder object at 0x7f7365ccd630>
 [target_assigner.__init__]: positive_class_weight 1.0
 [target_assigner.__init__]: negative_class_weight 1.0
 [target_assigner.__init__]: unmatched_cls_target Tensor("Const_3:0", shape=(22,), dtype=float32)
@@ -378,21 +386,29 @@ aspect_ratios: 2.0
 [anchor_generator_builder.build] gird_base_anchor_size:  [256, 256]
 [anchor_generator_builder.build] gird_anchor_stride:  [8, 8]
 [anchor_generator_builder.build] gird_anchor_offset:  [0, 0]
-[target_assigner.__init__]: similarity_calc <object_detection.core.region_similarity_calculator.IouSimilarity object at 0x7f2b380de860>
-[target_assigner.__init__]: matcher <object_detection.matchers.argmax_matcher.ArgMaxMatcher object at 0x7f2b380de828>
-[target_assigner.__init__]: box_coder <object_detection.box_coders.faster_rcnn_box_coder.FasterRcnnBoxCoder object at 0x7f2b380de9b0>
+[argmax_matcher.__init__] _force_match_for_each_row: True
+[argmax_matcher.__init__] _negatives_lower_than_unmatched: True
+[argmax_matcher.__init__] _matched_threshold: 0.7
+[argmax_matcher.__init__] _unmatched_threshold: 0.3
+[target_assigner.__init__]: similarity_calc <object_detection.core.region_similarity_calculator.IouSimilarity object at 0x7f736526eb70>
+[target_assigner.__init__]: matcher <object_detection.matchers.argmax_matcher.ArgMaxMatcher object at 0x7f736526eb38>
+[target_assigner.__init__]: box_coder <object_detection.box_coders.faster_rcnn_box_coder.FasterRcnnBoxCoder object at 0x7f736526ecc0>
 [target_assigner.__init__]: positive_class_weight 1.0
 [target_assigner.__init__]: negative_class_weight 1.0
 [target_assigner.__init__]: unmatched_cls_target None
-[target_assigner.__init__]: similarity_calc <object_detection.core.region_similarity_calculator.IouSimilarity object at 0x7f2b380dea90>
-[target_assigner.__init__]: matcher <object_detection.matchers.argmax_matcher.ArgMaxMatcher object at 0x7f2b380dea58>
-[target_assigner.__init__]: box_coder <object_detection.box_coders.faster_rcnn_box_coder.FasterRcnnBoxCoder object at 0x7f2b380debe0>
+[argmax_matcher.__init__] _force_match_for_each_row: False
+[argmax_matcher.__init__] _negatives_lower_than_unmatched: True
+[argmax_matcher.__init__] _matched_threshold: 0.5
+[argmax_matcher.__init__] _unmatched_threshold: None
+[target_assigner.__init__]: similarity_calc <object_detection.core.region_similarity_calculator.IouSimilarity object at 0x7f736526eda0>
+[target_assigner.__init__]: matcher <object_detection.matchers.argmax_matcher.ArgMaxMatcher object at 0x7f736526ed68>
+[target_assigner.__init__]: box_coder <object_detection.box_coders.faster_rcnn_box_coder.FasterRcnnBoxCoder object at 0x7f736526eef0>
 [target_assigner.__init__]: positive_class_weight 1.0
 [target_assigner.__init__]: negative_class_weight 1.0
 [target_assigner.__init__]: unmatched_cls_target Tensor("Const_3:0", shape=(22,), dtype=float32, device=/device:GPU:0)
 faster_rcnn_inception_resnetv2 [preprocess]: resized_inputs Tensor("Preprocessor/map/TensorArrayStack/TensorArrayGatherV3:0", shape=(1, ?, ?, 3), dtype=float32)
 [faster_rcnn_meta_arch]._extract_rpn_feature_maps: feature_map_shape[1]:Tensor("strided_slice:0", shape=(), dtype=int32, device=/device:GPU:0), feature_map_shape[0]:Tensor("strided_slice_1:0", shape=(), dtype=int32, device=/device:GPU:0) 
-[faster_rcnn_meta_arch]._extract_rpn_feature_maps: anchors:  <object_detection.core.box_list.BoxList object at 0x7f2b295d1f60>
+[faster_rcnn_meta_arch]._extract_rpn_feature_maps: anchors:  <object_detection.core.box_list.BoxList object at 0x7f7356fea240>
 [ConvolutionalBoxPredictor._predict] image_features Tensor("Conv/Relu6:0", shape=(1, ?, ?, 512), dtype=float32, device=/device:GPU:0)
 [ConvolutionalBoxPredictor._predict] num_predictions_per_location 12
 [ConvolutionalBoxPredictor._predict] features_depth:512,depth:0
@@ -401,22 +417,22 @@ faster_rcnn_inception_resnetv2 [preprocess]: resized_inputs Tensor("Preprocessor
 [ConvolutionalBoxPredictor._predict] box_encodings  Tensor("FirstStageBoxPredictor/Reshape:0", shape=(1, ?, 1, 4), dtype=float32, device=/device:GPU:0)
 [ConvolutionalBoxPredictor._predict] combined_feature_map_shape  [1, <tf.Tensor 'FirstStageBoxPredictor/strided_slice:0' shape=() dtype=int32>, <tf.Tensor 'FirstStageBoxPredictor/strided_slice_1:0' shape=() dtype=int32>, 512]
 [FasterRCNNMetaArch.predict] prediction_dict:  {'rpn_box_predictor_features': <tf.Tensor 'Conv/Relu6:0' shape=(1, ?, ?, 512) dtype=float32>, 'rpn_features_to_crop': <tf.Tensor 'FirstStageFeatureExtractor/InceptionResnetV2/InceptionResnetV2/Repeat_1/block17_20/Relu:0' shape=(1, ?, ?, 1088) dtype=float32>, 'image_shape': <tf.Tensor 'Shape_11:0' shape=(4,) dtype=int32>, 'rpn_box_encodings': <tf.Tensor 'map/TensorArrayStack/TensorArrayGatherV3:0' shape=(1, ?, 4) dtype=float32>, 'rpn_objectness_predictions_with_background': <tf.Tensor 'map_1/TensorArrayStack/TensorArrayGatherV3:0' shape=(1, ?, 2) dtype=float32>, 'anchors': <tf.Tensor 'PruneOutsideWindow/Gather/GatherV2:0' shape=(?, 4) dtype=float32>}
-[target_assigner.assign] anchors: <object_detection.core.box_list.BoxList object at 0x7f2b28f46c88>
-[target_assigner.assign] groundtruth_boxes: <object_detection.core.box_list.BoxList object at 0x7f2b28f89b38>
+[target_assigner.assign] anchors: <object_detection.core.box_list.BoxList object at 0x7f7356947f98>
+[target_assigner.assign] groundtruth_boxes: <object_detection.core.box_list.BoxList object at 0x7f7356986ef0>
 [target_assigner.assign] groundtruth_labels: Tensor("Pad:0", shape=(?, 22), dtype=float32, device=/device:GPU:0)
 [target_assigner.assign] params:
 [target_assigner.assign] num_anchors: None
-[target_assigner.assign] anchors: <object_detection.core.box_list.BoxList object at 0x7f2b28c15630>
-[target_assigner.assign] groundtruth_boxes: <object_detection.core.box_list.BoxList object at 0x7f2b27cd7ba8>
+[target_assigner.assign] anchors: <object_detection.core.box_list.BoxList object at 0x7f735594f320>
+[target_assigner.assign] groundtruth_boxes: <object_detection.core.box_list.BoxList object at 0x7f73556dcd68>
 [target_assigner.assign] groundtruth_labels: None
 [target_assigner.assign] params:
 [target_assigner.assign] num_anchors: None
-[target_assigner.assign] anchors: <object_detection.core.box_list.BoxList object at 0x7f2b27a3cf98>
-[target_assigner.assign] groundtruth_boxes: <object_detection.core.box_list.BoxList object at 0x7f2b27cd7ba8>
+[target_assigner.assign] anchors: <object_detection.core.box_list.BoxList object at 0x7f73553d5e80>
+[target_assigner.assign] groundtruth_boxes: <object_detection.core.box_list.BoxList object at 0x7f73556dcd68>
 [target_assigner.assign] groundtruth_labels: Tensor("Loss/Pad:0", shape=(?, 22), dtype=float32, device=/device:GPU:0)
 [target_assigner.assign] params:
 [target_assigner.assign] num_anchors: 64
-[_create_losses]: detection_model: <object_detection.meta_architectures.faster_rcnn_meta_arch.FasterRCNNMetaArch object at 0x7f2b380de7b8>
+[_create_losses]: detection_model: <object_detection.meta_architectures.faster_rcnn_meta_arch.FasterRCNNMetaArch object at 0x7f736526eac8>
 [_create_losses]: images: Tensor("concat_1:0", shape=(1, ?, ?, 3), dtype=float32, device=/device:GPU:0)
 [_create_losses]: groundtruth_boxes_list: (<tf.Tensor 'Slice_4:0' shape=(?, 4) dtype=float32>,)
 [_create_losses]: groundtruth_classes_list: (<tf.Tensor 'Reshape_9:0' shape=(?, 21) dtype=float32>,)

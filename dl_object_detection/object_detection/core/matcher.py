@@ -35,7 +35,7 @@ from abc import ABCMeta
 from abc import abstractmethod
 
 import tensorflow as tf
-
+from object_detection import tfprint
 
 class Match(object):
   """Class to store results from the matcher.
@@ -63,6 +63,7 @@ class Match(object):
       raise ValueError('match_results should be an int32 or int64 scalar '
                        'tensor')
     self._match_results = match_results
+    tfprint.tfp_match_results=tf.Print(match_results,[match_results,tf.shape(match_results),"match_results"])
 
   @property
   def match_results(self):

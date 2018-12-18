@@ -295,9 +295,8 @@ def train(create_tensor_dict_fn, create_model_fn, train_config, master, task,
         #print("[train] rpn_box_predictor_features:",sess.run[rpn_box_predictor_features])
         #print("[train] rpn_features_to_crop:",sess.run[rpn_features_to_crop])
         
-        
     slim.learning.train(
-        [train_tensor,tfprint.tfp_similarity_matrix],
+[train_tensor,tfprint.tfp_similarity_matrix,tfprint.tfp_match_results],
         logdir=train_dir,
         master=master,
         is_chief=is_chief,

@@ -98,6 +98,10 @@ class ArgMaxMatcher(matcher.Matcher):
                          self._matched_threshold, self._unmatched_threshold)
     self._force_match_for_each_row = force_match_for_each_row
     self._negatives_lower_than_unmatched = negatives_lower_than_unmatched
+    print("[argmax_matcher.__init__] _force_match_for_each_row:",force_match_for_each_row)
+    print("[argmax_matcher.__init__] _negatives_lower_than_unmatched:",negatives_lower_than_unmatched)
+    print("[argmax_matcher.__init__] _matched_threshold:",matched_threshold)
+    print("[argmax_matcher.__init__] _unmatched_threshold:",unmatched_threshold)
 
   def _match(self, similarity_matrix):
     """Tries to match each column of the similarity matrix to a row.
@@ -110,7 +114,7 @@ class ArgMaxMatcher(matcher.Matcher):
       Match object with corresponding matches for each of M columns.
     """
     
-    tfprint.tfp_similarity_matrix = tf.Print(similarity_matrix,["argmax_matcher's input : similarity_matrix\n",similarity_matrix],message="[trainning  info]")
+    tfprint.tfp_similarity_matrix = tf.Print(similarity_matrix,["similarity_matrix",similarity_matrix])
     def _match_when_rows_are_empty():
       """Performs matching when the rows of similarity matrix are empty.
 
@@ -168,6 +172,11 @@ class ArgMaxMatcher(matcher.Matcher):
         matches = tf.dynamic_stitch(
             [forced_matches_ids,
              keep_matches_ids], [forced_matches_values, keep_matches_values])
+        tfprint.argmax_row_range = tf.Print(row_range,["row_range",tf.shape(row_range),row_range])
+        tfprint.argmax_col_range = tf.Print(col_range,["col_range",tf.shape(col_range),col_range])
+        tfprint.forced_matches_values = tf.Print(forced_matches_values,["forced_matches_values",tf.shape(forced_matches_values),forced_matches_values])
+        tfprint.keep_matches_ids = tf.Print(keep_matches_ids,["keep_matches_ids",tf.shape(keep_matches_ids),keep_matches_ids])
+        tfprint.keep_matches_values = tf.Print(keep_matches_values,["keep_matches_values",tf.shape(keep_matches_values),keep_matches_values])
 
       return tf.cast(matches, tf.int32)
 
