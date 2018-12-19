@@ -42,7 +42,7 @@ from object_detection.core import matcher as mat
 from object_detection.core import region_similarity_calculator as sim_calc
 from object_detection.matchers import argmax_matcher
 from object_detection.matchers import bipartite_matcher
-
+from object_detection import tfprint
 
 class TargetAssigner(object):
   """Target assigner to compute classification and regression targets."""
@@ -157,6 +157,9 @@ class TargetAssigner(object):
       match_quality_matrix = self._similarity_calc.compare(groundtruth_boxes,
                                                            anchors)
       match = self._matcher.match(match_quality_matrix, **params)
+      #tfprint.match=tf.Print(match,["assign..match",tf.shape(match),match]) 这个match是match.Match 的object,不是tensor.
+      tfprint.anchors=tf.Print(anchors.get(),["assign..anchors",tf.shape(anchors.get()),anchors.get()],summarize=64)
+      tfprint.groundtruth_boxes=tf.Print(groundtruth_boxes.get(),["assign..groundtruth_boxes",tf.shape(groundtruth_boxes.get()),groundtruth_boxes.get()],summarize=64)
       reg_targets = self._create_regression_targets(anchors,
                                                     groundtruth_boxes,
                                                     match)
@@ -267,6 +270,7 @@ class TargetAssigner(object):
     cls_targets = tf.dynamic_stitch(
         [matched_anchor_indices, unmatched_ignored_anchor_indices],
         [matched_cls_targets, unmatched_ignored_cls_targets])
+    tfprint.cls_targets = tf.Print(cls_targets,["cls_targets",tf.shape(cls_targets),cls_targets[0],cls_targets[1],cls_targets[10],cls_targets[15],cls_targets[19]],summarize=64)
     return cls_targets
 
   def _create_regression_weights(self, match):

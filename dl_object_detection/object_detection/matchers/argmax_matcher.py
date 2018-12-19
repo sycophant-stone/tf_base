@@ -114,7 +114,7 @@ class ArgMaxMatcher(matcher.Matcher):
       Match object with corresponding matches for each of M columns.
     """
     
-    tfprint.tfp_similarity_matrix = tf.Print(similarity_matrix,["similarity_matrix",similarity_matrix])
+    tfprint.tfp_similarity_matrix = tf.Print(similarity_matrix,["similarity_matrix",tf.shape(similarity_matrix),similarity_matrix],summarize=64)
     def _match_when_rows_are_empty():
       """Performs matching when the rows of similarity matrix are empty.
 

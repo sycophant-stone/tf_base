@@ -63,7 +63,7 @@ class Match(object):
       raise ValueError('match_results should be an int32 or int64 scalar '
                        'tensor')
     self._match_results = match_results
-    tfprint.tfp_match_results=tf.Print(match_results,[match_results,tf.shape(match_results),"match_results"])
+    tfprint.tfp_match_results=tf.Print(match_results,[match_results,tf.shape(match_results),"match_results"],summarize=64)
 
   @property
   def match_results(self):
