@@ -24,6 +24,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
+import platform
+winprefix="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\dl_object_detection"
+def win_python_env_setup():
+	sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\dl_object_detection")
+	sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\dl_object_detection\\slim")
+	
+def env_prepare():
+	print("env prepare with %s",platform.system())
+	if(platform.system()=='Windows'):
+		win_python_env_setup()
+
+def iswindos():
+	return (platform.system()=='Windows')
+
+
+	
+env_prepare()
+
 import hashlib
 import io
 import logging

@@ -40,6 +40,24 @@ Example usage:
         --train_config_path=train_config.pbtxt \
         --input_config_path=train_input_config.pbtxt
 """
+import sys
+import platform
+winprefix="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\dl_object_detection"
+def win_python_env_setup():
+	sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\dl_object_detection")
+	sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\dl_object_detection\\slim")
+	
+def env_prepare():
+	print("env prepare with %s",platform.system())
+	if(platform.system()=='Windows'):
+		win_python_env_setup()
+
+def iswindos():
+	return (platform.system()=='Windows')
+
+
+	
+env_prepare()
 
 import functools
 import json
@@ -138,6 +156,9 @@ def get_configs_from_multiple_files():
 
 
 def main(_):
+  if iswindos():
+    FLAGS.train_dir=winprefix+FLAGS.train_dir
+    FLAGS.pipeline_config_path=FLAGS.pipeline_config_path+"_win"
   assert FLAGS.train_dir, '`train_dir` is missing.'
   if FLAGS.pipeline_config_path:
     model_config, train_config, input_config = get_configs_from_pipeline_file()
@@ -208,8 +229,9 @@ def main(_):
   print("[main]: ps_tasks:",ps_tasks)
   print("[main]: worker_job_name:",worker_job_name)
   print("[main]: is_chief:",is_chief)
-  print("[main]: train_dir:",FLAGS.train_dir)
 
+  print("[main]: train_dir:",FLAGS.train_dir)
+	
   trainer.train(create_input_dict_fn, model_fn, train_config, master, task,
                 FLAGS.num_clones, worker_replicas, FLAGS.clone_on_cpu, ps_tasks,
                 worker_job_name, is_chief, FLAGS.train_dir)
