@@ -144,7 +144,7 @@ class ArgMaxMatcher(matcher.Matcher):
         between_thresholds = tf.logical_and(
             tf.greater_equal(matched_vals, self._unmatched_threshold),
             tf.greater(self._matched_threshold, matched_vals))
-
+        tfprint.matches_raw= tf.Print(matches,["raw matches",tf.shape(matches),matches])
         if self._negatives_lower_than_unmatched:
           matches = self._set_values_using_indicator(matches,
                                                      below_unmatched_threshold,
@@ -159,6 +159,7 @@ class ArgMaxMatcher(matcher.Matcher):
           matches = self._set_values_using_indicator(matches,
                                                      between_thresholds,
                                                      -1)
+        tfprint.matches_thresh= tf.Print(matches,["after thresh matches",tf.shape(matches),matches])
 
       if self._force_match_for_each_row:
         forced_matches_ids = tf.cast(tf.argmax(similarity_matrix, 1), tf.int32)
