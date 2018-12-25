@@ -256,6 +256,7 @@ class TargetAssigner(object):
         where the subshape [d_1, ..., d_k] is compatible with groundtruth_labels
         which has shape [num_gt_boxes, d_1, d_2, ... d_k].
     """
+    tfprint.groundtruth_label = tf.Print(groundtruth_labels,["assign..groundtruth_labels",tf.shape(groundtruth_labels),groundtruth_labels],summarize=64)
     matched_anchor_indices = match.matched_column_indices()
     unmatched_ignored_anchor_indices = (match.
                                         unmatched_or_ignored_column_indices())

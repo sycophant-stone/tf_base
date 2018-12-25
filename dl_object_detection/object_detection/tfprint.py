@@ -12,3 +12,5 @@ anchors= tf.placeholder(tf.float32)
 groundtruth_boxes= tf.placeholder(tf.float32)
 matches_raw = tf.placeholder(tf.float32)
 matches_thresh = tf.placeholder(tf.float32)
+## target_assigner.py
+groundtruth_label = tf.placeholder(tf.float32)
