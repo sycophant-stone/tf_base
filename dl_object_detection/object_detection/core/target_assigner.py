@@ -222,6 +222,7 @@ class TargetAssigner(object):
         [matched_anchor_indices, unmatched_ignored_anchor_indices],
         [matched_reg_targets, unmatched_ignored_reg_targets])
     # TODO: summarize the number of matches on average.
+    tfprint.reg_targets = tf.Print(reg_targets,["reg_targets",tf.shape(reg_targets),reg_targets[0],reg_targets[1],reg_targets[10],reg_targets[15],reg_targets[19]],summarize=64)
     return reg_targets
 
   def _default_regression_target(self):

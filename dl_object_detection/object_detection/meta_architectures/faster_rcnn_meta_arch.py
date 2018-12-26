@@ -81,7 +81,7 @@ from object_detection.core import standard_fields as fields
 from object_detection.core import target_assigner
 from object_detection.utils import ops
 from object_detection.utils import shape_utils
-
+from object_detection import tfprint
 slim = tf.contrib.slim
 
 
@@ -513,7 +513,8 @@ class FasterRCNNMetaArch(model.DetectionModel):
      image_shape) = self._extract_rpn_feature_maps(preprocessed_inputs)
     (rpn_box_encodings, rpn_objectness_predictions_with_background
     ) = self._predict_rpn_proposals(rpn_box_predictor_features)
-
+    tfprint.rpn_box_encodings = tf.Print(rpn_box_encodings,["rpn_box_encodings",tf.shape(rpn_box_encodings),rpn_box_encodings],summarize=64)
+    tfprint.rpn_objectness_predictions_with_background = tf.Print(rpn_objectness_predictions_with_background,["rpn_objectness_predictions_with_background",tf.shape(rpn_objectness_predictions_with_background),rpn_objectness_predictions_with_background],summarize=64)
     # The Faster R-CNN paper recommends pruning anchors that venture outside
     # the image window at training time and clipping at inference time.
     clip_window = tf.to_float(tf.stack([0, 0, image_shape[1], image_shape[2]]))

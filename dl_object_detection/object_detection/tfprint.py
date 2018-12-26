@@ -8,9 +8,18 @@ forced_matches_values = tf.placeholder(tf.float32)
 keep_matches_ids = tf.placeholder(tf.float32)
 keep_matches_values = tf.placeholder(tf.float32)
 cls_targets = tf.placeholder(tf.float32)
+reg_targets = tf.placeholder(tf.float32)
 anchors= tf.placeholder(tf.float32)
 groundtruth_boxes= tf.placeholder(tf.float32)
 matches_raw = tf.placeholder(tf.float32)
 matches_thresh = tf.placeholder(tf.float32)
 ## target_assigner.py
 groundtruth_label = tf.placeholder(tf.float32)
+
+## core/balanced_positive_negative_sampler.py
+indicator = tf.placeholder(tf.bool) # not fetchable
+labels = tf.placeholder(tf.bool)    # not fetchable
+
+## faster rcnn meta arch 
+rpn_box_encodings = tf.placeholder(tf.float32)
+rpn_objectness_predictions_with_background = tf.placeholder(tf.float32)

@@ -47,7 +47,7 @@ class BalancedPositiveNegativeSampler(minibatch_sampler.MinibatchSampler):
       raise ValueError('positive_fraction should be in range [0,1]. '
                        'Received: %s.' % positive_fraction)
     self._positive_fraction = positive_fraction
-
+    print("[balanced_positive_negative_smapler].__init__] _positive_fraction:", positive_fraction)
   def subsample(self, indicator, batch_size, labels):
     """Returns subsampled minibatch.
 
@@ -64,6 +64,9 @@ class BalancedPositiveNegativeSampler(minibatch_sampler.MinibatchSampler):
     Raises:
       ValueError: if labels and indicator are not 1D boolean tensors.
     """
+    tfprint.indicator = tf.Print(indicator,["indicator",tf.shape(indicator),indicator],summarize=64)
+    tfprint.labels = tf.Print(labels,["labels",tf.shape(labels),labels],summarize=64)
+    print("[balanced_positive_negative_smapler].subsample] batch_size:", batch_size)
     if len(indicator.get_shape().as_list()) != 1:
       raise ValueError('indicator must be 1 dimensional, got a tensor of '
                        'shape %s' % indicator.get_shape())
