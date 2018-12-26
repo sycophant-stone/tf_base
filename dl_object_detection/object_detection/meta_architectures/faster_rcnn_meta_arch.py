@@ -1261,6 +1261,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
           prediction_dict['anchors'],
           groundtruth_boxlists,
           groundtruth_classes_with_background_list)
+      print("[faster_rcnn_meta_arch.loss] self._first_stage_only:",self._first_stage_only)
       if not self._first_stage_only:
         loss_dict.update(
             self._loss_box_classifier(

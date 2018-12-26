@@ -29,7 +29,7 @@ the minibatch_sampler base class.
 import tensorflow as tf
 
 from object_detection.core import minibatch_sampler
-
+from object_detection import tfprint
 
 class BalancedPositiveNegativeSampler(minibatch_sampler.MinibatchSampler):
   """Subsamples minibatches to a desired balance of positives and negatives."""
