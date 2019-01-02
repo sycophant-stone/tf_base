@@ -457,6 +457,7 @@ def batch_assign_targets(target_assigner,
     reg_targets_list.append(reg_targets)
     reg_weights_list.append(reg_weights)
     match_list.append(match)
+    tfprint.target_assign_param=tf.Print(anchors.get(),["anchors_batch,anchors_batch[0],anchors,len(gt_box_batch),gt_box_batch[0],len(gt_class_targets_batch)",len(anchors_batch),tf.shape(anchors_batch[0].get()),tf.shape(anchors.get()),len(gt_box_batch),tf.shape(gt_box_batch[0].get()),len(gt_class_targets_batch)])
   batch_cls_targets = tf.stack(cls_targets_list)
   batch_cls_weights = tf.stack(cls_weights_list)
   batch_reg_targets = tf.stack(reg_targets_list)

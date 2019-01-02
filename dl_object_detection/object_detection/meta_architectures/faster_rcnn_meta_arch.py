@@ -515,6 +515,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
     ) = self._predict_rpn_proposals(rpn_box_predictor_features)
     tfprint.rpn_box_encodings = tf.Print(rpn_box_encodings,["rpn_box_encodings",tf.shape(rpn_box_encodings),rpn_box_encodings],summarize=64)
     tfprint.rpn_objectness_predictions_with_background = tf.Print(rpn_objectness_predictions_with_background,["rpn_objectness_predictions_with_background",tf.shape(rpn_objectness_predictions_with_background),rpn_objectness_predictions_with_background],summarize=64)
+    tfprint.image_shape = tf.Print(image_shape,["image_shape",tf.shape(image_shape),image_shape])
     # The Faster R-CNN paper recommends pruning anchors that venture outside
     # the image window at training time and clipping at inference time.
     clip_window = tf.to_float(tf.stack([0, 0, image_shape[1], image_shape[2]]))
@@ -528,6 +529,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
           anchors_boxlist, clip_window)
 
     anchors = anchors_boxlist.get()
+    tfprint.f_anchors = tf.Print(anchors,["faster_rcnn_meta_arch.anchors",tf.shape(anchors),anchors],summarize = 64)
     prediction_dict = {
         'rpn_box_predictor_features': rpn_box_predictor_features,
         'rpn_features_to_crop': rpn_features_to_crop,
@@ -1333,7 +1335,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
           tf.to_int32(batch_cls_targets), depth=2)
       sampled_reg_indices = tf.multiply(batch_sampled_indices,
                                         batch_reg_weights)
-
+      tfprint.batch_shapes =  tf.Print(batch_cls_targets,["batch_cls_targets, batch_reg_targets,len(groundtruth_boxlists),anchors",tf.shape(batch_cls_targets),tf.shape(batch_reg_targets),len(groundtruth_boxlists),tf.shape(anchors)])
       localization_losses = self._first_stage_localization_loss(
           rpn_box_encodings, batch_reg_targets, weights=sampled_reg_indices)
       objectness_losses = self._first_stage_objectness_loss(

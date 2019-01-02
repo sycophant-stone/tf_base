@@ -15,6 +15,7 @@ matches_raw = tf.placeholder(tf.float32)
 matches_thresh = tf.placeholder(tf.float32)
 ## target_assigner.py
 groundtruth_label = tf.placeholder(tf.float32)
+target_assign_param = tf.placeholder(tf.float32)
 
 ## core/balanced_positive_negative_sampler.py
 indicator = tf.placeholder(tf.bool) # not fetchable
@@ -23,3 +24,6 @@ labels = tf.placeholder(tf.bool)    # not fetchable
 ## faster rcnn meta arch 
 rpn_box_encodings = tf.placeholder(tf.float32)
 rpn_objectness_predictions_with_background = tf.placeholder(tf.float32)
+f_anchors = tf.placeholder(tf.float32)
+image_shape = tf.placeholder(tf.float32)
+batch_shapes = tf.placeholder(tf.float32)
