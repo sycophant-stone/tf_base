@@ -105,10 +105,19 @@ class GridAnchorGenerator(anchor_generator.AnchorGenerator):
                 for list_item in feature_map_shape_list]):
       raise ValueError('feature_map_shape_list must be a list of pairs.')
     grid_height, grid_width = feature_map_shape_list[0]
+    print("[grid_anchor_generator].generate grid_height:",grid_height)
+    print("[grid_anchor_generator].generate grid_width:",grid_width)
+    print("[grid_anchor_generator].generate _scales:",self._scales)
+    print("[grid_anchor_generator].generate _aspect_ratios:",self._aspect_ratios)
+    print("[grid_anchor_generator].generate _base_anchor_size:",self._base_anchor_size)
+    print("[grid_anchor_generator].generate _anchor_stride:",self._anchor_stride)
+    print("[grid_anchor_generator].generate _anchor_offset:",self._anchor_offset)
     scales_grid, aspect_ratios_grid = ops.meshgrid(self._scales,
                                                    self._aspect_ratios)
     scales_grid = tf.reshape(scales_grid, [-1])
     aspect_ratios_grid = tf.reshape(aspect_ratios_grid, [-1])
+    print("[grid_anchor_generator].generate scales_grid:",scales_grid)
+    print("[grid_anchor_generator].generate aspect_ratios_grid:",aspect_ratios_grid)
     return tile_anchors(grid_height,
                         grid_width,
                         scales_grid,

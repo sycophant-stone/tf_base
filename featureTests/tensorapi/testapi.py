@@ -58,11 +58,34 @@ def test_tf_dynamic_stitch():
 		output = tf.dynamic_stitch(indices, data)
 		print(sess.run(output))
 
-		
 
+def test_tf_range():
+    x1 = tf.range(8)
+    with tf.Session() as sess:
+        print(sess.run(x1))
+
+def test_tf_stack():
+    x1 = tf.constant(value=[[1,2,3],[4,5,6],[7,8,9]])
+    x2 = tf.constant(value=[[11,12,13],[14,15,16],[17,18,19]])
+    b1 = tf.stack([x1,x2],axis=0)
+    b2 = tf.stack([x1,x2],axis=1)
+    b3 = tf.stack([x1,x2],axis=2)
+    with tf.Session() as sess:
+        print(sess.run(tf.shape(x1)))
+        print(sess.run(tf.shape(x2)))
+        print(sess.run(tf.shape(b1)))
+        print(sess.run(tf.shape(b2)))
+        print(sess.run(tf.shape(b3)))
+        print(sess.run(b1))
+        print(sess.run(b2))
+        print(sess.run(b3))
+    
 if __name__ == '__main__':
 	#test_tf_gather()
 	#test_tf_reshape()
 	#test_tf_where()
 	#test_tf_slice()
-	test_tf_dynamic_stitch()
+	#test_tf_dynamic_stitch()
+    #test_tf_range()
+    test_tf_stack()
+    
