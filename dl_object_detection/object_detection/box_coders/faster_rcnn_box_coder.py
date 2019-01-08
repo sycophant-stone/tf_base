@@ -32,7 +32,7 @@ import tensorflow as tf
 
 from object_detection.core import box_coder
 from object_detection.core import box_list
-
+from object_detection import tfprint
 EPSILON = 1e-8
 
 
@@ -115,4 +115,5 @@ class FasterRcnnBoxCoder(box_coder.BoxCoder):
     xmin = xcenter - w / 2.
     ymax = ycenter + h / 2.
     xmax = xcenter + w / 2.
+    tfprint.box_decoder_param = tf.Print(ty,["ty",ty,"tx",tx,"th",th,"tw",tw,"yca",ycenter_a,"xca",xcenter_a,"ha",ha,"wa",wa],summarize=64)
     return box_list.BoxList(tf.transpose(tf.stack([ymin, xmin, ymax, xmax])))

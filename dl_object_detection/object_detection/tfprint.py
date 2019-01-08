@@ -27,6 +27,10 @@ rpn_objectness_predictions_with_background = tf.placeholder(tf.float32)
 f_anchors = tf.placeholder(tf.float32)
 image_shape = tf.placeholder(tf.float32)
 batch_shapes = tf.placeholder(tf.float32)
+_postprocess_rpn = tf.placeholder(tf.float32)
 
 ## anchor_generator
 anchor_generator_param = tf.placeholder(tf.float32)
+
+## faster_rcnn_box_coder.py
+box_decoder_param = tf.placeholder(tf.float32)

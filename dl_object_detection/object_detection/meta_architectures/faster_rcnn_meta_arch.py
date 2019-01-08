@@ -381,7 +381,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
     self._second_stage_cls_loss_weight = second_stage_classification_loss_weight
     self._hard_example_miner = hard_example_miner
     self._parallel_iterations = parallel_iterations
-
+    print("[faster_rcnn_meta_arch.__init__] _hard_example_miner:",self._hard_example_miner)
   @property
   def first_stage_feature_extractor_scope(self):
     return 'FirstStageFeatureExtractor'
@@ -876,6 +876,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
         representing the number of proposals predicted for each image in
         the batch.
     """
+    rpn_box_encodings_batch_org = rpn_box_encodings_batch
     rpn_box_encodings_batch = tf.expand_dims(rpn_box_encodings_batch, axis=2)
     rpn_encodings_shape = shape_utils.combined_static_and_dynamic_shape(
         rpn_box_encodings_batch)
@@ -883,6 +884,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
         tf.expand_dims(anchors, 0), [rpn_encodings_shape[0], 1, 1])
     proposal_boxes = self._batch_decode_boxes(rpn_box_encodings_batch,
                                               tiled_anchor_boxes)
+    proposal_boxes_org = proposal_boxes
     proposal_boxes = tf.squeeze(proposal_boxes, axis=2)
     rpn_objectness_softmax_without_background = tf.nn.softmax(
         rpn_objectness_predictions_with_background_batch)[:, :, 1]
@@ -913,6 +915,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
         image_shape[1], image_shape[2], check_range=False).get()
     proposal_boxes = tf.reshape(normalized_proposal_boxes_reshaped,
                                 [-1, proposal_boxes.shape[1].value, 4])
+    tfprint._postprocess_rpn = tf.Print(rpn_box_encodings_batch,["_postprocess_rpn:rpn_box_encodings_batch_org",rpn_box_encodings_batch_org,"rpn_box_encodings_batch",rpn_box_encodings_batch,"rpn_encodings_shape",rpn_encodings_shape,"tiled_anchor_boxes",tiled_anchor_boxes,"proposal_boxes_org",proposal_boxes_org,"proposal_boxes",proposal_boxes,"proposal_scores",proposal_scores,"rpn_objectness_softmax_without_background",rpn_objectness_softmax_without_background],summarize=64)
     return proposal_boxes, proposal_scores, num_proposals
 
   def _unpad_proposals_and_sample_box_classifier_batch(

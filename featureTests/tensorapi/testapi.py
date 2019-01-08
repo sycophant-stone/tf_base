@@ -79,7 +79,30 @@ def test_tf_stack():
         print(sess.run(b1))
         print(sess.run(b2))
         print(sess.run(b3))
-    
+
+def test_tf_squeeze():
+    x1 = tf.constant(value=[1, 2, 1, 3, 1, 1])
+    b1 = tf.squeeze([x1],axis=0)
+    c1 = tf.squeeze(x1)
+    #b2 = tf.squeeze([x1],axis=1)
+    #b3 = tf.squeeze(x1,axis=2)
+    with tf.Session() as sess:
+        print(sess.run(tf.shape(b1)))
+        print(sess.run(tf.shape(c1)))
+        #print(sess.run(tf.shape(b2)))
+        print(sess.run(b1))
+        print(sess.run(c1))
+        #print(sess.run(b2))
+
+def test_shape():
+    x1 = tf.constant(value=[[1,2,3],[4,5,6],[7,8,9]])
+    static_shape = x1.shape.as_list()
+    dynamic_shape = tf.shape(x1)
+    with tf.Session() as sess:
+        print(static_shape)
+        print(sess.run(dynamic_shape))
+
+  
 if __name__ == '__main__':
 	#test_tf_gather()
 	#test_tf_reshape()
@@ -87,5 +110,7 @@ if __name__ == '__main__':
 	#test_tf_slice()
 	#test_tf_dynamic_stitch()
     #test_tf_range()
-    test_tf_stack()
+    #test_tf_stack()
+    #test_tf_squeeze()
+    test_shape()
     
