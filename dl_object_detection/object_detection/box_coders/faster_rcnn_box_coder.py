@@ -87,6 +87,7 @@ class FasterRcnnBoxCoder(box_coder.BoxCoder):
       tx *= self._scale_factors[1]
       th *= self._scale_factors[2]
       tw *= self._scale_factors[3]
+    tfprint.box_encoder_param = tf.Print(ty,["boxes shape",tf.shape(boxes.get()),"anchors shape",tf.shape(anchors.get()),"ty",ty,"tx",tx,"th",th,"tw",tw,"yca",ycenter_a,"xca",xcenter_a,"ha",ha,"wa",wa],summarize=64)
     return tf.transpose(tf.stack([ty, tx, th, tw]))
 
   def _decode(self, rel_codes, anchors):
@@ -115,5 +116,5 @@ class FasterRcnnBoxCoder(box_coder.BoxCoder):
     xmin = xcenter - w / 2.
     ymax = ycenter + h / 2.
     xmax = xcenter + w / 2.
-    tfprint.box_decoder_param = tf.Print(ty,["ty",ty,"tx",tx,"th",th,"tw",tw,"yca",ycenter_a,"xca",xcenter_a,"ha",ha,"wa",wa],summarize=64)
+    tfprint.box_decoder_param = tf.Print(ty,["ty",ty,tf.shape(ty),"tx",tx,"th",th,"tw",tw,"yca",ycenter_a,"xca",xcenter_a,"ha",ha,"wa",wa],summarize=64)
     return box_list.BoxList(tf.transpose(tf.stack([ymin, xmin, ymax, xmax])))
