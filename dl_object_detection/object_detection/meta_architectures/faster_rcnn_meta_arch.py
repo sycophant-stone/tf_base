@@ -623,7 +623,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
 
     absolute_proposal_boxes = ops.normalized_to_image_coordinates(
         proposal_boxes_normalized, image_shape, self._parallel_iterations)
-
+    tfprint.refined_box_encodings = tf.Print(refined_box_encodings,["refined_box_encodings,absolute_proposal_boxes.shape",tf.shape(refined_box_encodings),tf.shape(absolute_proposal_boxes),refined_box_encodings],summarize=64)
     prediction_dict = {
         'refined_box_encodings': refined_box_encodings,
         'class_predictions_with_background':
