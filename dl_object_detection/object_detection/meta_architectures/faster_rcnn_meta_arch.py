@@ -876,12 +876,16 @@ class FasterRCNNMetaArch(model.DetectionModel):
         representing the number of proposals predicted for each image in
         the batch.
     """
+    #tfprint._postprocess_rpn1 = tf.Print(rpn_box_encodings_batch,["rpn_box_encodings_batch,background_batch,anchors,image_shape",tf.shape(rpn_box_encodings_batch),tf.shape(rpn_objectness_predictions_with_background_batch),tf.shape(anchors),tf.shape(image_shape)],summarize=64)
     rpn_box_encodings_batch_org = rpn_box_encodings_batch
     rpn_box_encodings_batch = tf.expand_dims(rpn_box_encodings_batch, axis=2)
+    #tfprint._postprocess_rpn1 = tf.Print(rpn_box_encodings_batch,["rpn_box_encodings_batch",tf.shape(rpn_box_encodings_batch)],summarize=64)
     rpn_encodings_shape = shape_utils.combined_static_and_dynamic_shape(
         rpn_box_encodings_batch)
+    #tfprint._postprocess_rpn1 = tf.Print(rpn_encodings_shape,["rpn_encodings_shape",tf.shape(rpn_encodings_shape),rpn_encodings_shape],summarize=64)
     tiled_anchor_boxes = tf.tile(
         tf.expand_dims(anchors, 0), [rpn_encodings_shape[0], 1, 1])
+    tfprint._postprocess_rpn1 = tf.Print(tiled_anchor_boxes,["tiled_anchor_boxes",tf.shape(tiled_anchor_boxes),tiled_anchor_boxes],summarize=64)
     proposal_boxes = self._batch_decode_boxes(rpn_box_encodings_batch,
                                               tiled_anchor_boxes)
     proposal_boxes_org = proposal_boxes
