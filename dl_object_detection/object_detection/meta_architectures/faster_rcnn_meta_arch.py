@@ -885,7 +885,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
     #tfprint._postprocess_rpn1 = tf.Print(rpn_encodings_shape,["rpn_encodings_shape",tf.shape(rpn_encodings_shape),rpn_encodings_shape],summarize=64)
     tiled_anchor_boxes = tf.tile(
         tf.expand_dims(anchors, 0), [rpn_encodings_shape[0], 1, 1])
-    tfprint._postprocess_rpn1 = tf.Print(tiled_anchor_boxes,["tiled_anchor_boxes",tf.shape(tiled_anchor_boxes),tiled_anchor_boxes],summarize=64)
+    #tfprint._postprocess_rpn1 = tf.Print(tiled_anchor_boxes,["tiled_anchor_boxes",tf.shape(tiled_anchor_boxes),tiled_anchor_boxes],summarize=64)
     proposal_boxes = self._batch_decode_boxes(rpn_box_encodings_batch,
                                               tiled_anchor_boxes)
     proposal_boxes_org = proposal_boxes
@@ -903,6 +903,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
          self._first_stage_max_proposals,
          self._first_stage_max_proposals,
          clip_window=clip_window)
+    proposal_boxes=proposal_boxes_nms
     if self._is_training:
       proposal_boxes = tf.stop_gradient(proposal_boxes)
       if not self._hard_example_miner:
@@ -919,7 +920,8 @@ class FasterRCNNMetaArch(model.DetectionModel):
         image_shape[1], image_shape[2], check_range=False).get()
     proposal_boxes = tf.reshape(normalized_proposal_boxes_reshaped,
                                 [-1, proposal_boxes.shape[1].value, 4])
-    tfprint._postprocess_rpn = tf.Print(rpn_box_encodings_batch,["_postprocess_rpn:rpn_box_encodings_batch_org",rpn_box_encodings_batch_org,"rpn_box_encodings_batch",rpn_box_encodings_batch,"rpn_encodings_shape",rpn_encodings_shape,"tiled_anchor_boxes",tiled_anchor_boxes,"proposal_boxes_org",proposal_boxes_org,"proposal_boxes",proposal_boxes,"proposal_scores",proposal_scores,"rpn_objectness_softmax_without_background",rpn_objectness_softmax_without_background],summarize=64)
+    tfprint._postprocess_rpn1 = tf.Print(proposal_boxes,["proposal_boxes,predictionsbgd,sftmaxbgd,proposal_boxes,proposal_scores_nms,proposal_boxes_reshaped,proposal_boxes",tf.shape(proposal_boxes_org),tf.shape(rpn_objectness_predictions_with_background_batch),tf.shape(rpn_objectness_softmax_without_background),tf.shape(proposal_boxes_nms),tf.shape(proposal_scores),tf.shape(proposal_boxes_reshaped),tf.shape(proposal_boxes)],summarize=64)
+    #tfprint._postprocess_rpn = tf.Print(rpn_box_encodings_batch,["_postprocess_rpn:rpn_box_encodings_batch_org",rpn_box_encodings_batch_org,"rpn_box_encodings_batch",rpn_box_encodings_batch,"rpn_encodings_shape",rpn_encodings_shape,"tiled_anchor_boxes",tiled_anchor_boxes,"proposal_boxes_org",proposal_boxes_org,"proposal_boxes",proposal_boxes,"proposal_scores",proposal_scores,"rpn_objectness_softmax_without_background",rpn_objectness_softmax_without_background],summarize=64)
     return proposal_boxes, proposal_scores, num_proposals
 
   def _unpad_proposals_and_sample_box_classifier_batch(
