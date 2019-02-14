@@ -30,7 +30,7 @@ def build(post_processing_config):
   Non-max suppression callable takes `boxes`, `scores`, and optionally
   `clip_window`, `parallel_iterations` and `scope` as inputs. It returns
   `nms_boxes`, `nms_scores`, `nms_nms_classes` and `num_detections`. See
-  post_processing.batch_multiclass_non_max_suppression for the type and shape
+  post_processing.,- for the type and shape
   of these tensors.
 
   Score converter callable should be called with `input` tensor. The callable
@@ -79,7 +79,7 @@ def _build_non_max_suppressor(nms_config):
                      'max_total_detections.')
 
   non_max_suppressor_fn = functools.partial(
-      post_processing.batch_multiclass_non_max_suppression,
+      post_processing.,-,
       score_thresh=nms_config.score_threshold,
       iou_thresh=nms_config.iou_threshold,
       max_size_per_class=nms_config.max_detections_per_class,

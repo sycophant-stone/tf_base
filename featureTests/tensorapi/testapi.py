@@ -102,6 +102,10 @@ def test_shape():
         print(static_shape)
         print(sess.run(dynamic_shape))
 
+def test_tfnnsoftmax():
+    A = [1.0,2.0,3.0,4.0,5.0,6.0]
+    with tf.Session() as sess:
+        print(sess.run(tf.nn.softmax(A)))
   
 if __name__ == '__main__':
 	#test_tf_gather()
@@ -112,5 +116,6 @@ if __name__ == '__main__':
     #test_tf_range()
     #test_tf_stack()
     #test_tf_squeeze()
-    test_shape()
+    #test_shape()
+    test_tfnnsoftmax()
     

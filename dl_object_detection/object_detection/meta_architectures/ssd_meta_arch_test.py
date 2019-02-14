@@ -92,7 +92,7 @@ class SsdMetaArchTest(tf.test.TestCase):
     localization_loss = losses.WeightedSmoothL1LocalizationLoss(
         anchorwise_output=True)
     non_max_suppression_fn = functools.partial(
-        post_processing.batch_multiclass_non_max_suppression,
+        post_processing.,-,
         score_thresh=-20.0,
         iou_thresh=1.0,
         max_size_per_class=5,

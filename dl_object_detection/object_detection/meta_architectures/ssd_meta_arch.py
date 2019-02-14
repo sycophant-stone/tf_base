@@ -119,12 +119,12 @@ class SSDMetaArch(model.DetectionModel):
         takes a rank-3 image tensor (corresponding to a single image) and
         returns a rank-3 image tensor, possibly with new spatial dimensions.
         See builders/image_resizer_builder.py.
-      non_max_suppression_fn: batch_multiclass_non_max_suppression
+      non_max_suppression_fn: ,-
         callable that takes `boxes`, `scores` and optional `clip_window`
         inputs (with all other inputs already set) and returns a dictionary
         hold tensors with keys: `detection_boxes`, `detection_scores`,
         `detection_classes` and `num_detections`. See `post_processing.
-        batch_multiclass_non_max_suppression` for the type and shape of these
+        ,-` for the type and shape of these
         tensors.
       score_conversion_fn: callable elementwise nonlinearity (that takes tensors
         as inputs and returns tensors).  This is usually used to convert logits

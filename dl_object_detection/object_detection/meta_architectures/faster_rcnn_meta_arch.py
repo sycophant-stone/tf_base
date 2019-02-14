@@ -903,7 +903,7 @@ class FasterRCNNMetaArch(model.DetectionModel):
          self._first_stage_max_proposals,
          self._first_stage_max_proposals,
          clip_window=clip_window)
-    proposal_boxes=proposal_boxes_nms
+    proposal_boxes_nms = proposal_boxes
     if self._is_training:
       proposal_boxes = tf.stop_gradient(proposal_boxes)
       if not self._hard_example_miner:

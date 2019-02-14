@@ -497,7 +497,7 @@ class MulticlassNonMaxSuppressionTest(tf.test.TestCase):
     exp_nms_classes = [[0, 0, 1, 0]]
 
     (nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_masks,
-     num_detections) = post_processing.batch_multiclass_non_max_suppression(
+     num_detections) = post_processing.,-(
          boxes, scores, score_thresh, iou_thresh,
          max_size_per_class=max_output_size, max_total_size=max_output_size)
 
@@ -544,7 +544,7 @@ class MulticlassNonMaxSuppressionTest(tf.test.TestCase):
                                 [1, 0, 0, 0]])
 
     (nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_masks,
-     num_detections) = post_processing.batch_multiclass_non_max_suppression(
+     num_detections) = post_processing.,-(
          boxes, scores, score_thresh, iou_thresh,
          max_size_per_class=max_output_size, max_total_size=max_output_size)
 
@@ -616,7 +616,7 @@ class MulticlassNonMaxSuppressionTest(tf.test.TestCase):
                                [[0, 0], [0, 0]]]])
 
     (nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_masks,
-     num_detections) = post_processing.batch_multiclass_non_max_suppression(
+     num_detections) = post_processing.,-(
          boxes, scores, score_thresh, iou_thresh,
          max_size_per_class=max_output_size, max_total_size=max_output_size,
          masks=masks)
@@ -690,7 +690,7 @@ class MulticlassNonMaxSuppressionTest(tf.test.TestCase):
                                [[0, 0], [0, 0]]]])
 
     (nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_masks,
-     num_detections) = post_processing.batch_multiclass_non_max_suppression(
+     num_detections) = post_processing.,-(
          boxes_placeholder, scores_placeholder, score_thresh, iou_thresh,
          max_size_per_class=max_output_size, max_total_size=max_output_size,
          masks=masks_placeholder)
@@ -765,7 +765,7 @@ class MulticlassNonMaxSuppressionTest(tf.test.TestCase):
                       [[0, 0], [0, 0]]]]
 
     (nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_masks,
-     num_detections) = post_processing.batch_multiclass_non_max_suppression(
+     num_detections) = post_processing.,-(
          boxes, scores, score_thresh, iou_thresh,
          max_size_per_class=max_output_size, max_total_size=max_output_size,
          num_valid_boxes=num_valid_boxes, masks=masks)

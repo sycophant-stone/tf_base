@@ -136,13 +136,13 @@ class RFCNMetaArch(faster_rcnn_meta_arch.FasterRCNNMetaArch):
       second_stage_balance_fraction: Fraction of positive examples to use
         per image for the box classifier. The recommended value for Faster RCNN
         is 0.25.
-      second_stage_non_max_suppression_fn: batch_multiclass_non_max_suppression
+      second_stage_non_max_suppression_fn: ,-
         callable that takes `boxes`, `scores`, optional `clip_window` and
         optional (kwarg) `mask` inputs (with all other inputs already set)
         and returns a dictionary containing tensors with keys:
         `detection_boxes`, `detection_scores`, `detection_classes`,
         `num_detections`, and (optionally) `detection_masks`. See
-        `post_processing.batch_multiclass_non_max_suppression` for the type and
+        `post_processing.,-` for the type and
         shape of these tensors.
       second_stage_score_conversion_fn: Callable elementwise nonlinearity
         (that takes tensors as inputs and returns tensors).  This is usually
