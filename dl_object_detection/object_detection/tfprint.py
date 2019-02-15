@@ -36,3 +36,11 @@ anchor_generator_param = tf.placeholder(tf.float32)
 
 ## faster_rcnn_box_coder.py
 box_decoder_param = tf.placeholder(tf.float32)
+
+
+### demo:
+"""
+from object_detection import tfprint
+tfprint.rpn_box_encodings = tf.Print(rpn_box_encodings,["rpn_box_encodings",tf.shape(rpn_box_encodings),rpn_box_encodings],summarize=64)
+
+"""
