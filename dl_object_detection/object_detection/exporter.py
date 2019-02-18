@@ -334,7 +334,7 @@ def _export_inference_graph(input_type,
       model_path=model_path,
       input_saver_def=input_saver_def,
       trained_checkpoint_prefix=trained_checkpoint_prefix)
-
+  print("[_export_inference_graph] output_node_names:%s",','.join(outputs.keys()))
   frozen_graph_def = freeze_graph_with_def_protos(
       input_graph_def=tf.get_default_graph().as_graph_def(),
       input_saver_def=input_saver_def,
