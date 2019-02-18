@@ -296,12 +296,7 @@ def train(create_tensor_dict_fn, create_model_fn, train_config, master, task,
         #print("[train] rpn_features_to_crop:",sess.run[rpn_features_to_crop])
         
     slim.learning.train(
-#[train_tensor,tfprint.tfp_similarity_matrix,tfprint.tfp_match_results,tfprint.anchors,tfprint.groundtruth_boxes,tfprint.groundtruth_label,tfprint.rpn_box_encodings,tfprint.rpn_objectness_predictions_with_background,tfprint.f_anchors,tfprint.image_shape,tfprint.target_assign_param,tfprint.batch_shapes,tfprint.reg_targets,tfprint.cls_targets ], 
-        #[train_tensor,tfprint.anchor_generator_param],
-        #[train_tensor,tfprint._postprocess_rpn,tfprint.box_decoder_param],
-        #[train_tensor,tfprint.refined_box_encodings],
-        [train_tensor,tfprint._postprocess_rpn1],
-        #[train_tensor],
+        [train_tensor],
         logdir=train_dir,
         master=master,
         is_chief=is_chief,
