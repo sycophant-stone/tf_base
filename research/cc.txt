@@ -1,0 +1,6 @@
+
+export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+
+python train.py --train_dir voc/train_dir/ --pipeline_config_path voc/voc.config
+
+python legacy/train.py --train_dir vvv/trainout/ --pipeline_config_path vvv/vv.config
