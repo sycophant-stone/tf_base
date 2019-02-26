@@ -17,7 +17,7 @@
 import tensorflow as tf
 from object_detection.core import box_predictor
 from object_detection.utils import ops
-
+from object_detection import tfprint
 slim = tf.contrib.slim
 
 BOX_ENCODINGS = box_predictor.BOX_ENCODINGS
@@ -112,6 +112,7 @@ class RfcnBoxPredictor(box_predictor.BoxPredictor):
     batch_size = tf.shape(proposal_boxes)[0]
     num_boxes = tf.shape(proposal_boxes)[1]
     net = image_feature
+    
     with slim.arg_scope(self._conv_hyperparams_fn()):
       net = slim.conv2d(net, self._depth, [1, 1], scope='reduce_depth')
       # Location predictions.
@@ -141,6 +142,7 @@ class RfcnBoxPredictor(box_predictor.BoxPredictor):
       class_feature_map = slim.conv2d(net, class_feature_map_depth, [1, 1],
                                       activation_fn=None,
                                       scope='class_predictions')
+      
       class_predictions_with_background = (
           ops.batch_position_sensitive_crop_regions(
               class_feature_map,
@@ -153,6 +155,7 @@ class RfcnBoxPredictor(box_predictor.BoxPredictor):
       class_predictions_with_background = tf.reshape(
           class_predictions_with_background,
           [batch_size * num_boxes, 1, total_classes])
+      tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
 
     return {BOX_ENCODINGS: [box_encodings],
             CLASS_PREDICTIONS_WITH_BACKGROUND:
