@@ -315,6 +315,7 @@ class SSDMetaArch(model.DetectionModel):
       target_assigner_instance: target_assigner.TargetAssigner instance to use.
     """
     super(SSDMetaArch, self).__init__(num_classes=box_predictor.num_classes)
+    print("[SSDMetaArch] _box_predictor:",box_predictor)
     self._is_training = is_training
     self._freeze_batchnorm = freeze_batchnorm
     self._inplace_batchnorm_update = inplace_batchnorm_update

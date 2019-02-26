@@ -80,6 +80,8 @@ flags.DEFINE_string('input_config_path', '',
                     'Path to an input_reader_pb2.InputReader config file.')
 flags.DEFINE_string('model_config_path', '',
                     'Path to a model_pb2.DetectionModel config file.')
+flags.DEFINE_string('analysising', '',
+                    'whether analysising or not.')
 
 FLAGS = flags.FLAGS
 

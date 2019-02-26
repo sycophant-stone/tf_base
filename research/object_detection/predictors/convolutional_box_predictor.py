@@ -17,7 +17,7 @@
 import tensorflow as tf
 from object_detection.core import box_predictor
 from object_detection.utils import static_shape
-
+from object_detection import tfprint
 slim = tf.contrib.slim
 
 BOX_ENCODINGS = box_predictor.BOX_ENCODINGS
@@ -91,7 +91,9 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
     self._min_depth = min_depth
     self._max_depth = max_depth
     self._num_layers_before_predictor = num_layers_before_predictor
-
+    print("[ConvolutionalBoxPredictor] _box_prediction_head",self._box_prediction_head)
+    print("[ConvolutionalBoxPredictor] _class_prediction_head",self._class_prediction_head)
+          
   @property
   def num_classes(self):
     return self._num_classes
@@ -132,10 +134,10 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
           tf.variable_scope('BoxPredictor_{}'.format(i))
           for i in range(len(image_features))
       ]
-    for (image_feature,
-         num_predictions_per_location, box_predictor_scope) in zip(
+    for idx, (image_feature,
+         num_predictions_per_location, box_predictor_scope) in enumerate(zip(
              image_features, num_predictions_per_location_list,
-             box_predictor_scopes):
+             box_predictor_scopes)):
       net = image_feature
       with box_predictor_scope:
         with slim.arg_scope(self._conv_hyperparams_fn()):
@@ -155,17 +157,23 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
             sorted_keys = sorted(self._other_heads.keys())
             sorted_keys.append(BOX_ENCODINGS)
             sorted_keys.append(CLASS_PREDICTIONS_WITH_BACKGROUND)
+            print("[ConvolutionalBoxPredictor._predict] sorted_keys",sorted_keys)
             for head_name in sorted_keys:
+              print("[ConvolutionalBoxPredictor._predict] head_name",head_name)
               if head_name == BOX_ENCODINGS:
                 head_obj = self._box_prediction_head
               elif head_name == CLASS_PREDICTIONS_WITH_BACKGROUND:
                 head_obj = self._class_prediction_head
               else:
                 head_obj = self._other_heads[head_name]
+              print("[ConvolutionalBoxPredictor._predict] head_obj",head_obj)
               prediction = head_obj.predict(
                   features=image_feature,
                   num_predictions_per_location=num_predictions_per_location)
               predictions[head_name].append(prediction)
+              if(idx==0):
+                ## add rfcn roi
+                tfprint.ssd_fmap0 = tf.Print(image_feature,["ssd_fmap0",tf.shape(image_feature),tf.shape(predictions['box_encodings']),tf.shape(predictions['class_predictions_with_background'])],summarize=64)
     return predictions
 
 
@@ -238,7 +246,7 @@ class WeightSharedConvolutionalBoxPredictor(box_predictor.BoxPredictor):
     self._kernel_size = kernel_size
     self._apply_batch_norm = apply_batch_norm
     self._share_prediction_tower = share_prediction_tower
-
+    print("[ConvolutionalBoxPredictor] _predict_head",self._predict_head)
   @property
   def num_classes(self):
     return self._num_classes
