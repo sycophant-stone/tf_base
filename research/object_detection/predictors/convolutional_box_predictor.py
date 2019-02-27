@@ -174,6 +174,73 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
               if(idx==0):
                 ## add rfcn roi
                 tfprint.ssd_fmap0 = tf.Print(image_feature,["ssd_fmap0",tf.shape(image_feature),tf.shape(predictions['box_encodings']),tf.shape(predictions['class_predictions_with_background'])],summarize=64)
+              if(idx==0):
+              ### add roi for 1st feature maps
+                  net_roi = image_feature
+                  proposal_boxes = predictions[BOX_ENCODINGS]
+                  #th slim.arg_scope(self._conv_hyperparams_fn()):
+                  _depth = 1024
+                  net_roi = slim.conv2d(net_roi, _depth, [1, 1], scope='reduce_depth')
+                  # Location predictions.
+                  _num_spatial_bins = [3,3]
+                  _num_classes = 20
+                  _box_code_size = 4
+                  _crop_size = [18, 18]
+                  batch_size = tf.shape(proposal_boxes)[1]
+                  num_boxes = tf.shape(proposal_boxes)[2]
+                    
+                  location_feature_map_depth = (_num_spatial_bins[0] *
+                                            _num_spatial_bins[1] *
+                                            _num_classes *
+                                            _box_code_size)
+                  location_feature_map = slim.conv2d(net_roi, location_feature_map_depth,
+                                                [1, 1], activation_fn=None,
+                                                scope='refined_locations')
+                  proposal_boxes = tf.squeeze(proposal_boxes,axis=[0,3]) #把[1 24 1083 1 4]的dim0,dim3的"1"挤掉.因为batch_position_sensitive_crop_regions
+                  box_encodings = ops.batch_position_sensitive_crop_regions(
+                    location_feature_map,
+                    boxes=proposal_boxes,
+                    crop_size=_crop_size,
+                    num_spatial_bins=_num_spatial_bins,
+                    global_pool=True)
+                  box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2, 3])
+                  box_encodings = tf.reshape(box_encodings,
+                                        [batch_size * num_boxes, 1, _num_classes,
+                                            _box_code_size])
+                  
+                  # Class predictions.
+                  total_classes = _num_classes + 1  # Account for background class.
+                  class_feature_map_depth = (_num_spatial_bins[0] *
+                                        _num_spatial_bins[1]*
+                                        total_classes)
+                  class_feature_map = slim.conv2d(net_roi, class_feature_map_depth, [1, 1],
+                                                activation_fn=None,
+                                                scope='class_predictions')
+                  
+                  class_predictions_with_background = (
+                    ops.batch_position_sensitive_crop_regions(
+                        class_feature_map,
+                        boxes=proposal_boxes,
+                        crop_size=_crop_size,
+                        num_spatial_bins=_num_spatial_bins,
+                        global_pool=True))
+                  class_predictions_with_background = tf.squeeze(
+                    class_predictions_with_background, squeeze_dims=[2, 3])
+                  class_predictions_with_background = tf.reshape(
+                    class_predictions_with_background,
+                    [batch_size * num_boxes, 1, total_classes])
+                  tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
+                  
+                  ## change dims to match the ssd' outputs.
+                  rshp_box_encodings = slim.conv2d(box_encodings , 1083, [1, 1], scope='RoiRegPostReshape') #[24 1083 1 4]
+                  class_predictions_with_background = tf.expand_dims(class_predictions_with_background,axis=2)#在dim1上添加一个维度.
+                  rshp_class_predictions_with_background = slim.conv2d(class_predictions_with_background , 1083 , [1, 1], scope='RoiClsPostReshape') #[24 1083 21]
+                  
+                  ## add to ssd's prediction outputs
+                  predictions['box_encodings'].append(rshp_box_encodings)
+                  predictions['class_predictions_with_background'].append(rshp_class_predictions_with_background)
+                  
+              ### end roi for 1st maps
     return predictions
 
 
