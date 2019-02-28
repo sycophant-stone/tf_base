@@ -183,15 +183,15 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   proposal_boxes = predictions[BOX_ENCODINGS]
                   #th slim.arg_scope(self._conv_hyperparams_fn()):
                   _depth = 1024
-                  net_roi = slim.conv2d(net_roi, _depth, [1, 1],reuse=tf.AUTO_REUSE, scope='reduce_depth')
+                  net_roi = slim.conv2d(net_roi, _depth, [1, 1],reuse=tf.AUTO_REUSE, scope='reduce_depth_roi')
                   # Location predictions.
                   _num_spatial_bins = [3,3]
                   _num_classes = 20
                   _box_code_size = 4
                   _crop_size = [18, 18]
-                  batch_size = tf.shape(proposal_boxes[0])[1]
-                  num_boxes = tf.shape(proposal_boxes[0])[2]
-                  tfprint.ssd_fmap0 = tf.Print(proposal_boxes,["ssd roi box",tf.shape(proposal_boxes)],summarize=64)
+                  batch_size = tf.shape(proposal_boxes[0])[0]
+                  num_boxes = tf.shape(proposal_boxes[0])[1]
+                  #tfprint.ssd_fmap0 = tf.Print(proposal_boxes,["ssd roi box",tf.shape(proposal_boxes)],summarize=64)
                   location_feature_map_depth = (_num_spatial_bins[0] *
                                             _num_spatial_bins[1] *
                                             _num_classes *
@@ -199,8 +199,8 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   location_feature_map = slim.conv2d(net_roi, location_feature_map_depth,
                                                 [1, 1], activation_fn=None,
                                                      reuse=tf.AUTO_REUSE,
-                                                scope='refined_locations')
-                  proposal_boxes = tf.squeeze(proposal_boxes,axis=[0,3]) #把[1 24 1083 1 4]的dim0,dim3的"1"挤掉.因为batch_position_sensitive_crop_regions
+                                                scope='refined_locations_roi')
+                  proposal_boxes = tf.squeeze(proposal_boxes[0],axis=[2]) #把[1 24 1083 1 4]的dim0,dim3的"1"挤掉.因为batch_position_sensitive_crop_regions
                   box_encodings = ops.batch_position_sensitive_crop_regions(
                     location_feature_map,
                     boxes=proposal_boxes,
@@ -219,7 +219,8 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                                         total_classes)
                   class_feature_map = slim.conv2d(net_roi, class_feature_map_depth, [1, 1],
                                                 activation_fn=None,
-                                                scope='class_predictions')
+                                                   reuse=tf.AUTO_REUSE,
+                                                scope='class_predictions_roi')
                   
                   class_predictions_with_background = (
                     ops.batch_position_sensitive_crop_regions(
@@ -236,9 +237,9 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   #tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
                   
                   ## change dims to match the ssd' outputs.
-                  rshp_box_encodings = slim.conv2d(box_encodings , 1083, [1, 1], scope='RoiRegPostReshape') #[24 1083 1 4]
+                  rshp_box_encodings = slim.conv2d(box_encodings , 1083, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape') #[24 1083 1 4]
                   class_predictions_with_background = tf.expand_dims(class_predictions_with_background,axis=2)#在dim1上添加一个维度.
-                  rshp_class_predictions_with_background = slim.conv2d(class_predictions_with_background , 1083 , [1, 1], scope='RoiClsPostReshape') #[24 1083 21]
+                  rshp_class_predictions_with_background = slim.conv2d(class_predictions_with_background , 1083 , [1, 1],  reuse=tf.AUTO_REUSE,scope='RoiClsPostReshape') #[24 1083 21]
                   
                   ## add to ssd's prediction outputs
                   predictions['box_encodings'].append(rshp_box_encodings)
