@@ -18,6 +18,7 @@ import tensorflow as tf
 from object_detection.core import box_predictor
 from object_detection.utils import static_shape
 from object_detection import tfprint
+from object_detection.utils import ops
 slim = tf.contrib.slim
 
 BOX_ENCODINGS = box_predictor.BOX_ENCODINGS
@@ -171,16 +172,18 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   features=image_feature,
                   num_predictions_per_location=num_predictions_per_location)
               predictions[head_name].append(prediction)
+              '''
               if(idx==0):
                 ## add rfcn roi
                 tfprint.ssd_fmap0 = tf.Print(image_feature,["ssd_fmap0",tf.shape(image_feature),tf.shape(predictions['box_encodings']),tf.shape(predictions['class_predictions_with_background'])],summarize=64)
+              '''
               if(idx==0):
               ### add roi for 1st feature maps
                   net_roi = image_feature
                   proposal_boxes = predictions[BOX_ENCODINGS]
                   #th slim.arg_scope(self._conv_hyperparams_fn()):
                   _depth = 1024
-                  net_roi = slim.conv2d(net_roi, _depth, [1, 1], scope='reduce_depth')
+                  net_roi = slim.conv2d(net_roi, _depth, [1, 1],reuse=tf.AUTO_REUSE, scope='reduce_depth')
                   # Location predictions.
                   _num_spatial_bins = [3,3]
                   _num_classes = 20
@@ -188,13 +191,14 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   _crop_size = [18, 18]
                   batch_size = tf.shape(proposal_boxes)[1]
                   num_boxes = tf.shape(proposal_boxes)[2]
-                    
+                  tfprint.ssd_fmap0 = tf.Print(proposal_boxes,["ssd roi box",tf.shape(proposal_boxes)],summarize=64)
                   location_feature_map_depth = (_num_spatial_bins[0] *
                                             _num_spatial_bins[1] *
                                             _num_classes *
                                             _box_code_size)
                   location_feature_map = slim.conv2d(net_roi, location_feature_map_depth,
                                                 [1, 1], activation_fn=None,
+                                                     reuse=tf.AUTO_REUSE,
                                                 scope='refined_locations')
                   proposal_boxes = tf.squeeze(proposal_boxes,axis=[0,3]) #把[1 24 1083 1 4]的dim0,dim3的"1"挤掉.因为batch_position_sensitive_crop_regions
                   box_encodings = ops.batch_position_sensitive_crop_regions(
@@ -229,7 +233,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   class_predictions_with_background = tf.reshape(
                     class_predictions_with_background,
                     [batch_size * num_boxes, 1, total_classes])
-                  tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
+                  #tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
                   
                   ## change dims to match the ssd' outputs.
                   rshp_box_encodings = slim.conv2d(box_encodings , 1083, [1, 1], scope='RoiRegPostReshape') #[24 1083 1 4]
