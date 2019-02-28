@@ -189,8 +189,8 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   _num_classes = 20
                   _box_code_size = 4
                   _crop_size = [18, 18]
-                  batch_size = tf.shape(proposal_boxes)[1]
-                  num_boxes = tf.shape(proposal_boxes)[2]
+                  batch_size = tf.shape(proposal_boxes[0])[1]
+                  num_boxes = tf.shape(proposal_boxes[0])[2]
                   tfprint.ssd_fmap0 = tf.Print(proposal_boxes,["ssd roi box",tf.shape(proposal_boxes)],summarize=64)
                   location_feature_map_depth = (_num_spatial_bins[0] *
                                             _num_spatial_bins[1] *
