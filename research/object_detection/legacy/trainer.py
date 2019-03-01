@@ -403,7 +403,8 @@ def train(create_tensor_dict_fn,
         print("[Main] analysisiing")
         slim.learning.train(
             #train_tensor,
-            [train_tensor,tfprint.ssd_fmap0],
+            #[train_tensor,tfprint.ssd_fmap0],
+            [train_tensor,tfprint.ssd_fmap0,tfprint.ssd_fmap1,tfprint.ssd_fmap2,tfprint.ssd_fmap3,tfprint.ssd_fmap4,tfprint.ssd_fmap5],
             #[train_tensor,tfprint.rfcn_roi],
             logdir=train_dir,
             master=master,

@@ -172,10 +172,40 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   features=image_feature,
                   num_predictions_per_location=num_predictions_per_location)
               predictions[head_name].append(prediction)
-              '''
-              if(idx==0):
+              if (idx==0):
+                    image_feature0 = image_feature
+                    prediction0 = prediction
+                    head_name0= head_name
+                    tfprint.ssd_fmap0 = tf.Print(image_feature0,["ssd_fmap0,idx0,head_name", head_name0,tf.shape(image_feature0),tf.shape(prediction0)],summarize=64)
+              if (idx==1):
+                    image_feature1 = image_feature
+                    prediction1 = prediction
+                    head_name1= head_name
+                    tfprint.ssd_fmap1 = tf.Print(image_feature1,["ssd_fmap0,idx1,head_name", head_name1,tf.shape(image_feature1),tf.shape(prediction1)],summarize=64)
+              if (idx==2):
+                    image_feature2 = image_feature
+                    prediction2 = prediction
+                    head_name2= head_name
+                    tfprint.ssd_fmap2 = tf.Print(image_feature2,["ssd_fmap0,idx2,head_name", head_name2,tf.shape(image_feature2),tf.shape(prediction2)],summarize=64)
+              if (idx==3):
+                    image_feature3 = image_feature
+                    prediction3 = prediction
+                    head_name3= head_name
+                    tfprint.ssd_fmap3 = tf.Print(image_feature3,["ssd_fmap0,idx3,head_name", head_name3,tf.shape(image_feature3),tf.shape(prediction3)],summarize=64)
+              if (idx==4):
+                    image_feature4 = image_feature
+                    prediction4 = prediction
+                    head_name4= head_name
+                    tfprint.ssd_fmap4 = tf.Print(image_feature4,["ssd_fmap0,idx4,head_name", head_name4,tf.shape(image_feature4),tf.shape(prediction4)],summarize=64)
+              if (idx==5):
+                    image_feature5 = image_feature
+                    prediction5 = prediction
+                    head_name5= head_name
+                    tfprint.ssd_fmap5 = tf.Print(image_feature5,["ssd_fmap0,idx5,head_name", head_name5,tf.shape(image_feature5),tf.shape(prediction5)],summarize=64)
+                    
+              #if(idx==0):
                 ## add rfcn roi
-                tfprint.ssd_fmap0 = tf.Print(image_feature,["ssd_fmap0",tf.shape(image_feature),tf.shape(predictions['box_encodings']),tf.shape(predictions['class_predictions_with_background'])],summarize=64)
+                #tfprint.ssd_fmap0 = tf.Print(image_feature,["ssd_fmap0",tf.shape(image_feature),tf.shape(predictions['box_encodings']),tf.shape(predictions['class_predictions_with_background'])],summarize=64)
               '''
               if(idx==0):
               ### add roi for 1st feature maps
@@ -246,6 +276,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   predictions['class_predictions_with_background'].append(rshp_class_predictions_with_background)
                   
               ### end roi for 1st maps
+              '''
     return predictions
 
 

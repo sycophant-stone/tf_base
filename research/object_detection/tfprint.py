@@ -3,6 +3,12 @@ import tensorflow as tf
 
 ## ssd
 ssd_fmap0 = tf.placeholder(tf.float32)
+ssd_fmap1 = tf.placeholder(tf.float32)
+ssd_fmap2 = tf.placeholder(tf.float32)
+ssd_fmap3 = tf.placeholder(tf.float32)
+ssd_fmap4 = tf.placeholder(tf.float32)
+ssd_fmap5 = tf.placeholder(tf.float32)
+
 ## rfcn
 rfcn_roi = tf.placeholder(tf.float32)
 
