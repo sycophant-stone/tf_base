@@ -19,12 +19,31 @@ from __future__ import division
 from __future__ import print_function
 
 from absl import flags
+import sys
+import platform
+winprefix="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\"
+def win_python_env_setup():
+	sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research")
+	sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\slim")
+def env_prepare():
+	print("env prepare with %s",platform.system())
+	if(platform.system()=='Windows'):
+		win_python_env_setup()
 
+def iswindos():
+	return (platform.system()=='Windows')
+
+env_prepare()
+    
 import tensorflow as tf
 
 from object_detection import model_hparams
 from object_detection import model_lib
 
+	
+
+
+    
 flags.DEFINE_string(
     'model_dir', None, 'Path to output model directory '
     'where event and checkpoint files will be written.')
@@ -50,6 +69,11 @@ FLAGS = flags.FLAGS
 
 
 def main(unused_argv):
+  if iswindos():
+    FLAGS.model_dir=winprefix+FLAGS.model_dir
+    FLAGS.pipeline_config_path=FLAGS.pipeline_config_path+"_win"
+  assert FLAGS.model_dir, '`model_dir` is missing.'
+  
   flags.mark_flag_as_required('model_dir')
   flags.mark_flag_as_required('pipeline_config_path')
   config = tf.estimator.RunConfig(model_dir=FLAGS.model_dir)
