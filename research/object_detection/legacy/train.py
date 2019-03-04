@@ -115,7 +115,7 @@ FLAGS = flags.FLAGS
 @tf.contrib.framework.deprecated(None, 'Use object_detection/model_main.py.')
 def main(_):
   if iswindos():
-    FLAGS.train_dir=winprefix+FLAGS.train_dir
+    FLAGS.train_dir=winprefix+"\\"+FLAGS.train_dir
     FLAGS.pipeline_config_path=winprefix+"\\"+FLAGS.pipeline_config_path
   assert FLAGS.train_dir, '`train_dir` is missing.'
   if FLAGS.task == 0: tf.gfile.MakeDirs(FLAGS.train_dir)
