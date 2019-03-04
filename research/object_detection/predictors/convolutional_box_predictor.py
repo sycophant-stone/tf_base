@@ -172,6 +172,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   features=image_feature,
                   num_predictions_per_location=num_predictions_per_location)
               predictions[head_name].append(prediction)
+              '''
               if (idx==0):
                     image_feature0 = image_feature
                     if head_name == BOX_ENCODINGS:
@@ -208,6 +209,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     prediction5 = prediction
                     head_name5= head_name
                     tfprint.ssd_fmap5 = tf.Print(image_feature5,["ssd_fmap0,idx5,head_name", head_name5,tf.shape(image_feature5),tf.shape(prediction5)],summarize=10)
+             '''
                     
               #if(idx==0):
                 ## add rfcn roi
