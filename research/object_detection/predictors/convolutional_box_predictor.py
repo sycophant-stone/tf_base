@@ -235,7 +235,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   item3 = tf.shape(proposal_boxes[0])[3]
                   # 这部分的结论已有. 看起来是正确的. net_roi是[24 19 19 1024]
                   #tfprint.ssd_debug0 = tf.Print(net_roi,["reduce depth roi, img, dpt, out; batch_size,num_boxes",tf.shape(image_feature),_depth,tf.shape(net_roi),batch_size,num_boxes],summarize=8)
-                  tfprint.ssd_debug0 = tf.Print(net_roi,["proposal_boxes' shape",batch_size,num_boxes,item2,item3],summarize=8)
+                  #tfprint.ssd_debug0 = tf.Print(net_roi,["proposal_boxes' shape",batch_size,num_boxes,item2,item3],summarize=8)
                   
                   location_feature_map_depth = (_num_spatial_bins[0] *
                                             _num_spatial_bins[1] *
@@ -246,7 +246,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                                                      reuse=tf.AUTO_REUSE,
                                                 scope='refined_locations_roi')
                   
-                  tfprint.ssd_debug0 = tf.Print(proposal_boxes[0],["proposal_boxes[0]",tf.shape(proposal_boxes[0])],summarize=4)
+                  #tfprint.ssd_debug0 = tf.Print(proposal_boxes[0],["proposal_boxes[0]",tf.shape(proposal_boxes[0])],summarize=4)
                   
                   ##tf.shape(location_feature_map)
                   proposal_boxes = tf.squeeze(proposal_boxes[0],axis=[2]) #把[24 1083 1 4]的dim0,dim3的"1"挤掉.因为batch_position_sensitive_crop_regions
@@ -259,10 +259,9 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     global_pool=True)
                   
                   box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2, 3])
-                  box_encodings = tf.reshape(box_encodings,
-                                        [batch_size * num_boxes, 1, _num_classes,
-                                            _box_code_size])
-                  
+                  ##box_encodings = tf.reshape(box_encodings,[batch_size * num_boxes, 1, _num_classes,_box_code_size])
+                  box_encodings = tf.reshape(box_encodings,[batch_size , num_boxes, _num_classes,_box_code_size])
+                  #tfprint.ssd_debug0 = tf.Print(box_encodings,["box_encodings shape",tf.shape(box_encodings)],summarize=4)
                   # Class predictions.
                   total_classes = _num_classes + 1  # Account for background class.
                   class_feature_map_depth = (_num_spatial_bins[0] *
@@ -285,21 +284,23 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   class_predictions_with_background = tf.reshape(
                     class_predictions_with_background,
                     [batch_size * num_boxes, 1, total_classes])
-                  '''
+                  
                   #tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
+                  ## box_encodings不能打印.
+                  
                   
                   ## change dims to match the ssd' outputs.
-                  rshp_box_encodings = slim.conv2d(box_encodings , 1083, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape') #[24 1083 1 4]
-                  class_predictions_with_background = tf.expand_dims(class_predictions_with_background,axis=2)#在dim1上添加一个维度.
-                  rshp_class_predictions_with_background = slim.conv2d(class_predictions_with_background , 1083 , [1, 1],  reuse=tf.AUTO_REUSE,scope='RoiClsPostReshape') #[24 1083 21] 这里不对. 1083个输出是不对的.
+                  # 这个是没必要,尺寸不对.rshp_box_encodings = slim.conv2d(box_encodings , 1083, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape') #[24 1083 1 4]
+                  #class_predictions_with_background = tf.expand_dims(class_predictions_with_background,axis=2)#在dim1上添加一个维度.
+                  #rshp_class_predictions_with_background = slim.conv2d(class_predictions_with_background , 1083 , [1, 1],  reuse=tf.AUTO_REUSE,scope='RoiClsPostReshape') #[24 1083 21] 这里不对. 1083个输出是不对的.
                   
-                  tfprint.ssd_debug0 = tf.Print(box_encodings,["box_encodings,rshp_box_encodings,class_predictions_with_background,reshp___",tf.shape(box_encodings),tf.shape(rshp_box_encodings),tf.shape(class_predictions_with_background),tf.shape(rshp_class_predictions_with_background)],summarize=4)
+                  #tfprint.ssd_debug0 = tf.Print(box_encodings,["box_encodings,rshp_box_encodings,class_predictions_with_background,reshp___",tf.shape(box_encodings),tf.shape(rshp_box_encodings),tf.shape(class_predictions_with_background),tf.shape(rshp_class_predictions_with_background)],summarize=4)
                 
                   ## add to ssd's prediction outputs
                   ## dim isn't equal, remove to debug.
                   #predictions['box_encodings'].append(rshp_box_encodings)
                   #predictions['class_predictions_with_background'].append(rshp_class_predictions_with_background)
-                  '''
+                  
               ### end roi for 1st maps
               
     return predictions

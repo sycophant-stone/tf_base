@@ -1,6 +1,7 @@
 
 export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 
+/home/julyedu_433249/work/tf_base/research/bin/protoc object_detection/protos/*.proto --python_out=.
 python train.py --train_dir voc/train_dir/ --pipeline_config_path voc/voc.config
 
 python legacy/train.py --train_dir vvv/trainout/ --pipeline_config_path vvv/v2mob.config --logtostderr

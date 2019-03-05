@@ -328,7 +328,16 @@ class SSDMetaArch(model.DetectionModel):
     self._matcher = matcher
     self._region_similarity_calculator = region_similarity_calculator
     self._add_background_class = add_background_class
-
+    print("[meta_ssd_arch.init] self._is_training ", is_training)
+    print("[meta_ssd_arch.init] self._freeze_batchnorm ", freeze_batchnorm)
+    print("[meta_ssd_arch.init] self._inplace_batchnorm_update ", inplace_batchnorm_update)
+    print("[meta_ssd_arch.init] self._anchor_generator ", anchor_generator)
+    print("[meta_ssd_arch.init] self._box_predictor ", box_predictor)
+    print("[meta_ssd_arch.init] self._box_coder ", box_coder)
+    print("[meta_ssd_arch.init] self._feature_extractor ", feature_extractor)
+    print("[meta_ssd_arch.init] self._matcher ", matcher)
+    print("[meta_ssd_arch.init] self._region_similarity_calculator ", region_similarity_calculator)
+    print("[meta_ssd_arch.init] self._add_background_class ", add_background_class)
     # Needed for fine-tuning from classification checkpoints whose
     # variables do not have the feature extractor scope.
     if self._feature_extractor.is_keras_model:
