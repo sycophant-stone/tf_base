@@ -255,7 +255,8 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     num_spatial_bins=_num_spatial_bins,
                     global_pool=True)
                   
-                  box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2, 3]) #pos reg[24, 1083 1 1 80],带有batch的.
+                  box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2]) #pos reg[24, 1083 1 1 80],带有batch的.
+                  box_encodings = slim.conv2d(box_encodings , 4, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape')
                   ''' ## 可以使用的
                   tfprint.pos_sen = tf.Print(image_feature,["squeezed box",tf.shape(box_encodings)],summarize=8)
                   '''
@@ -282,11 +283,12 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                         crop_size=_crop_size,
                         num_spatial_bins=_num_spatial_bins,
                         global_pool=True))
-                  '''看一下cls的raw输出.'''
-                  tfprint.pos_sen = tf.Print(image_feature,["pos map result of cls",tf.shape(class_predictions_with_background)],summarize=8)
+                  '''看一下cls的raw输出.
+                  #tfprint.pos_sen = tf.Print(image_feature,["pos map result of cls",tf.shape(class_predictions_with_background)],summarize=8)
                   '''
                   class_predictions_with_background = tf.squeeze(
-                    class_predictions_with_background, squeeze_dims=[2, 3])
+                    class_predictions_with_background, squeeze_dims=[2,3])
+                  '''
                   class_predictions_with_background = tf.reshape(
                     class_predictions_with_background,
                     [batch_size * num_boxes, 1, total_classes])
@@ -304,8 +306,9 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                 
                   ## add to ssd's prediction outputs
                   ## dim isn't equal, remove to debug.
-                  #predictions['box_encodings'].append(rshp_box_encodings)
-                  #predictions['class_predictions_with_background'].append(rshp_class_predictions_with_background)
+                  tfprint.pos_sen = tf.Print(image_feature,["reg shape, cls shape",tf.shape(box_encodings),tf.shape(class_predictions_with_background)],summarize=8)
+                  predictions['box_encodings'].append(box_encodings)
+                  predictions['class_predictions_with_background'].append(class_predictions_with_background)
                   
               ### end roi for 1st maps
               
