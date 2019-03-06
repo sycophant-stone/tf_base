@@ -379,7 +379,18 @@ class SSDMetaArch(model.DetectionModel):
     self._image_resizer_fn = image_resizer_fn
     self._non_max_suppression_fn = non_max_suppression_fn
     self._score_conversion_fn = score_conversion_fn
-
+    print("self._classification_loss ", classification_loss)
+    print("self._localization_loss ", localization_loss)
+    print("self._classification_loss_weight ", classification_loss_weight)
+    print("self._localization_loss_weight ", localization_loss_weight)
+    print("self._normalize_loss_by_num_matches ", normalize_loss_by_num_matches)
+    print("self._normalize_loc_loss_by_codesize ", normalize_loc_loss_by_codesize)
+    print("self._hard_example_miner ", hard_example_miner)
+    print("self._random_example_sampler ", random_example_sampler)
+    print("self._image_resizer_fn ", image_resizer_fn)
+    print("self._non_max_suppression_fn ", non_max_suppression_fn)
+    print("self._score_conversion_fn ", score_conversion_fn)
+    
     self._anchors = None
     self._add_summaries = add_summaries
     self._batched_prediction_tensor_names = []

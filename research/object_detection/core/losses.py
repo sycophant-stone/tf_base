@@ -34,7 +34,7 @@ import tensorflow as tf
 from object_detection.core import box_list
 from object_detection.core import box_list_ops
 from object_detection.utils import ops
-
+from object_detection import tfprint
 slim = tf.contrib.slim
 
 
@@ -71,6 +71,7 @@ class Loss(object):
         target_tensor = tf.where(tf.is_nan(target_tensor),
                                  prediction_tensor,
                                  target_tensor)
+      #tfprint.loss_shp = tf.Print(prediction_tensor,["predict , target ",tf.shape(prediction_tensor),tf.shape(target_tensor)],summarize=4)
       return self._compute_loss(prediction_tensor, target_tensor, **params)
 
   @abstractmethod
