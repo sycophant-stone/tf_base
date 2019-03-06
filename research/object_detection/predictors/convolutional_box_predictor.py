@@ -256,14 +256,16 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     global_pool=True)
                   
                   box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2, 3]) #pos reg[24, 1083 1 1 80],带有batch的.
+                  ''' ## 可以使用的
                   tfprint.pos_sen = tf.Print(image_feature,["squeezed box",tf.shape(box_encodings)],summarize=8)
+                  '''
                   '''注意,如果tf.Print后面接的第一个参数是tensor,如果这个tensor尺寸太大,tf.print会打印它的值.这会导致GPU memory overflow.
                      建议把tensor设置成一个小值,我们重点看第二列的shape值.'''
                   ##box_encodings = tf.reshape(box_encodings,[batch_size * num_boxes, 1, _num_classes,_box_code_size])
                   #box_encodings = tf.reshape(box_encodings,[batch_size , num_boxes, _num_classes,_box_code_size])
                   
                   # Class predictions.
-                  ''' 先只看reg
+                  # 先只看reg
                   total_classes = _num_classes + 1  # Account for background class.
                   class_feature_map_depth = (_num_spatial_bins[0] *
                                         _num_spatial_bins[1]*
@@ -280,6 +282,9 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                         crop_size=_crop_size,
                         num_spatial_bins=_num_spatial_bins,
                         global_pool=True))
+                  '''看一下cls的raw输出.'''
+                  tfprint.pos_sen = tf.Print(image_feature,["pos map result of cls",tf.shape(class_predictions_with_background)],summarize=8)
+                  '''
                   class_predictions_with_background = tf.squeeze(
                     class_predictions_with_background, squeeze_dims=[2, 3])
                   class_predictions_with_background = tf.reshape(
