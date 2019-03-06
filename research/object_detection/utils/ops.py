@@ -23,7 +23,7 @@ import tensorflow as tf
 from object_detection.core import standard_fields as fields
 from object_detection.utils import shape_utils
 from object_detection.utils import static_shape
-
+from object_detection import tfprint
 
 def expanded_shape(orig_shape, start_dim, num_dims):
   """Inserts multiple ones into a shape vector.
@@ -709,8 +709,13 @@ def position_sensitive_crop_regions(image,
     # Average over all bins.
     position_sensitive_features = tf.add_n(image_crops) / len(image_crops)
     # Then average over spatial positions within the bins.
+    pos1 = position_sensitive_features
     position_sensitive_features = tf.reduce_mean(
         position_sensitive_features, [1, 2], keep_dims=True)
+    '''
+    #可以使用的debug接口,结果正确,不会出现卡住.
+    tfprint.pos_sen = tf.Print(image,["image,imagesplit",tf.shape(image),tf.shape(image_splits),tf.shape(crop),tf.shape(image_crops),len(image_crops),tf.shape(pos1),tf.shape(position_sensitive_features),tf.shape(position_sensitive_boxes)],summarize=8)
+    '''
   else:
     # Reorder height/width to depth channel.
     block_size = bin_crop_size[0]

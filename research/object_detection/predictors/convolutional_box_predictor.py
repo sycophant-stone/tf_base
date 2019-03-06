@@ -245,9 +245,6 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                                                 [1, 1], activation_fn=None,
                                                      reuse=tf.AUTO_REUSE,
                                                 scope='refined_locations_roi')
-                  
-                  #tfprint.ssd_debug0 = tf.Print(proposal_boxes[0],["proposal_boxes[0]",tf.shape(proposal_boxes[0])],summarize=4)
-                  
                   ##tf.shape(location_feature_map)
                   proposal_boxes = tf.squeeze(proposal_boxes[0],axis=[2]) #把[24 1083 1 4]的dim0,dim3的"1"挤掉.因为batch_position_sensitive_crop_regions
                   
@@ -258,11 +255,15 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     num_spatial_bins=_num_spatial_bins,
                     global_pool=True)
                   
-                  box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2, 3])
+                  box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2, 3]) #pos reg[24, 1083 1 1 80],带有batch的.
+                  tfprint.pos_sen = tf.Print(image_feature,["squeezed box",tf.shape(box_encodings)],summarize=8)
+                  '''注意,如果tf.Print后面接的第一个参数是tensor,如果这个tensor尺寸太大,tf.print会打印它的值.这会导致GPU memory overflow.
+                     建议把tensor设置成一个小值,我们重点看第二列的shape值.'''
                   ##box_encodings = tf.reshape(box_encodings,[batch_size * num_boxes, 1, _num_classes,_box_code_size])
-                  box_encodings = tf.reshape(box_encodings,[batch_size , num_boxes, _num_classes,_box_code_size])
-                  #tfprint.ssd_debug0 = tf.Print(box_encodings,["box_encodings shape",tf.shape(box_encodings)],summarize=4)
+                  #box_encodings = tf.reshape(box_encodings,[batch_size , num_boxes, _num_classes,_box_code_size])
+                  
                   # Class predictions.
+                  ''' 先只看reg
                   total_classes = _num_classes + 1  # Account for background class.
                   class_feature_map_depth = (_num_spatial_bins[0] *
                                         _num_spatial_bins[1]*
@@ -284,7 +285,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   class_predictions_with_background = tf.reshape(
                     class_predictions_with_background,
                     [batch_size * num_boxes, 1, total_classes])
-                  
+                 ''' 
                   #tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
                   ## box_encodings不能打印.
                   

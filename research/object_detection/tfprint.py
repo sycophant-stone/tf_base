@@ -17,8 +17,7 @@ ssd_debug0 = tf.placeholder(tf.float32)
 
 ## rfcn
 rfcn_roi = tf.placeholder(tf.float32)
-
-
+pos_sen = tf.placeholder(tf.float32)
 
 ### demo:
 """
