@@ -30,6 +30,7 @@ from abc import ABCMeta
 from abc import abstractmethod
 
 import tensorflow as tf
+import sys
 
 from object_detection.core import box_list
 from object_detection.core import box_list_ops
@@ -48,6 +49,12 @@ class Loss(object):
                ignore_nan_targets=False,
                scope=None,
                **params):
+    
+    print ("--- current function is", sys._getframe().f_code.co_name)
+    print ("--- current function from", sys._getframe().f_code.co_filename)
+    print ("--- called by function", sys._getframe().f_back.f_code.co_name)
+    print ("--- called at line", sys._getframe().f_back.f_lineno)
+    #print ("--- called from file", sys._getframe().f_back.f_code.co_filename)
     """Call the loss function.
 
     Args:
