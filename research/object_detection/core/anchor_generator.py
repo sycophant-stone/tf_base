@@ -31,6 +31,7 @@ the number of anchors that it uses per location for each feature map.
 """
 from abc import ABCMeta
 from abc import abstractmethod
+from object_detection import tfprint
 
 import tensorflow as tf
 
@@ -99,6 +100,7 @@ class AnchorGenerator(object):
         len(feature_map_shape_list) != len(self.num_anchors_per_location())):
       raise ValueError('Number of feature maps is expected to equal the length '
                        'of `num_anchors_per_location`.')
+    tfprint.ssd_anchor = tf.Print(feature_map_shape_list,["map list",feature_map_shape_list,self.num_anchors_per_location()],summarize=64)
     with tf.name_scope(self.name_scope()):
       anchors_list = self._generate(feature_map_shape_list, **params)
       if self.check_num_anchors:

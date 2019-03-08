@@ -19,6 +19,9 @@ ssd_debug0 = tf.placeholder(tf.float32)
 rfcn_roi = tf.placeholder(tf.float32)
 pos_sen = tf.placeholder(tf.float32)
 loss_shp = tf.placeholder(tf.float32)
+
+### core/anchor
+ssd_anchor = tf.placeholder(tf.float32)
 ### demo:
 """
 from object_detection import tfprint

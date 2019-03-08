@@ -306,8 +306,10 @@ def create_ssd_anchors(num_layers=6,
     base_anchor_size = [1.0, 1.0]
   base_anchor_size = tf.constant(base_anchor_size, dtype=tf.float32)
   box_specs_list = []
+  '''
   box_specs_list.append([(0.1, 1.0), (0.2, 2.0), (0.2, 0.5)]) # ssd roi reg
   box_specs_list.append([(0.1, 1.0), (0.2, 2.0), (0.2, 0.5)]) # ssd roi cls
+  '''
   if scales is None or not scales:
     scales = [min_scale + (max_scale - min_scale) * i / (num_layers - 1)
               for i in range(num_layers)] + [1.0]

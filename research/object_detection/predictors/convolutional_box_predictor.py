@@ -214,8 +214,8 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
               #if(idx==0):
                 ## add rfcn roi
                 #tfprint.ssd_fmap0 = tf.Print(image_feature,["ssd_fmap0",tf.shape(image_feature),tf.shape(predictions['box_encodings']),tf.shape(predictions['class_predictions_with_background'])],summarize=64)
-              
-              if(idx==0):
+              if (False):
+              #if(idx==0):
               ### add roi for 1st feature maps
                   net_roi = image_feature
                   proposal_boxes = predictions[BOX_ENCODINGS]
