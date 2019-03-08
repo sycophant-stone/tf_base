@@ -584,7 +584,12 @@ class SSDMetaArch(model.DetectionModel):
         shape_utils.combined_static_and_dynamic_shape(
             feature_map) for feature_map in feature_maps
     ]
-    return [(shape[1], shape[2]) for shape in feature_map_shapes]
+    shapelist = []
+    shapelist.append((feature_map_shapes[0][1], feature_map_shapes[0][2]))
+    shapelist.append((feature_map_shapes[0][1], feature_map_shapes[0][2]))
+    shapelist.append( (shape[1], shape[2]) for shape in feature_map_shapes )
+    return shapelist
+    #return [(shape[1], shape[2]) for shape in feature_map_shapes]
 
   def postprocess(self, prediction_dict, true_image_shapes):
     """Converts prediction tensors to final detections.
