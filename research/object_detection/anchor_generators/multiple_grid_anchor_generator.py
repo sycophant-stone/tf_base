@@ -329,9 +329,14 @@ def create_ssd_anchors(num_layers=6,
     base_anchor_size = [1.0, 1.0]
   base_anchor_size = tf.constant(base_anchor_size, dtype=tf.float32)
   box_specs_list = []
+  ## 对第一层添加2组anchors
+  box_specs_list.append([(0.1, 1.0),(0.2, 2.0),(0.2, 0.5)])
+  box_specs_list.append([(0.1, 1.0),(0.2, 2.0),(0.2, 0.5)])
+  ''' # 可用的代码段
   dbg_box_specs_list = []
   dbg_box_specs_list.append([(0.1, 1.0),(0.2, 2.0),(0.2, 0.5)])
   dbg_box_specs_list.append([(0.1, 1.0),(0.2, 2.0),(0.2, 0.5)])
+  '''
 
   if scales is None or not scales:
     scales = [min_scale + (max_scale - min_scale) * i / (num_layers - 1)
@@ -356,8 +361,10 @@ def create_ssd_anchors(num_layers=6,
         layer_box_specs.append((np.sqrt(scale*scale_next),
                                 interpolated_scale_aspect_ratio))
     box_specs_list.append(layer_box_specs)
+    '''# 可用的代码段
     dbg_box_specs_list.append(layer_box_specs)
   zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
   tfprint.ssd_box_specs = tf.Print(zeros_tsr,["boxspecs",len(dbg_box_specs_list),dbg_box_specs_list[0],dbg_box_specs_list[1],dbg_box_specs_list[2]],summarize=64)  
+  '''
   return MultipleGridAnchorGenerator(box_specs_list, base_anchor_size,
                                      anchor_strides, anchor_offsets)

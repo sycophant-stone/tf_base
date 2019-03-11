@@ -544,6 +544,14 @@ class SSDMetaArch(model.DetectionModel):
             feature_map_spatial_dims,
             im_height=image_shape[1],
             im_width=image_shape[2]))
+    '''##START 对第一层添加2个feature maps'''
+    feature_maps_temp = []
+    feature_maps_temp.append(list(feature_maps)[0])
+    feature_maps_temp.append(list(feature_maps)[0])
+    for mps in feature_maps:
+        feature_maps_temp.append(mps)
+    feature_maps = feature_maps_temp
+    '''#END'''
     if self._box_predictor.is_keras_model:
       prediction_dict = self._box_predictor(feature_maps)
     else:
@@ -595,10 +603,12 @@ class SSDMetaArch(model.DetectionModel):
         shape2=shape[2]
         shapelist.append((shape1,shape2))
         
-    #return shapelist
+    return shapelist
+    ''' # 可用的代码段
     zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
     tfprint.ssd_feature_map = tf.Print(zeros_tsr,["feature_maps shapes",len(shapelist),feature_map_shapes[0],feature_map_shapes[1],feature_map_shapes[2]],summarize=64)
     return [(shape[1], shape[2]) for shape in feature_map_shapes]
+    '''
 
   def postprocess(self, prediction_dict, true_image_shapes):
     """Converts prediction tensors to final detections.
