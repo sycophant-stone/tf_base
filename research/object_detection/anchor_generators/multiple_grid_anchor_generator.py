@@ -219,6 +219,9 @@ class MultipleGridAnchorGenerator(anchor_generator.AnchorGenerator):
         scale_height * self._base_anchor_size[0],
         scale_width * self._base_anchor_size[1]
     ]
+    zeros_tsr = tf.zeros([1, 1])
+    tfprint.ssd_tiledAnc = tf.Print(zeros_tsr,["tiled_anchors",len(feature_map_shape_list),len(self._scales),len(self._aspect_ratios),len(anchor_strides),len(anchor_offsets)],summarize=10)
+    
     for feature_map_index, (grid_size, scales, aspect_ratios, stride,
                             offset) in enumerate(
                                 zip(feature_map_shape_list, self._scales,
@@ -241,7 +244,23 @@ class MultipleGridAnchorGenerator(anchor_generator.AnchorGenerator):
       anchor_indices = feature_map_index * tf.ones([num_anchors_in_layer])
       tiled_anchors.add_field('feature_map_index', anchor_indices)
       anchor_grid_list.append(tiled_anchors)
-
+    '''
+      zeros_tsr = tf.zeros([1, 1])
+      if feature_map_index==0:
+        num_anchors_in_layer0 = num_anchors_in_layer
+      if feature_map_index==1:
+        num_anchors_in_layer1 = num_anchors_in_layer
+      if feature_map_index==2:
+        num_anchors_in_layer2 = num_anchors_in_layer
+      if feature_map_index==3:
+        num_anchors_in_layer3 = num_anchors_in_layer
+      if feature_map_index==4:
+        num_anchors_in_layer4 = num_anchors_in_layer
+      if feature_map_index==5:
+        num_anchors_in_layer5 = num_anchors_in_layer
+        
+    tfprint.ssd_tiledAnc = tf.Print(zeros_tsr,["tiled_anchors",num_anchors_in_layer0,num_anchors_in_layer1,num_anchors_in_layer2,num_anchors_in_layer3,num_anchors_in_layer4,num_anchors_in_layer5, tf.shape(anchor_grid_list[0].get()),tf.shape(anchor_grid_list[1].get()),tf.shape(anchor_grid_list[2].get()),tf.shape(anchor_grid_list[3].get()),tf.shape(anchor_grid_list[4].get()),tf.shape(anchor_grid_list[5].get())],summarize=10)
+    '''
     return anchor_grid_list
 
 

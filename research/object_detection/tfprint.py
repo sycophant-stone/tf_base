@@ -26,6 +26,8 @@ ssd_anchor = tf.placeholder(tf.float32)
 ### loss shapes
 ssd_box_specs = tf.placeholder(tf.float32)
 ssd_feature_map = tf.placeholder(tf.float32)
+ssd_tiledAnc = tf.placeholder(tf.float32)
+
 ### demo:
 """
 from object_detection import tfprint
