@@ -22,9 +22,14 @@ loss_shp = tf.placeholder(tf.float32)
 
 ### core/anchor
 ssd_anchor = tf.placeholder(tf.float32)
+
+### loss shapes
+ssd_box_specs = tf.placeholder(tf.float32)
+ssd_feature_map = tf.placeholder(tf.float32)
 ### demo:
 """
 from object_detection import tfprint
-tfprint.rpn_box_encodings = tf.Print(rpn_box_encodings,["rpn_box_encodings",tf.shape(rpn_box_encodings),rpn_box_encodings],summarize=64)
+zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
+tfprint.rpn_box_encodings = tf.Print(zeros_tsr,["rpn_box_encodings",tf.shape(rpn_box_encodings),rpn_box_encodings],summarize=64)
 
 """

@@ -30,6 +30,7 @@ from object_detection.core import target_assigner
 from object_detection.utils import ops
 from object_detection.utils import shape_utils
 from object_detection.utils import visualization_utils
+from object_detection import tfprint
 
 slim = tf.contrib.slim
 
@@ -586,12 +587,18 @@ class SSDMetaArch(model.DetectionModel):
     ]
     
     shapelist = []
-    shapelist.append((feature_map_shapes[0][1], feature_map_shapes[0][2]))
-    shapelist.append((feature_map_shapes[0][1], feature_map_shapes[0][2]))
-    shapelist.append( (shape[1], shape[2]) for shape in feature_map_shapes )
-    return shapelist
-    
-    '''return [(shape[1], shape[2]) for shape in feature_map_shapes]'''
+    shapelist.append((19, 19))
+    shapelist.append((19, 19))
+    #shapelist.append( (shape[1], shape[2]) for shape in feature_map_shapes ) ## 这两个代码段,输出结果不一样.
+    for shape in feature_map_shapes:
+        shape1=shape[1]
+        shape2=shape[2]
+        shapelist.append((shape1,shape2))
+        
+    #return shapelist
+    zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
+    tfprint.ssd_feature_map = tf.Print(zeros_tsr,["feature_maps shapes",len(shapelist),feature_map_shapes[0],feature_map_shapes[1],feature_map_shapes[2]],summarize=64)
+    return [(shape[1], shape[2]) for shape in feature_map_shapes]
 
   def postprocess(self, prediction_dict, true_image_shapes):
     """Converts prediction tensors to final detections.
