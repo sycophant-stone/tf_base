@@ -137,6 +137,9 @@ class MultipleGridAnchorGenerator(anchor_generator.AnchorGenerator):
     """
     return [len(box_specs) for box_specs in self._box_specs]
 
+  def get_box_specs(self):
+    return self._box_specs
+
   def _generate(self, feature_map_shape_list, im_height=1, im_width=1):
     """Generates a collection of bounding boxes to be used as anchors.
 
@@ -174,6 +177,7 @@ class MultipleGridAnchorGenerator(anchor_generator.AnchorGenerator):
     """
     if not (isinstance(feature_map_shape_list, list)
             and len(feature_map_shape_list) == len(self._box_specs)):
+      print("feature_map_shape_list,boxspecs",len(feature_map_shape_list), len(self._box_specs))
       raise ValueError('feature_map_shape_list must be a list with the same '
                        'length as self._box_specs')
     if not all([isinstance(list_item, tuple) and len(list_item) == 2
@@ -306,10 +310,9 @@ def create_ssd_anchors(num_layers=6,
     base_anchor_size = [1.0, 1.0]
   base_anchor_size = tf.constant(base_anchor_size, dtype=tf.float32)
   box_specs_list = []
-  '''
-  box_specs_list.append([(0.1, 1.0), (0.2, 2.0), (0.2, 0.5)]) # ssd roi reg
-  box_specs_list.append([(0.1, 1.0), (0.2, 2.0), (0.2, 0.5)]) # ssd roi cls
-  '''
+  box_specs_list.append([(0.1, 1.0),(0.2, 2.0),(0.2, 0.5)])
+  box_specs_list.append([(0.1, 1.0),(0.2, 2.0),(0.2, 0.5)])
+
   if scales is None or not scales:
     scales = [min_scale + (max_scale - min_scale) * i / (num_layers - 1)
               for i in range(num_layers)] + [1.0]

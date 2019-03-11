@@ -75,6 +75,9 @@ class AnchorGenerator(object):
     """
     pass
 
+  def get_box_specs(self):
+    pass
+
   def generate(self, feature_map_shape_list, **params):
     """Generates a collection of bounding boxes to be used as anchors.
 
@@ -100,7 +103,8 @@ class AnchorGenerator(object):
         len(feature_map_shape_list) != len(self.num_anchors_per_location())):
       raise ValueError('Number of feature maps is expected to equal the length '
                        'of `num_anchors_per_location`.')
-    tfprint.ssd_anchor = tf.Print(feature_map_shape_list,["map list",feature_map_shape_list,self.num_anchors_per_location()],summarize=64)
+    #tfprint.ssd_anchor = tf.Print(feature_map_shape_list,["maplist, numAncPerLoc, boxSpec",feature_map_shape_list,self.num_anchors_per_location()],summarize=64)
+    tfprint.ssd_anchor = tf.Print(feature_map_shape_list,["boxSpec",self.get_box_specs()[0],self.get_box_specs()[1],self.get_box_specs()[2],self.get_box_specs()[3],self.get_box_specs()[4],self.get_box_specs()[5]],summarize=64)
     with tf.name_scope(self.name_scope()):
       anchors_list = self._generate(feature_map_shape_list, **params)
       if self.check_num_anchors:
