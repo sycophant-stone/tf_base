@@ -226,7 +226,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     continue
                   #th slim.arg_scope(self._conv_hyperparams_fn()):
                   
-                  _depth = 1024
+                  _depth = 128#1024
                   net_roi = slim.conv2d(net_roi, _depth, [1, 1],reuse=tf.AUTO_REUSE, scope='reduce_depth_roi')
                   
                   # Location predictions.
