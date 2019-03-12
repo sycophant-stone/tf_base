@@ -171,7 +171,8 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
               prediction = head_obj.predict(
                   features=image_feature,
                   num_predictions_per_location=num_predictions_per_location)
-              predictions[head_name].append(prediction)
+              if idx>0:
+                predictions[head_name].append(prediction)
               '''
               if (idx==0):
                     image_feature0 = image_feature
@@ -218,7 +219,11 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
               if(idx==0):
               ### add roi for 1st feature maps
                   net_roi = image_feature
-                  proposal_boxes = predictions[BOX_ENCODINGS]
+                  '''proposal_boxes = predictions[BOX_ENCODINGS]'''
+                  if head_name == BOX_ENCODINGS:
+                    proposal_boxes = prediction
+                  else:
+                    continue
                   #th slim.arg_scope(self._conv_hyperparams_fn()):
                   
                   _depth = 1024
@@ -229,10 +234,10 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   _num_classes = 20
                   _box_code_size = 4
                   _crop_size = [18, 18]
-                  batch_size = tf.shape(proposal_boxes[0])[0]
-                  num_boxes = tf.shape(proposal_boxes[0])[1]
-                  item2 = tf.shape(proposal_boxes[0])[2]
-                  item3 = tf.shape(proposal_boxes[0])[3]
+                  batch_size = tf.shape(proposal_boxes)[0]
+                  num_boxes = tf.shape(proposal_boxes)[1]
+                  item2 = tf.shape(proposal_boxes)[2]
+                  item3 = tf.shape(proposal_boxes)[3]
                   # 这部分的结论已有. 看起来是正确的. net_roi是[24 19 19 1024]
                   #tfprint.ssd_debug0 = tf.Print(net_roi,["reduce depth roi, img, dpt, out; batch_size,num_boxes",tf.shape(image_feature),_depth,tf.shape(net_roi),batch_size,num_boxes],summarize=8)
                   #tfprint.ssd_debug0 = tf.Print(net_roi,["proposal_boxes' shape",batch_size,num_boxes,item2,item3],summarize=8)
@@ -246,7 +251,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                                                      reuse=tf.AUTO_REUSE,
                                                 scope='refined_locations_roi')
                   ##tf.shape(location_feature_map)
-                  proposal_boxes = tf.squeeze(proposal_boxes[0],axis=[2]) #把[24 1083 1 4]的dim0,dim3的"1"挤掉.因为batch_position_sensitive_crop_regions
+                  proposal_boxes = tf.squeeze(proposal_boxes,axis=[2]) #把[24 1083 1 4]的dim0,dim3的"1"挤掉.因为batch_position_sensitive_crop_regions
                   
                   box_encodings = ops.batch_position_sensitive_crop_regions(
                     location_feature_map,
