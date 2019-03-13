@@ -246,6 +246,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                                             _num_spatial_bins[1] *
                                             _num_classes *
                                             _box_code_size)
+                  location_feature_map_depth = 36
                   location_feature_map = slim.conv2d(net_roi, location_feature_map_depth,
                                                 [1, 1], activation_fn=None,
                                                      reuse=tf.AUTO_REUSE,
@@ -261,7 +262,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     global_pool=True)
                   
                   box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2]) #pos reg[24, 1083 1 1 80],带有batch的.
-                  box_encodings = slim.conv2d(box_encodings , 4, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape')
+                  '''box_encodings = slim.conv2d(box_encodings , 4, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape')'''
                   ''' ## 可以使用的
                   tfprint.pos_sen = tf.Print(image_feature,["squeezed box",tf.shape(box_encodings)],summarize=8)
                   '''
@@ -276,6 +277,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   class_feature_map_depth = (_num_spatial_bins[0] *
                                         _num_spatial_bins[1]*
                                         total_classes)
+
                   class_feature_map = slim.conv2d(net_roi, class_feature_map_depth, [1, 1],
                                                 activation_fn=None,
                                                    reuse=tf.AUTO_REUSE,
