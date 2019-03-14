@@ -43,6 +43,32 @@ Example usage:
         --model_config_path=model_config.pbtxt \
         --input_config_path=eval_input_config.pbtxt
 """
+import sys
+import platform
+winprefix="D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\object_detection"
+#winprefix="D:\work\stuff\modules\misc\sprd_camera\alg\july\tf_base\research\object_detection\\"
+
+def win_python_env_setup():
+    sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\object_detection")
+    sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research")
+    sys.path.append(r"D:\\work\\stuff\\modules\\misc\\sprd_camera\\alg\\july\\tf_base\\research\\slim")
+    #sys.path.append(r"D:\work\stuff\modules\misc\sprd_camera\alg\july\tf_base\research\object_detection")
+    #sys.path.append(r"D:\work\stuff\modules\misc\sprd_camera\alg\july\tf_base\research")
+    #sys.path.append(r"D:\work\stuff\modules\misc\sprd_camera\alg\july\tf_base\research\slim")
+
+    print(sys.path)
+	
+def env_prepare():
+	print("env prepare with ",platform.system())
+	if(platform.system()=='Windows'):
+		win_python_env_setup()
+
+def iswindos():
+	return (platform.system()=='Windows')
+
+
+	
+env_prepare()
 import functools
 import os
 import tensorflow as tf
@@ -83,6 +109,10 @@ FLAGS = flags.FLAGS
 @tf.contrib.framework.deprecated(None, 'Use object_detection/model_main.py.')
 def main(unused_argv):
   assert FLAGS.checkpoint_dir, '`checkpoint_dir` is missing.'
+  if iswindos():
+    FLAGS.checkpoint_dir=winprefix+"\\"+FLAGS.checkpoint_dir
+    FLAGS.eval_dir=winprefix+"\\"+FLAGS.eval_dir
+    FLAGS.pipeline_config_path=winprefix+"\\"+FLAGS.pipeline_config_path  
   assert FLAGS.eval_dir, '`eval_dir` is missing.'
   tf.gfile.MakeDirs(FLAGS.eval_dir)
   if FLAGS.pipeline_config_path:
