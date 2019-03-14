@@ -29,9 +29,9 @@ from object_detection.metrics import coco_evaluation
 from object_detection.utils import label_map_util
 from object_detection.utils import ops
 from object_detection.utils import visualization_utils as vis_utils
-
+tf.logging.set_verbosity(tf.logging.INFO)
 slim = tf.contrib.slim
-
+logging.basicConfig(level=logging.DEBUG)
 # A dictionary of metric names to classes that implement the metric. The classes
 # in the dictionary must implement
 # utils.object_detection_evaluation.DetectionEvaluator interface.

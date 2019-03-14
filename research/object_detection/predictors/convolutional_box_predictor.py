@@ -233,7 +233,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   _num_spatial_bins = [3,3]
                   _num_classes = 20
                   _box_code_size = 4
-                  _crop_size = [9,9]#[18, 18]
+                  _crop_size = [18, 18]
                   batch_size = tf.shape(proposal_boxes)[0]
                   num_boxes = tf.shape(proposal_boxes)[1]
                   item2 = tf.shape(proposal_boxes)[2]
@@ -262,7 +262,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     global_pool=True)
                   
                   box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2]) #pos reg[24, 1083 1 1 80],带有batch的.
-                  '''box_encodings = slim.conv2d(box_encodings , 4, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape')'''
+                  #box_encodings = slim.conv2d(box_encodings , 4, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape')
                   ''' ## 可以使用的
                   tfprint.pos_sen = tf.Print(image_feature,["squeezed box",tf.shape(box_encodings)],summarize=8)
                   '''
