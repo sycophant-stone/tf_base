@@ -714,7 +714,7 @@ def position_sensitive_crop_regions(image,
         position_sensitive_features, [1, 2], keep_dims=True)
     '''
     #可以使用的debug接口,结果正确,不会出现卡住.
-    tfprint.pos_sen = tf.Print(image,["image,imagesplit",tf.shape(image),tf.shape(image_splits),tf.shape(crop),tf.shape(image_crops),len(image_crops),tf.shape(pos1),tf.shape(position_sensitive_features),tf.shape(position_sensitive_boxes)],summarize=8)
+    #tfprint.pos_sen = tf.Print(image,["image,imagesplit",tf.shape(image),tf.shape(image_splits),tf.shape(crop),tf.shape(image_crops),len(image_crops),tf.shape(pos1),tf.shape(position_sensitive_features),tf.shape(position_sensitive_boxes)],summarize=8)
     '''
   else:
     # Reorder height/width to depth channel.

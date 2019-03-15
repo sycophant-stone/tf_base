@@ -179,37 +179,37 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                     if head_name == BOX_ENCODINGS:
                         prediction0reg = prediction
                         head_name0= head_name
-                        tfprint.ssd_fmap0_reg = tf.Print(image_feature0,["ssd_fmap0,idx0,head_name", head_name0,tf.shape(image_feature0),tf.shape(prediction0reg)],summarize=10)
+                        #tfprint.ssd_fmap0_reg = tf.Print(image_feature0,["ssd_fmap0,idx0,head_name", head_name0,tf.shape(image_feature0),tf.shape(prediction0reg)],summarize=10)
                     else:
                         prediction0cls = prediction
                         head_name0= head_name
-                        tfprint.ssd_fmap0_cls = tf.Print(image_feature0,["ssd_fmap0,idx0,head_name", head_name0,tf.shape(image_feature0),tf.shape(prediction0cls)],summarize=10)
+                        #tfprint.ssd_fmap0_cls = tf.Print(image_feature0,["ssd_fmap0,idx0,head_name", head_name0,tf.shape(image_feature0),tf.shape(prediction0cls)],summarize=10)
                     
               if (idx==1):
                     image_feature1 = image_feature
                     prediction1 = prediction
                     head_name1= head_name
-                    tfprint.ssd_fmap1 = tf.Print(image_feature1,["ssd_fmap0,idx1,head_name", head_name1,tf.shape(image_feature1),tf.shape(prediction1)],summarize=10)
+                    #tfprint.ssd_fmap1 = tf.Print(image_feature1,["ssd_fmap0,idx1,head_name", head_name1,tf.shape(image_feature1),tf.shape(prediction1)],summarize=10)
               if (idx==2):
                     image_feature2 = image_feature
                     prediction2 = prediction
                     head_name2= head_name
-                    tfprint.ssd_fmap2 = tf.Print(image_feature2,["ssd_fmap0,idx2,head_name", head_name2,tf.shape(image_feature2),tf.shape(prediction2)],summarize=10)
+                    #tfprint.ssd_fmap2 = tf.Print(image_feature2,["ssd_fmap0,idx2,head_name", head_name2,tf.shape(image_feature2),tf.shape(prediction2)],summarize=10)
               if (idx==3):
                     image_feature3 = image_feature
                     prediction3 = prediction
                     head_name3= head_name
-                    tfprint.ssd_fmap3 = tf.Print(image_feature3,["ssd_fmap0,idx3,head_name", head_name3,tf.shape(image_feature3),tf.shape(prediction3)],summarize=10)
+                    #tfprint.ssd_fmap3 = tf.Print(image_feature3,["ssd_fmap0,idx3,head_name", head_name3,tf.shape(image_feature3),tf.shape(prediction3)],summarize=10)
               if (idx==4):
                     image_feature4 = image_feature
                     prediction4 = prediction
                     head_name4= head_name
-                    tfprint.ssd_fmap4 = tf.Print(image_feature4,["ssd_fmap0,idx4,head_name", head_name4,tf.shape(image_feature4),tf.shape(prediction4)],summarize=10)
+                    #tfprint.ssd_fmap4 = tf.Print(image_feature4,["ssd_fmap0,idx4,head_name", head_name4,tf.shape(image_feature4),tf.shape(prediction4)],summarize=10)
               if (idx==5):
                     image_feature5 = image_feature
                     prediction5 = prediction
                     head_name5= head_name
-                    tfprint.ssd_fmap5 = tf.Print(image_feature5,["ssd_fmap0,idx5,head_name", head_name5,tf.shape(image_feature5),tf.shape(prediction5)],summarize=10)
+                    #tfprint.ssd_fmap5 = tf.Print(image_feature5,["ssd_fmap0,idx5,head_name", head_name5,tf.shape(image_feature5),tf.shape(prediction5)],summarize=10)
              '''
                     
               #if(idx==0):
@@ -233,7 +233,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   _num_spatial_bins = [3,3]
                   _num_classes = 20
                   _box_code_size = 4
-                  _crop_size = [18, 18]
+                  _crop_size = [3,3]#[18, 18]
                   batch_size = tf.shape(proposal_boxes)[0]
                   num_boxes = tf.shape(proposal_boxes)[1]
                   item2 = tf.shape(proposal_boxes)[2]
@@ -264,7 +264,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                   box_encodings = tf.squeeze(box_encodings, squeeze_dims=[2]) #pos reg[24, 1083 1 1 80],带有batch的.
                   #box_encodings = slim.conv2d(box_encodings , 4, [1, 1], reuse=tf.AUTO_REUSE, scope='RoiRegPostReshape')
                   ''' ## 可以使用的
-                  tfprint.pos_sen = tf.Print(image_feature,["squeezed box",tf.shape(box_encodings)],summarize=8)
+                  #tfprint.pos_sen = tf.Print(image_feature,["squeezed box",tf.shape(box_encodings)],summarize=8)
                   '''
                   '''注意,如果tf.Print后面接的第一个参数是tensor,如果这个tensor尺寸太大,tf.print会打印它的值.这会导致GPU memory overflow.
                      建议把tensor设置成一个小值,我们重点看第二列的shape值.'''
@@ -313,7 +313,7 @@ class ConvolutionalBoxPredictor(box_predictor.BoxPredictor):
                 
                   ## add to ssd's prediction outputs
                   ## dim isn't equal, remove to debug.
-                  tfprint.pos_sen = tf.Print(image_feature,["reg shape, cls shape",tf.shape(box_encodings),tf.shape(class_predictions_with_background)],summarize=8)
+                  #tfprint.pos_sen = tf.Print(image_feature,["reg shape, cls shape",tf.shape(box_encodings),tf.shape(class_predictions_with_background)],summarize=8)
                   predictions['box_encodings'].append(box_encodings)
                   predictions['class_predictions_with_background'].append(class_predictions_with_background)
                   

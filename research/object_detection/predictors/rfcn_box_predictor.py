@@ -155,7 +155,7 @@ class RfcnBoxPredictor(box_predictor.BoxPredictor):
       class_predictions_with_background = tf.reshape(
           class_predictions_with_background,
           [batch_size * num_boxes, 1, total_classes])
-      tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
+      #tfprint.rfcn_roi = tf.Print(class_feature_map,["rfcn roi, cls and reg",tf.shape(class_feature_map),tf.shape(class_predictions_with_background),tf.shape(location_feature_map),tf.shape(box_encodings)],summarize=64)
 
     return {BOX_ENCODINGS: [box_encodings],
             CLASS_PREDICTIONS_WITH_BACKGROUND:

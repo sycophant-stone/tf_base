@@ -606,7 +606,7 @@ class SSDMetaArch(model.DetectionModel):
     return shapelist
     ''' # 可用的代码段
     zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
-    tfprint.ssd_feature_map = tf.Print(zeros_tsr,["feature_maps shapes",len(shapelist),feature_map_shapes[0],feature_map_shapes[1],feature_map_shapes[2]],summarize=64)
+    #tfprint.ssd_feature_map = tf.Print(zeros_tsr,["feature_maps shapes",len(shapelist),feature_map_shapes[0],feature_map_shapes[1],feature_map_shapes[2]],summarize=64)
     return [(shape[1], shape[2]) for shape in feature_map_shapes]
     '''
 

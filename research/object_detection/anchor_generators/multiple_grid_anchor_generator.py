@@ -220,7 +220,7 @@ class MultipleGridAnchorGenerator(anchor_generator.AnchorGenerator):
         scale_width * self._base_anchor_size[1]
     ]
     zeros_tsr = tf.zeros([1, 1])
-    tfprint.ssd_tiledAnc = tf.Print(zeros_tsr,["tiled_anchors",len(feature_map_shape_list),len(self._scales),len(self._aspect_ratios),len(anchor_strides),len(anchor_offsets)],summarize=10)
+    #tfprint.ssd_tiledAnc = tf.Print(zeros_tsr,["tiled_anchors",len(feature_map_shape_list),len(self._scales),len(self._aspect_ratios),len(anchor_strides),len(anchor_offsets)],summarize=10)
     
     for feature_map_index, (grid_size, scales, aspect_ratios, stride,
                             offset) in enumerate(
@@ -259,7 +259,7 @@ class MultipleGridAnchorGenerator(anchor_generator.AnchorGenerator):
       if feature_map_index==5:
         num_anchors_in_layer5 = num_anchors_in_layer
         
-    tfprint.ssd_tiledAnc = tf.Print(zeros_tsr,["tiled_anchors",num_anchors_in_layer0,num_anchors_in_layer1,num_anchors_in_layer2,num_anchors_in_layer3,num_anchors_in_layer4,num_anchors_in_layer5, tf.shape(anchor_grid_list[0].get()),tf.shape(anchor_grid_list[1].get()),tf.shape(anchor_grid_list[2].get()),tf.shape(anchor_grid_list[3].get()),tf.shape(anchor_grid_list[4].get()),tf.shape(anchor_grid_list[5].get())],summarize=10)
+    #tfprint.ssd_tiledAnc = tf.Print(zeros_tsr,["tiled_anchors",num_anchors_in_layer0,num_anchors_in_layer1,num_anchors_in_layer2,num_anchors_in_layer3,num_anchors_in_layer4,num_anchors_in_layer5, tf.shape(anchor_grid_list[0].get()),tf.shape(anchor_grid_list[1].get()),tf.shape(anchor_grid_list[2].get()),tf.shape(anchor_grid_list[3].get()),tf.shape(anchor_grid_list[4].get()),tf.shape(anchor_grid_list[5].get())],summarize=10)
     '''
     return anchor_grid_list
 
@@ -364,7 +364,7 @@ def create_ssd_anchors(num_layers=6,
     '''# 可用的代码段
     dbg_box_specs_list.append(layer_box_specs)
   zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
-  tfprint.ssd_box_specs = tf.Print(zeros_tsr,["boxspecs",len(dbg_box_specs_list),dbg_box_specs_list[0],dbg_box_specs_list[1],dbg_box_specs_list[2]],summarize=64)  
+  #tfprint.ssd_box_specs = tf.Print(zeros_tsr,["boxspecs",len(dbg_box_specs_list),dbg_box_specs_list[0],dbg_box_specs_list[1],dbg_box_specs_list[2]],summarize=64)  
   '''
   return MultipleGridAnchorGenerator(box_specs_list, base_anchor_size,
                                      anchor_strides, anchor_offsets)
