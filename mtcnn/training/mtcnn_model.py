@@ -30,7 +30,7 @@ def cls_ohem(cls_prob, label):
     num_row = tf.to_int32(cls_prob.get_shape()[0])
     row = tf.range(num_row)*2
     indices_ = row + label_int
-    tfprint.cls_ohem = tf.Print(zeros_tsr,["cls_ohem",tf.shape(row),row,tf.shape(label_int),label_int,tf.shape(indices_),indices_],summarize=8)
+    tfprint.cls_ohem = tf.Print(zeros_tsr,["cls_ohem",tf.shape(row),row,tf.shape(label_int),label_int,tf.shape(indices_),indices_,tf.shape(cls_prob),tf.shape(label),tf.shape(cls_prob_reshape),cls_prob_reshape],summarize=8)
     label_prob = tf.squeeze(tf.gather(cls_prob_reshape, indices_))
     loss = -tf.log(label_prob+1e-10)
     zeros = tf.zeros_like(label_prob, dtype=tf.float32)
