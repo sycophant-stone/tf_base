@@ -123,7 +123,7 @@ def __save_data(stage, data, save_path):
         sys.stdout.flush()
     for f in saveFiles.values():
         f.close()
-    print '\n'
+    print ('\n')
 
 def test_net(batch_size, stage, thresh, min_face_size, stride):
     print(">>>>>> Detect bbox for %s..."%(stage))
