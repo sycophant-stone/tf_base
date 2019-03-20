@@ -11,6 +11,7 @@ from tools.tfrecord_reader import read_multi_tfrecords,read_single_tfrecord
 from mtcnn_config import config
 from mtcnn_model import P_Net, R_Net, O_Net
 import cv2
+import tfprint
 
 def train_model(baseLr, loss, data_num):
     """
@@ -129,7 +130,7 @@ def train(netFactory, modelPrefix, endEpoch, dataPath, display=200, baseLr=0.01,
     i = 0
     #total steps
     MAX_STEP = int(total_num / config.BATCH_SIZE + 1) * endEpoch
-    print "\n\nTotal step: ", MAX_STEP
+    print ("\n\nTotal step: ", MAX_STEP)
     epoch = 0
     sess.graph.finalize()    
     try:
@@ -149,7 +150,7 @@ def train(netFactory, modelPrefix, endEpoch, dataPath, display=200, baseLr=0.01,
             print bbox_batch_array[0]
             print landmark_batch_array[0]
             '''
-            _,_,summary = sess.run([train_op, lr_op ,summary_op], feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array,landmark_target:landmark_batch_array})
+            _,_,summary,_ = sess.run([train_op, lr_op ,summary_op,tfprint.cls_ohem], feed_dict={input_image: image_batch_array, label: label_batch_array, bbox_target: bbox_batch_array,landmark_target:landmark_batch_array})
             
             if (step+1) % display == 0:
                 #acc = accuracy(cls_pred, labels_batch)
@@ -189,7 +190,7 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    print "The training argument info is: ", args
+    print ("The training argument info is: ", args)
     if args.stage not in ['pnet', 'rnet', 'onet']:
         raise Exception("Please specify stage by --stage=pnet or rnet or onet")
     dataPath = os.path.join(rootPath, "tmp/data/%s"%(args.stage))

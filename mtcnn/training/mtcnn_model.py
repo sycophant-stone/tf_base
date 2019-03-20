@@ -2,6 +2,7 @@
 import tensorflow as tf
 from tensorflow.contrib import slim
 import numpy as np
+import tfprint
 num_keep_radio = 0.7
 #define prelu
 def prelu(inputs):
@@ -19,6 +20,7 @@ def dense_to_one_hot(labels_dense, num_classes):
     return labels_one_hot
 
 def cls_ohem(cls_prob, label):
+    zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
     zeros = tf.zeros_like(label)
     #label=-1 --> label=0net_factory
     label_filter_invalid = tf.where(tf.less(label,0), zeros, label)
@@ -28,6 +30,7 @@ def cls_ohem(cls_prob, label):
     num_row = tf.to_int32(cls_prob.get_shape()[0])
     row = tf.range(num_row)*2
     indices_ = row + label_int
+    tfprint.cls_ohem = tf.Print(zeros_tsr,["cls_ohem",tf.shape(row),row,tf.shape(label_int),label_int,tf.shape(indices_),indices_],summarize=8)
     label_prob = tf.squeeze(tf.gather(cls_prob_reshape, indices_))
     loss = -tf.log(label_prob+1e-10)
     zeros = tf.zeros_like(label_prob, dtype=tf.float32)
