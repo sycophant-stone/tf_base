@@ -91,6 +91,7 @@ class BBox(object):
         Bounding Box of face
     """
     def __init__(self, bbox):
+        bbox=list(bbox)
         self.left = bbox[0]
         self.top = bbox[1]
         self.right = bbox[2]

@@ -60,8 +60,8 @@ def gen_landmark_data(srcTxt, net, augment=False):
                 bbox_size = np.random.randint(int(min(gt_w, gt_h) * 0.8), np.ceil(1.25 * max(gt_w, gt_h)))
                 delta_x = np.random.randint(-gt_w * 0.2, gt_w * 0.2)
                 delta_y = np.random.randint(-gt_h * 0.2, gt_h * 0.2)
-                nx1 = max(x1+gt_w/2-bbox_size/2+delta_x,0)
-                ny1 = max(y1+gt_h/2-bbox_size/2+delta_y,0)
+                nx1 = max(x1+gt_w//2-bbox_size//2+delta_x,0) ## /号可能会引入浮点数的输出, //号是没有浮点数的.
+                ny1 = max(y1+gt_h//2-bbox_size//2+delta_y,0)
                 
                 nx2 = nx1 + bbox_size
                 ny2 = ny1 + bbox_size
@@ -131,7 +131,7 @@ def gen_landmark_data(srcTxt, net, augment=False):
         sys.stdout.write(printStr)
         sys.stdout.flush()
     saveF.close()
-    print "\nLandmark create done!"
+    print ("\nLandmark create done!")
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Create hard bbox sample...',
