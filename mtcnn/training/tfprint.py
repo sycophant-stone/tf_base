@@ -4,6 +4,7 @@ import tensorflow as tf
 ## cls_ohem
 cls_ohem = tf.placeholder(tf.float32)
 
+inf_boxes = tf.placeholder(tf.float32)
 
 ### demo:
 """
