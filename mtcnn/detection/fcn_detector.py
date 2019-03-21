@@ -4,7 +4,7 @@ import sys, os
 rootPath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../"))
 sys.path.insert(0, rootPath)
 from training.mtcnn_config import config
-
+from training.tfprint import tfprint
 class FcnDetector(object):
     #net_factory: which net
     #model_path: where the params'file is
@@ -37,7 +37,7 @@ class FcnDetector(object):
     def predict(self, databatch):
         height, width, _ = databatch.shape
         # print(height, width)
-        cls_prob, bbox_pred = self.sess.run([self.cls_prob, self.bbox_pred],
+        cls_prob, bbox_pred = self.sess.run([self.cls_prob, self.bbox_pred,tfprint.inf_boxes],
                                                            feed_dict={self.image_op: databatch, self.width_op: width,
                                                                       self.height_op: height})
         return cls_prob, bbox_pred

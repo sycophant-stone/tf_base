@@ -7,6 +7,7 @@ rootPath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__
 sys.path.insert(0, rootPath)
 from nms import py_nms
 from training.mtcnn_config import config
+from training.tfprint import tfprint
 
 class MtcnnDetector(object):
     def __init__(self,
@@ -93,6 +94,8 @@ class MtcnnDetector(object):
             return np.array([])
         #offset
         dx1, dy1, dx2, dy2 = [reg[t_index[0], t_index[1], i] for i in range(4)]
+        zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
+        tfprint.inf_boxes = tf.Print(zeros_tsr,["generator bbox",tf.shape(cls_map),cls_map,tf.shape(reg),reg,tf.shape(t_index),t_index],summarize=8)
         reg = np.array([dx1, dy1, dx2, dy2])
         score = cls_map[t_index[0], t_index[1]]
         boundingbox = np.vstack([np.round((self.stride * t_index[1]) / scale),

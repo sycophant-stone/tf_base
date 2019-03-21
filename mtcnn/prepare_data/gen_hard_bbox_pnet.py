@@ -32,7 +32,7 @@ def gen_hard_bbox_pnet(srcDataSet, srcAnnotations):
         # boxed change to float type
         bbox = map(float, annotation[1:])
         # gt. each row mean bounding box
-        boxes = np.array(bbox, dtype=np.float32).reshape(-1, 4)
+        boxes = np.array(list(bbox), dtype=np.float32).reshape(-1, 4)
         #load image
         img = cv2.imread(os.path.join(srcDataSet, imPath + '.jpg'))
         idx += 1
@@ -132,7 +132,7 @@ def gen_hard_bbox_pnet(srcDataSet, srcAnnotations):
         sys.stdout.flush()
     for f in saveFiles.values():
         f.close()
-    print '\n'
+    print ('\n')
 
 
 if __name__ == "__main__":
