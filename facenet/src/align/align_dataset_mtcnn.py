@@ -93,6 +93,7 @@ def main(args):
                         if img.ndim == 2:
                             img = facenet.to_rgb(img)
                         img = img[:, :, 0:3]
+                        print("align pic:",image_path)
 
                         bounding_boxes, _ = align.detect_face.detect_face(img, minsize, pnet, rnet, onet, threshold, factor)
                         nrof_faces = bounding_boxes.shape[0]
@@ -103,6 +104,10 @@ def main(args):
                                 bounding_box_size = (det[:, 2] - det[:, 0]) * (det[:, 3] - det[:, 1])
                                 img_center = img_size / 2
                                 offsets = np.vstack([(det[:, 0] + det[:, 2]) / 2 - img_center[1], (det[:, 1] + det[:, 3]) / 2 - img_center[0]])
+                                print("prams. img_center",img_center)
+                                print("prams. det",det)
+                                print("prams. offsets",offsets)
+                                print("prams. bounding_box_size",bounding_box_size)
                                 offset_dist_squared = np.sum(np.power(offsets, 2.0), 0)
                                 index = np.argmax(bounding_box_size - offset_dist_squared * 2.0)  # some extra weight on the centering
                                 det = det[index, :]
