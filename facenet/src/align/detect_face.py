@@ -33,6 +33,7 @@ import tensorflow as tf
 #from math import floor
 import cv2
 import os
+import args_helper
 
 def layer(op):
     '''Decorator for composable network layers.'''
@@ -347,6 +348,14 @@ def detect_face(img, minsize, pnet, rnet, onet, threshold, factor):
         qq2 = total_boxes[:,1]+total_boxes[:,6]*regh
         qq3 = total_boxes[:,2]+total_boxes[:,7]*regw
         qq4 = total_boxes[:,3]+total_boxes[:,8]*regh
+        if args_helper.debug==True:
+            print("detect_face. total_boxes:",total_boxes)
+            print("detect_face. regw:",regw)
+            print("detect_face. regh:",regh)
+            print("detect_face. qq1:",qq1)
+            print("detect_face. qq2:",qq2)
+            print("detect_face. qq3:",qq3)
+            print("detect_face. qq4:",qq4)
         total_boxes = np.transpose(np.vstack([qq1, qq2, qq3, qq4, total_boxes[:,4]]))
         total_boxes = rerec(total_boxes.copy())
         total_boxes[:,0:4] = np.fix(total_boxes[:,0:4]).astype(np.int32)

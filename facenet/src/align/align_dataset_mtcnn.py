@@ -35,11 +35,13 @@ import facenet
 import align.detect_face
 import random
 from time import sleep
-
+from absl import app
+import args_helper
 
 def main(args):
     sleep(random.random())
     output_dir = os.path.expanduser(args.output_dir)
+    args_helper.debug = args.debug
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     # Store some git revision info in a text file in the log directory
@@ -104,10 +106,11 @@ def main(args):
                                 bounding_box_size = (det[:, 2] - det[:, 0]) * (det[:, 3] - det[:, 1])
                                 img_center = img_size / 2
                                 offsets = np.vstack([(det[:, 0] + det[:, 2]) / 2 - img_center[1], (det[:, 1] + det[:, 3]) / 2 - img_center[0]])
-                                print("prams. img_center",img_center)
-                                print("prams. det",det)
-                                print("prams. offsets",offsets)
-                                print("prams. bounding_box_size",bounding_box_size)
+                                if args_helper.debug==True:
+                                    print("prams. img_center",img_center)
+                                    print("prams. det",det)
+                                    print("prams. offsets",offsets)
+                                    print("prams. bounding_box_size",bounding_box_size)
                                 offset_dist_squared = np.sum(np.power(offsets, 2.0), 0)
                                 index = np.argmax(bounding_box_size - offset_dist_squared * 2.0)  # some extra weight on the centering
                                 det = det[index, :]
@@ -145,6 +148,8 @@ def parse_arguments(argv):
                         help='Shuffles the order of images to enable alignment using multiple processes.', action='store_true')
     parser.add_argument('--gpu_memory_fraction', type=float,
                         help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
+    parser.add_argument('--debug', type=bool,
+                        help='open debug info or not', default=False)
     return parser.parse_args(argv)
 
 if __name__ == '__main__':
