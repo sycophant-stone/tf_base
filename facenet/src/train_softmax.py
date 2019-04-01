@@ -43,7 +43,7 @@ import tensorflow.contrib.slim as slim
 from tensorflow.python.ops import data_flow_ops
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
-
+import tfprint
 
 def main(args):
 
@@ -289,7 +289,7 @@ def train(args, sess, epoch, image_list, label_list, index_dequeue_op, enqueue_o
             err, _, step, reg_loss, summary_str = sess.run([loss, train_op, global_step, regularization_losses, summary_op], feed_dict=feed_dict)
             summary_writer.add_summary(summary_str, global_step=step)
         else:
-            err, _, step, reg_loss = sess.run([loss, train_op, global_step, regularization_losses], feed_dict=feed_dict)
+            err, _, step, reg_loss,_ = sess.run([loss, train_op, global_step, regularization_losses,tfprint.center_loss], feed_dict=feed_dict)
         duration = time.time() - start_time
         print('Epoch: [%d][%d/%d]\tTime %.3f\tLoss %2.3f\tRegLoss %2.3f' %
               (epoch, batch_number + 1, args.epoch_size, duration, err, np.sum(reg_loss)))

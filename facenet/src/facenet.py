@@ -39,6 +39,7 @@ from tensorflow.python.training import training
 import random
 import re
 from tensorflow.python.platform import gfile
+import tfprint
 
 def triplet_loss(anchor, positive, negative, alpha):
     """Calculate the triplet loss according to the FaceNet paper
@@ -77,14 +78,18 @@ def center_loss(features, label, alfa, nrof_classes):
     """Center loss based on the paper "A Discriminative Feature Learning Approach for Deep Face Recognition"
        (http://ydwen.github.io/papers/WenECCV16.pdf)
     """
+    zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
     nrof_features = features.get_shape()[1]
     centers = tf.get_variable('centers', [nrof_classes, nrof_features], dtype=tf.float32,
         initializer=tf.constant_initializer(0), trainable=False)
+    centers_1 = centers
     label = tf.reshape(label, [-1])
     centers_batch = tf.gather(centers, label)
     diff = (1 - alfa) * (centers_batch - features)
     centers = tf.scatter_sub(centers, label, diff)
+    centers_2 = centers
     loss = tf.reduce_mean(tf.square(features - centers_batch))
+    tfprint.center_loss = tf.Print(zeros_tsr,["features,label,nrof_classes, centers_1, centers_batch, diff, centers_2, loss, ",tf.shape(features),tf.shape(label),nrof_classes,tf.shape(centers_1),tf.shape(centers_batch),tf.shape(diff),tf.shape(centers_2),loss],summarize=4)
     return loss, centers
 
 def get_image_paths_and_labels(dataset):
