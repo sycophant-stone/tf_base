@@ -44,8 +44,10 @@ from tensorflow.python.ops import data_flow_ops
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
 import tfprint
+import args_helper
 
 def main(args):
+    args_helper.facenet_open_debug = args.facenet_open_debug
 
     network = importlib.import_module(args.model_def)
 
@@ -289,7 +291,10 @@ def train(args, sess, epoch, image_list, label_list, index_dequeue_op, enqueue_o
             err, _, step, reg_loss, summary_str = sess.run([loss, train_op, global_step, regularization_losses, summary_op], feed_dict=feed_dict)
             summary_writer.add_summary(summary_str, global_step=step)
         else:
-            err, _, step, reg_loss,_ = sess.run([loss, train_op, global_step, regularization_losses,tfprint.center_loss], feed_dict=feed_dict)
+            if args_helper.facenet_open_debug==True:
+                err, _, step, reg_loss,_ = sess.run([loss, train_op, global_step, regularization_losses,tfprint.center_loss], feed_dict=feed_dict)
+            else:
+                err, _, step, reg_loss = sess.run([loss, train_op, global_step, regularization_losses], feed_dict=feed_dict)   
         duration = time.time() - start_time
         print('Epoch: [%d][%d/%d]\tTime %.3f\tLoss %2.3f\tRegLoss %2.3f' %
               (epoch, batch_number + 1, args.epoch_size, duration, err, np.sum(reg_loss)))
@@ -446,6 +451,8 @@ def parse_arguments(argv):
                         help='Number of images to process in a batch in the LFW test set.', default=100)
     parser.add_argument('--lfw_nrof_folds', type=int,
                         help='Number of folds to use for cross validation. Mainly used for testing.', default=10)
+    parser.add_argument('--facenet_open_debug', type=bool,
+                        help='open debug info or not', default=False)
     return parser.parse_args(argv)
 
 
