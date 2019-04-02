@@ -104,8 +104,9 @@ def get_image_paths_and_labels(dataset):
         image_paths_flat += dataset[i].image_paths
         temp = [i] * len(dataset[i].image_paths)
         labels_flat += [i] * len(dataset[i].image_paths)
-        print("get_image_paths_and_labels.dataset[%d].image_paths:%s"%(i,dataset[i].image_paths))
-        print("get_image_paths_and_labels.%d-th'lens:%d labels:%s"%(i,len(dataset[i].image_paths),temp))
+        if args_helper.facenet_open_debug ==True:
+            print("get_image_paths_and_labels.dataset[%d].image_paths:%s"%(i,dataset[i].image_paths))
+            print("get_image_paths_and_labels.%d-th'lens:%d labels:%s"%(i,len(dataset[i].image_paths),temp))
     return image_paths_flat, labels_flat
 
 def shuffle_examples(image_paths, labels):

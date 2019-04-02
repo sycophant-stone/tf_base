@@ -30,6 +30,7 @@ from __future__ import print_function
 import os
 import numpy as np
 import facenet
+import args_helper
 
 def evaluate(embeddings, actual_issame, nrof_folds=10):
     # Calculate evaluation metrics
@@ -72,6 +73,7 @@ def read_pairs(pairs_filename):
         for line in f.readlines()[1:]:
             pair = line.strip().split()
             pairs.append(pair)
+            print("pair:",pair)
     return np.array(pairs)
 
 
