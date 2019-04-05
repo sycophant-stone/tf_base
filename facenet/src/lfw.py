@@ -73,7 +73,8 @@ def read_pairs(pairs_filename):
         for line in f.readlines()[1:]:
             pair = line.strip().split()
             pairs.append(pair)
-            print("pair:",pair)
+            if args_helper.facenet_open_debug ==True:
+                print("pair:",pair)
     return np.array(pairs)
 
 
