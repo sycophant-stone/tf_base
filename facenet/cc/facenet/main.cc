@@ -60,6 +60,7 @@ limitations under the License.
 
 // times
 #include<time.h>
+#include<math.h>
 
 // These are all common classes it's handy to reference with no namespace.
 using tensorflow::Flag;
@@ -276,6 +277,20 @@ Status CheckTopLabel(const std::vector<Tensor>& outputs, int expected,
   return Status::OK();
 }
 
+//\brief return tensor0 and tensor1's distance.
+float distance(Tensor& ts0, Tensor& ts1){
+    tensorflow::TensorShape dims = ts0.shape();
+    //LOG(ERROR)<<"dims: "<<dims;
+    float sum = 0.0;
+    for(int i=0;i<128;i++) {
+        auto ts0_map = ts0.tensor<float,2>();
+        auto ts1_map = ts1.tensor<float,2>();
+        float diff = ts0_map(i) - ts1_map(i);
+        sum += pow(diff,2);
+    }
+    return sqrt(sum);
+}
+
 int main(int argc, char* argv[]) {
   // These are the command-line flags the program can understand.
   // They define where the graph and input data is located, and what kind of
@@ -356,6 +371,7 @@ int main(int argc, char* argv[]) {
 
   // Actually run the image through the model.
   std::vector<Tensor> outputs;
+  std::vector<Tensor> allpic_opts;
   clock_t start, stop;
   double duration;
   start = clock();
@@ -376,7 +392,16 @@ int main(int argc, char* argv[]) {
       }
       LOG(ERROR)<<"th res dims: "<<outputs[0].dims()<<" shape:"<<outputs[0].shape();
       LOG(ERROR)<<"th res matrx: "<<outputs[0].matrix<float>();
+      allpic_opts.push_back(outputs[0]);
   }
+  ////////////////////////////////////////////////////////////////////////////
+  /// POST process                              ////////////////
+  ///////////////////////////////////////////////////////////////////////////
+  LOG(ERROR)<<"  0  1  2";
+  for(int i=0;i<allpic_opts.size();i++) {
+      LOG(ERROR)<<i<<" "<<distance(allpic_opts[i],allpic_opts[0])<<" " <<distance(allpic_opts[i],allpic_opts[1])<<" " <<distance(allpic_opts[i],allpic_opts[2]);
+  }  
+  
   #if 0
   // This is for automated testing to make sure we get the expected result with
   // the default settings. We know that label 653 (military uniform) should be
