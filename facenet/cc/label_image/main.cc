@@ -58,6 +58,9 @@ limitations under the License.
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
+// times
+#include<time.h>
+
 // These are all common classes it's handy to reference with no namespace.
 using tensorflow::Flag;
 using tensorflow::Tensor;
@@ -279,6 +282,7 @@ int main(int argc, char* argv[]) {
   // input the model expects. If you train your own model, or use something
   // other than inception_v3, then you'll need to update these.
   string image = "tensorflow/examples/label_image/data/grace_hopper.jpg";
+  std::vector<string> imgs={"tensorflow/examples/label_image/data/grace_hopper.jpg", "tensorflow/examples/label_image/data/grace_hopper.jpg"};
   string graph =
       "tensorflow/examples/label_image/data/inception_v3_2016_08_28_frozen.pb";
   string labels =
@@ -291,6 +295,9 @@ int main(int argc, char* argv[]) {
   string output_layer = "InceptionV3/Predictions/Reshape_1";
   bool self_test = false;
   string root_dir = "";
+  for(int i=0;i<imgs.size();i++) {
+      LOG(ERROR)<<"=====img["<<i<<"]:"<<imgs[i]<<"====";
+      image = imgs[i];
   std::vector<Flag> flag_list = {
       Flag("image", &image, "image to be processed"),
       Flag("graph", &graph, "graph to be executed"),
@@ -344,8 +351,14 @@ int main(int argc, char* argv[]) {
 
   // Actually run the image through the model.
   std::vector<Tensor> outputs;
+  clock_t start, stop;
+  double duration;
+  start = clock();
   Status run_status = session->Run({{input_layer, resized_tensor}},
                                    {output_layer}, {}, &outputs);
+  stop = clock();
+  duration = ((double)(stop - start)) / CLOCKS_PER_SEC;//CLK_TCK;
+  LOG(ERROR) << "Infer Time(s): " << duration <<"s";
   if (!run_status.ok()) {
     LOG(ERROR) << "Running model failed: " << run_status;
     return -1;
@@ -372,6 +385,7 @@ int main(int argc, char* argv[]) {
   if (!print_status.ok()) {
     LOG(ERROR) << "Running print failed: " << print_status;
     return -1;
+  }
   }
 
   return 0;
