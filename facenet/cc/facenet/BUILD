@@ -10,7 +10,7 @@ licenses(["notice"])  # Apache 2.0
 exports_files(["LICENSE"])
 
 #exports_files(["data/grace_hopper.jpg"])
-exports_files(["test_imgs_exp/exp182_2.jpg"])
+exports_files(["test_imgs_exp/exp182_0.jpg"])
 
 load("//tensorflow:tensorflow.bzl", "tf_cc_binary")
 

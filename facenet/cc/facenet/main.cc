@@ -184,60 +184,6 @@ Status ReadTensorFromImageFile(const string& file_name, const int input_height,
   return Status::OK();
 }
 
-Status ReadTensorFromImageFile_clean(const string& file_name, const int input_height,
-                               const int input_width, const float input_mean,
-                               const float input_std,
-                               std::vector<Tensor>* out_tensors) {
-  auto root = tensorflow::Scope::NewRootScope();
-  using namespace ::tensorflow::ops;  // NOLINT(build/namespaces)
-
-  string input_name = "file_reader";
-  string output_name = "normalized";
-
-  // read file_name into a tensor named input
-  Tensor input(tensorflow::DT_STRING, tensorflow::TensorShape());
-  TF_RETURN_IF_ERROR(
-      ReadEntireFile(tensorflow::Env::Default(), file_name, &input));
-
-  // use a placeholder to read input data
-  auto file_reader =
-      Placeholder(root.WithOpName("input"), tensorflow::DataType::DT_STRING);
-
-  std::vector<std::pair<string, tensorflow::Tensor>> inputs = {
-      {"input", input},
-  };
-
-  // Now try to figure out what kind of file it is and decode it.
-  const int wanted_channels = 3;
-  tensorflow::Output image_reader;
-  if (tensorflow::str_util::EndsWith(file_name, ".png")) {
-    image_reader = DecodePng(root.WithOpName("png_reader"), file_reader,
-                             DecodePng::Channels(wanted_channels));
-  } else if (tensorflow::str_util::EndsWith(file_name, ".gif")) {
-    // gif decoder returns 4-D tensor, remove the first dim
-    image_reader =
-        Squeeze(root.WithOpName("squeeze_first_dim"),
-                DecodeGif(root.WithOpName("gif_reader"), file_reader));
-  } else if (tensorflow::str_util::EndsWith(file_name, ".bmp")) {
-    image_reader = DecodeBmp(root.WithOpName("bmp_reader"), file_reader);
-  } else {
-    // Assume if it's neither a PNG nor a GIF then it must be a JPEG.
-    image_reader = DecodeJpeg(root.WithOpName("jpeg_reader"), file_reader,
-                              DecodeJpeg::Channels(wanted_channels));
-  }
-
-  // This runs the GraphDef network definition that we've just constructed, and
-  // returns the results in the output tensor.
-  tensorflow::GraphDef graph;
-  TF_RETURN_IF_ERROR(root.ToGraphDef(&graph));
-
-  std::unique_ptr<tensorflow::Session> session(
-      tensorflow::NewSession(tensorflow::SessionOptions()));
-  TF_RETURN_IF_ERROR(session->Create(graph));
-  TF_RETURN_IF_ERROR(session->Run({inputs}, {"jpeg_reader"}, {}, out_tensors));
-  return Status::OK();
-}
-
 // Reads a model graph definition from disk, and creates a session object you
 // can use to run it.
 Status LoadGraph(const string& graph_file_name,
@@ -335,15 +281,14 @@ int main(int argc, char* argv[]) {
   // They define where the graph and input data is located, and what kind of
   // input the model expects. If you train your own model, or use something
   // other than inception_v3, then you'll need to update these.
-  //string image = "tensorflow/examples/facenet/data/test_imgs/1.jpg";
-  //std::vector<string> imgs={"tensorflow/examples/facenet/test_imgs_exp/exp182_0.jpg","tensorflow/examples/facenet/test_imgs_exp/exp182_1.jpg","tensorflow/examples/facenet/test_imgs_exp/exp182_2.jpg"};
-  std::vector<string> imgs={"tensorflow/examples/facenet/test_imgs_exp/exp182_0.jpg"};
+  std::vector<string> imgs={"tensorflow/examples/facenet/test_imgs_exp/exp182_0.jpg","tensorflow/examples/facenet/test_imgs_exp/exp182_1.jpg","tensorflow/examples/facenet/test_imgs_exp/exp182_2.jpg"};
+  string image = "tensorflow/examples/facenet/test_imgs_exp/exp182_0.jpg";
   string graph =
       "tensorflow/examples/facenet/data/inceptionv1_facenet.pb";
   //string labels =
   //    "tensorflow/examples/label_image/data/imagenet_slim_labels.txt";
-  int32 input_width = 182;//299;
-  int32 input_height = 182;//299;
+  int32 input_width = 160;//299;
+  int32 input_height = 160;//299;
   float input_mean = 0;
   float input_std = 255;
   string input_layer = "input:0";
@@ -352,7 +297,7 @@ int main(int argc, char* argv[]) {
   bool self_test = false;
   string root_dir = "";
   std::vector<Flag> flag_list = {
-      //Flag("image", &image, "image to be processed"),
+      Flag("image", &image, "image to be processed"),
       Flag("graph", &graph, "graph to be executed"),
       //Flag("labels", &labels, "name of file containing labels"),
       Flag("input_width", &input_width, "resize image to this width in pixels"),
@@ -393,84 +338,45 @@ int main(int argc, char* argv[]) {
   // to the specifications the main graph expects.
   std::vector<Tensor> resized_tensors;
   std::vector<Tensor> resized_imgs;
-  LOG(ERROR) << "before image reading and preprocess";
   for(int i=0;i<imgs.size();i++) {
       LOG(ERROR)<<"imgs size"<<i<<"/"<<imgs.size();
       string image_path = tensorflow::io::JoinPath(root_dir, imgs[i]);
-      Status read_tensor_status =
-          ReadTensorFromImageFile(image_path, input_height, input_width, input_mean,
+      Status read_tensor_status = ReadTensorFromImageFile(image_path, input_height, input_width, input_mean,
                               input_std, &resized_tensors);
       if (!read_tensor_status.ok()) {
-        LOG(ERROR) << read_tensor_status;
-        return -1;
+          LOG(ERROR) << read_tensor_status;
+          return -1;
       }
       LOG(ERROR)<<"resized_tensors.size: "<<resized_tensors.size();
       for(int j=0;j<resized_tensors.size();j++) {
           resized_imgs.push_back(resized_tensors[j]);
       }
   }
-  const Tensor& resized_tensor = resized_imgs[0];
+  const Tensor& resized_tensor = resized_tensors[0];
 
   // Actually run the image through the model.
-  std::vector<Tensor> outputs;//(3);
+  std::vector<Tensor> outputs;
   clock_t start, stop;
   double duration;
   start = clock();
-  //const Tensor Zero={0};
-  LOG(ERROR) << "start to Inference";
+  LOG(ERROR) << "start to Inference"<<resized_tensor.shape();
   for(int k=0;k<resized_imgs.size();k++) {
-    LOG(ERROR)<<"k:"<<k<<"resized_imgs.size: "<<resized_imgs.size();
+      LOG(ERROR)<<"k:"<<k<<"resized_imgs.size: "<<resized_imgs.size();
     
-  std::vector<std::pair<string, Tensor>> input;
-    tensorflow::TensorShape inputshape;
-    inputshape.InsertDim(0,1);
-    //Tensor a(tensorflow::DT_INT32,inputshape);
-    //Tensor b(tensorflow::DT_INT32,inputshape);
-  //Tensor zr(tensorflow::DT_BOOL,inputshape);
-  //auto zr_map=zr.tensor<bool,1>();
-  //zr_map(0) = 0;
-    //auto a_map = a.tensor<int,1>();
-    //a_map(0) = 2;
-    //auto b_map = b.tensor<int,1>();
-    //b_map(0) = 3;
-    //input.emplace_back(std::string("a"), a);
-    //input.emplace_back(std::string("b"), b);
-  input.emplace_back(input_layer, resized_imgs[k]);
-  input.emplace_back(phase_train_placeholder, false);
-  /* 注意这个的Run函数的顺序:
-   * input: 如果有多个inputs tensor, 把这些tensor用vector表示.
-   * output: 输出的节点名字(string类型).
-   * 空:
-   * 输出的节点: tensor, 或者tensor组成的vector.
-   */
-  Status run_status = session->Run(input,{output_layer},{}, &outputs);
-    
-    
-  //Status run_status = session->Run({{input_layer, resized_tensor}},{phase_train_placeholder,0},
-  //                                 {output_layer}, &outputs);
-  stop = clock();
-  duration = ((double)(stop - start)) / CLOCKS_PER_SEC;//CLK_TCK;
-  LOG(ERROR) << "Infer Time(s): " << duration <<"s";
-  if (!run_status.ok()) {
-    LOG(ERROR) << "Running model failed: " << run_status;
-    return -1;
+      std::vector<std::pair<string, Tensor>> input;
+      input.emplace_back(input_layer, resized_imgs[k]);
+      input.emplace_back(phase_train_placeholder, false);
+      Status run_status = session->Run(input,{output_layer},{}, &outputs);
+      stop = clock();
+      duration = ((double)(stop - start)) / CLOCKS_PER_SEC;//CLK_TCK;
+      LOG(ERROR) << "Infer Time(s): " << duration <<"s";
+      if (!run_status.ok()) {
+          LOG(ERROR) << "Running model failed: " << run_status;
+          return -1;
+      }
+      LOG(ERROR)<<"th res dims: "<<outputs[0].dims()<<" shape:"<<outputs[0].shape();
+      LOG(ERROR)<<"th res matrx: "<<outputs[0].matrix<float>();
   }
-  
-  // post process
-  //LOG(INFO) << outputs[0].matrix<float>();
-    
-  //Tensor result = outputs[0];
-  //auto result_map = result.tensor<float,1>();
-  //LOG(ERROR)<<"result: "<<result_map(0);
-  //LOG(ERROR)<<"tf res:"<<outputs[1].matrix<float>();
-  LOG(ERROR)<<"outputs size: "<<outputs.size();
-  for(int i=0;i<outputs.size();i++) {
-      LOG(ERROR)<<""<<i<<"th res dims: "<<outputs[i].dims()<<" shape:"<<outputs[i].shape();
-      LOG(ERROR)<<""<<i<<"th res matrx: "<<outputs[i].matrix<float>();
-  }
-  }
-  //auto result_map = result.tensor<float,1>();
- //
   #if 0
   // This is for automated testing to make sure we get the expected result with
   // the default settings. We know that label 653 (military uniform) should be

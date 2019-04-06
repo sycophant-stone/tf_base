@@ -57,6 +57,7 @@ def main(args):
             emb = sess.run(embeddings, feed_dict=feed_dict)
 
             nrof_images = len(args.image_files)
+            print("images shape", images.shape)
             print("emb'shape", emb.shape)
             print("emb:", emb)
             print('Images:')
