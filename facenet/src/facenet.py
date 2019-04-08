@@ -97,6 +97,28 @@ def center_loss(features, label, alfa, nrof_classes):
         tfprint.center_loss = tf.Print(zeros_tsr,["features,label,nrof_classes, centers_1, centers_batch, diff, centers_2, loss, ",tf.shape(features),tf.shape(label),nrof_classes,tf.shape(centers_1),tf.shape(centers_batch),tf.shape(diff),tf.shape(centers_2),loss],summarize=4)
     return loss, centers
 
+def mutal_loss(features, label, alfa, nrof_classes):
+    """Mutual loss 
+    """
+    if args_helper.facenet_open_debug ==True:
+        zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.
+    nrof_features = features.get_shape()[1]
+    centers = tf.get_variable('centers', [nrof_classes, nrof_features], dtype=tf.float32,
+        initializer=tf.constant_initializer(0), trainable=False)
+    if args_helper.facenet_open_debug ==True:
+        centers_1 = centers
+    label = tf.reshape(label, [-1])
+    centers_batch = tf.gather(centers, label)
+    centers_batch_ots = tf.gather(centers, label+1)
+    diff = -1*(1 - alfa) * (centers_batch - centers_batch_ots)
+    centers = tf.scatter_sub(centers, label, diff)
+    if args_helper.facenet_open_debug ==True:
+        centers_2 = centers
+    loss = tf.reduce_mean(tf.square(features - centers_batch))
+    if args_helper.facenet_open_debug ==True:
+        tfprint.center_loss = tf.Print(zeros_tsr,["features,label,nrof_classes, centers_1, centers_batch, diff, centers_2, loss, ",tf.shape(features),tf.shape(label),nrof_classes,tf.shape(centers_1),tf.shape(centers_batch),tf.shape(diff),tf.shape(centers_2),loss],summarize=4)
+    return loss, centers    
+    
 def get_image_paths_and_labels(dataset):
     image_paths_flat = []
     labels_flat = []
