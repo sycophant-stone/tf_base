@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # import math
 import tensorflow as tf
+import tfprint
 
 """
 @platform: vim
@@ -188,16 +189,20 @@ class Model(object):
         """
         the abovel commented-out code would lead loss to divergence, maybe you can try it.
         """
+        zeros_tsr = tf.zeros([2, 3])
         with tf.variable_scope("softmax"):
             weights = tf.get_variable(name='embedding_weights',
                                       shape=[embeddings.get_shape().as_list()[-1], 10],
                                       initializer=tf.contrib.layers.xavier_initializer())
             # normalize weights
             weights_norm = tf.norm(weights, axis=0, keepdims=True)
+            w_ori = weights
             weights = tf.div(weights, weights_norm, name="normalize_weights")
+            w_af_div = weights
             logits = tf.matmul(embeddings, weights)
             pred_prob = tf.nn.softmax(logits=logits)
             loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels))
+            tfprint.modified_sl = tf.Print(zeros_tsr,["w, w_norm, w_af_div",tf.shape(w_ori), w_ori, tf.shape(weights_norm), weights_norm, w_af_div],summarize=64)
             return pred_prob, loss
 
     @staticmethod
@@ -212,12 +217,15 @@ class Model(object):
         """
         l = 0.
         embeddings_norm = tf.norm(embeddings, axis=1)
+        zeros_tsr = tf.zeros([2, 3])
 
         with tf.variable_scope("softmax"):
             weights = tf.get_variable(name='embedding_weights',
                                       shape=[embeddings.get_shape().as_list()[-1], 10],
                                       initializer=tf.contrib.layers.xavier_initializer())
+            w_origin = weights
             weights = tf.nn.l2_normalize(weights, axis=0)
+            w_l2_norm = weights
             # cacualting the cos value of angles between embeddings and weights
             orgina_logits = tf.matmul(embeddings, weights)
             N = embeddings.get_shape()[0] # get batch_size
@@ -246,6 +254,9 @@ class Model(object):
             updated_logits = ff*orgina_logits + f*combined_logits
             loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels,logits=updated_logits))
             pred_prob = tf.nn.softmax(logits=updated_logits)
+            tfprint.angular_sl = tf.Print(zeros_tsr,["w_origin",tf.shape(w_origin), w_origin,"w_l2norm", tf.shape(w_l2_norm), w_l2_norm, 
+                                          "label", tf.shape(labels), labels, "N:", N, "sig sample label idx", single_sample_label_index, "selected logits", tf.shape(selected_logits),selected_logits
+                                          ,"embeddingNorm", embeddings_norm, "cos_theta", cos_theta,"sing0,3,4", sign0, sign3, sign4],summarize=64)
             return pred_prob, loss
 
 

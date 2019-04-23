@@ -7,6 +7,8 @@ from utils import visualize, create_gif
 from tqdm import tqdm
 from tensorflow.examples.tutorials.mnist import input_data
 
+import tfprint
+
 """
 @platform: vim
 @author:   YunYang1994
@@ -35,7 +37,7 @@ batch_size = 256
 train_batchs = 40 # the number of batchs per epoch
 test_batchs  = 20
 embedding_dim = 2 # 3
-loss_type = 1
+loss_type = 2
 
 
 
@@ -77,7 +79,11 @@ def train(loss_type):
             i,j = batch*batch_size, (batch+1)*batch_size
             batch_images, batch_labels = mnist.train.next_batch(batch_size)
             feed_dict = {images:batch_images, labels:batch_labels}
-            _, _, batch_loss, batch_acc, embeddings[i:j,:] = sess.run([train_op, add_step_op, loss, accuracy, network.embeddings], feed_dict)
+            if loss_type == 1:
+                _,_, _, batch_loss, batch_acc, embeddings[i:j,:] = sess.run([tfprint.modified_sl, train_op, add_step_op, loss, accuracy, network.embeddings], feed_dict)
+            if loss_type == 2:
+                _,_, _, batch_loss, batch_acc, embeddings[i:j,:] = sess.run([tfprint.angular_sl, train_op, add_step_op, loss, accuracy, network.embeddings], feed_dict)
+            #_, _, batch_loss, batch_acc, embeddings[i:j,:] = sess.run([train_op, add_step_op, loss, accuracy, network.embeddings], feed_dict)
             nlabels[i:j] = batch_labels
             f.write(" ".join(map(str,[batch_acc, batch_loss]))+ "\n")
             # print(batch_acc)
