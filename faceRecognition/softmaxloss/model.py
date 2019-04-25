@@ -236,7 +236,7 @@ class Model(object):
             #   [1,0],
             #   ....
             #   [128,9]]
-            selected_logits = tf.gather_nd(orgina_logits, single_sample_label_index)
+            selected_logits = tf.gather_nd(orgina_logits, single_sample_label_index) ## tf.gather_nd , orgina_logits,selected_logits
             cos_theta = tf.div(selected_logits, embeddings_norm)
             cos_theta_power = tf.square(cos_theta)
             cos_theta_biq = tf.pow(cos_theta, 4)
@@ -244,7 +244,9 @@ class Model(object):
             sign3 = tf.multiply(tf.sign(2*cos_theta_power-1), sign0)
             sign4 = 2*sign0 + sign3 -3
             result=sign3*(8*cos_theta_biq-8*cos_theta_power+1) + sign4
-
+            
+            angu_theta = tf.acos(cos_theta)
+            cos_4Theta = tf.cos(4*angu_theta) ## result 的算法和实际要求的cos(4θ)的值不同,这是何意?
             margin_logits = tf.multiply(result, embeddings_norm)
             f = 1.0/(1.0+l)
             ff = 1.0 - f
@@ -254,9 +256,14 @@ class Model(object):
             updated_logits = ff*orgina_logits + f*combined_logits
             loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels,logits=updated_logits))
             pred_prob = tf.nn.softmax(logits=updated_logits)
+            tfprint.angular_sl = tf.Print(zeros_tsr,["embeddings",tf.shape(embeddings), embeddings,"weights", tf.shape(w_origin), w_origin, 
+                                          "orgina_logits",tf.shape(orgina_logits),orgina_logits,"sig sample label idx", tf.shape(single_sample_label_index),single_sample_label_index,"selected logits", tf.shape(selected_logits),selected_logits,"embeddingNorm", tf.shape(embeddings_norm), embeddings_norm,"costheta",cos_theta,"costheta2",cos_theta_power,"costheta4",cos_theta_biq,"sing0", sign0,"sign3", sign3,"sign4", sign4,"cos(4theta)",cos_4Theta,"result?",result
+                                          ],summarize=64)
+            '''
             tfprint.angular_sl = tf.Print(zeros_tsr,["w_origin",tf.shape(w_origin), w_origin,"w_l2norm", tf.shape(w_l2_norm), w_l2_norm, 
                                           "label", tf.shape(labels), labels, "N:", N, "sig sample label idx", single_sample_label_index, "selected logits", tf.shape(selected_logits),selected_logits
                                           ,"embeddingNorm", embeddings_norm, "cos_theta", cos_theta,"sing0,3,4", sign0, sign3, sign4],summarize=64)
+            '''
             return pred_prob, loss
 
 
