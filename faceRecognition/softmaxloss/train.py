@@ -72,6 +72,7 @@ def train(loss_type):
     # summary = tf.summary.FileWriter("./image/", sess.graph)
 
     for epoch in range(epochs):
+        model.Model.set_lambda_by_iter(epochs)
         nlabels = np.zeros((train_batchs*batch_size,), dtype=np.int32)
         embeddings = np.zeros((train_batchs*batch_size, embedding_dim), dtype=np.float32)
         train_acc = 0.

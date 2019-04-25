@@ -2,6 +2,7 @@
 # import math
 import tensorflow as tf
 import tfprint
+import numpy as np
 
 """
 @platform: vim
@@ -15,7 +16,9 @@ class Model(object):
         -->  -->
            ==
     """
+    ll = 0.0 ## 静态变量, 为依据epoch值更新lamda.
     def __init__(self, images, labels, embedding_dim,loss_type = 0):
+        #self.l = 0
         self.images = images
         self.labels = labels
         self.embedding_dim = embedding_dim
@@ -29,10 +32,10 @@ class Model(object):
     def __get_embeddings(self):
         return self.network(inputs=self.images, embedding_dim=self.embedding_dim)
 
-    def __get_loss(self):
+    def __get_loss(self, l=ll):
         if self.loss_type == 0: return self.Original_Softmax_Loss(self.embeddings, self.labels)
         if self.loss_type == 1: return self.Modified_Softmax_Loss(self.embeddings, self.labels)
-        if self.loss_type == 2: return self.Angular_Softmax_Loss( self.embeddings, self.labels)
+        if self.loss_type == 2: return self.Angular_Softmax_Loss( self.embeddings, self.labels, l) ## 每次epoch,利用更新的lamda.
 
     def __get_pred(self):
         return tf.argmax(self.pred_prob, axis=1)
@@ -41,7 +44,15 @@ class Model(object):
         correct_predictions = tf.equal(self.predictions, self.labels)
         accuracy = tf.reduce_mean(tf.cast(correct_predictions, 'float'))
         return accuracy
-
+    
+    @staticmethod
+    def set_lambda_by_iter(iter_val=0):
+        ll = max(1000/(0.12*iter_val+1),5)
+        
+    @staticmethod
+    def network1(inputs, embedding_dim=2):
+        print("network1")
+        
     @staticmethod
     def network(inputs, embedding_dim=2):
 
@@ -206,7 +217,7 @@ class Model(object):
             return pred_prob, loss
 
     @staticmethod
-    def Angular_Softmax_Loss(embeddings, labels, margin=4):
+    def Angular_Softmax_Loss(embeddings, labels, margin=4, lmd=0):
         """
         Note:(about the value of margin)
         as for binary-class case, the minimal value of margin is 2+sqrt(3)
@@ -214,8 +225,11 @@ class Model(object):
 
         the value of margin proposed by the author of paper is 4.
         here the margin value is 4.
+        param:
+        lmd: lambda for balance between softmax Loss and A-softmax loss
         """
-        l = 0.
+        #l = 0.
+        l = lmd#self.l
         embeddings_norm = tf.norm(embeddings, axis=1)
         zeros_tsr = tf.zeros([2, 3])
 
@@ -248,7 +262,7 @@ class Model(object):
             angu_theta = tf.acos(cos_theta)
             cos_4Theta = tf.cos(4*angu_theta) ## result 的算法和实际要求的cos(4θ)的值不同,这是何意?
             margin_logits = tf.multiply(result, embeddings_norm)
-            f = 1.0/(1.0+l)
+            f = 1.0/(1.0+l) # l:lambda
             ff = 1.0 - f
             combined_logits = tf.add(orgina_logits, tf.scatter_nd(single_sample_label_index,
                                                            tf.subtract(margin_logits, selected_logits),
@@ -257,7 +271,7 @@ class Model(object):
             loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels,logits=updated_logits))
             pred_prob = tf.nn.softmax(logits=updated_logits)
             tfprint.angular_sl = tf.Print(zeros_tsr,["embeddings",tf.shape(embeddings), embeddings,"weights", tf.shape(w_origin), w_origin, 
-                                          "orgina_logits",tf.shape(orgina_logits),orgina_logits,"sig sample label idx", tf.shape(single_sample_label_index),single_sample_label_index,"selected logits", tf.shape(selected_logits),selected_logits,"embeddingNorm", tf.shape(embeddings_norm), embeddings_norm,"costheta",cos_theta,"costheta2",cos_theta_power,"costheta4",cos_theta_biq,"sing0", sign0,"sign3", sign3,"sign4", sign4,"cos(4theta)",cos_4Theta,"result?",result
+                                          "orgina_logits",tf.shape(orgina_logits),orgina_logits,"sig sample label idx", tf.shape(single_sample_label_index),single_sample_label_index,"selected logits", tf.shape(selected_logits),selected_logits,"embeddingNorm", tf.shape(embeddings_norm), embeddings_norm,"costheta",cos_theta,"costheta2",cos_theta_power,"costheta4",cos_theta_biq,"sing0", sign0,"sign3", sign3,"sign4", sign4,"cos(4theta)",cos_4Theta,"result?",result,"l",l,"f",f,"ff",ff
                                           ],summarize=64)
             '''
             tfprint.angular_sl = tf.Print(zeros_tsr,["w_origin",tf.shape(w_origin), w_origin,"w_l2norm", tf.shape(w_l2_norm), w_l2_norm, 
