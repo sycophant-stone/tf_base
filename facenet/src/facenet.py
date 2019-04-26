@@ -42,22 +42,38 @@ from tensorflow.python.platform import gfile
 import tfprint
 import args_helper
 
-def angular_softmax_loss(embeddings,labels, margin=4):
+'''
+embeddings.shape =  [None, 10575]
+embeddings.transpose.shape =  [10575, None]
+'''
+def angular_softmax_loss(embeddings,labels,num_cls, margin=4):
     l = 0. 
+    print("embeddings.shape = ",embeddings.get_shape().as_list())
+    embeddings=tf.transpose(embeddings) # 128, 90
     embeddings_norm = tf.norm(embeddings, axis=1)
     zeros_tsr = tf.zeros([2, 3])
-
+    print("embeddings.transpose.shape = ",embeddings.get_shape().as_list())
+    inputs_shape = embeddings.get_shape().as_list()
+    ''' # debug shape和as_list. 尽早采用print出来as_list之后的值.
+    weight = tf.Variable(initial_value=tf.random_normal((num_cls,inputs_shape[0])) * tf.sqrt(2 / inputs_shape[0]),dtype=tf.float32,name='weights') # shaep =classes, features,
+    tfprint.asoftmax_loss = tf.Print(zeros_tsr,["label shape",tf.shape(labels),tf.shape(weight)],summarize=4)
+    return zeros_tsr
+    '''
+    
     with tf.variable_scope("softmax"):
+        label_shp = labels.get_shape()
         weights = tf.get_variable(name='embedding_weights',
-                                  shape=[embeddings.get_shape().as_list()[-1], 10],
+                                  #shape=[inputs_shape[0], inputs_shape[0]], # 10575 10575 太大了. GPU内存不够了.
+                                  shape=[400,400], 
+                                  #shape=[tf.shape(labels)[0],tf.shape(labels)[0]],
                                   initializer=tf.contrib.layers.xavier_initializer())
         w_origin = weights
         weights = tf.nn.l2_normalize(weights, axis=0)
         w_l2_norm = weights
         # cacualting the cos value of angles between embeddings and weights
         orgina_logits = tf.matmul(embeddings, weights)
-        N = embeddings.get_shape()[0] # get batch_size
-        single_sample_label_index = tf.stack([tf.constant(list(range(N)), tf.int64), labels], axis=1)
+        #N = embeddings.get_shape()[0] # get batch_size
+        single_sample_label_index = tf.stack([tf.constant(list(range(inputs_shape[0])), tf.int64), labels], axis=1)
         # N = 128, labels = [1,0,...,9]
         # single_sample_label_index:
         # [ [0,1],
@@ -78,13 +94,12 @@ def angular_softmax_loss(embeddings,labels, margin=4):
         margin_logits = tf.multiply(result, embeddings_norm)
         f = 1.0/(1.0+l) # l:lambda
         ff = 1.0 - f
-        combined_logits = tf.add(orgina_logits, tf.scatter_nd(single_sample_label_index,
-                                                              tf.subtract(margin_logits, selected_logits),
-                                                              orgina_logits.get_shape()))
+        combined_logits = tf.add(orgina_logits, tf.scatter_nd(single_sample_label_index,tf.subtract(margin_logits, selected_logits),orgina_logits.get_shape()))
         updated_logits = ff*orgina_logits + f*combined_logits
         loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels,logits=updated_logits))
         pred_prob = tf.nn.softmax(logits=updated_logits)
         return loss
+        
         
 def triplet_loss(anchor, positive, negative, alpha):
     """Calculate the triplet loss according to the FaceNet paper
@@ -172,8 +187,11 @@ def get_image_paths_and_labels(dataset):
         temp = [i] * len(dataset[i].image_paths)
         labels_flat += [i] * len(dataset[i].image_paths)
         if args_helper.facenet_open_debug ==True:
+            print("here debug for the datasets. gt")
+            '''
             print("get_image_paths_and_labels.dataset[%d].image_paths:%s"%(i,dataset[i].image_paths))
             print("get_image_paths_and_labels.%d-th'lens:%d labels:%s"%(i,len(dataset[i].image_paths),temp))
+            '''
     return image_paths_flat, labels_flat
 
 def shuffle_examples(image_paths, labels):

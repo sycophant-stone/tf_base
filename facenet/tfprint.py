@@ -3,6 +3,7 @@ import tensorflow as tf
 
 ## center loss
 center_loss = tf.placeholder(tf.float32)
+asoftmax_loss = tf.placeholder(tf.float32)
 ### demo:
 """
 import tfprint

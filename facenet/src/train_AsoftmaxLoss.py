@@ -180,7 +180,7 @@ def main(args):
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
             labels=label_batch, logits=logits, name='cross_entropy_per_example')
         '''
-        cross_entropy = facenet.angular_softmax_loss(embeddings=logits, labels=label_batch,margin=4)
+        cross_entropy = facenet.angular_softmax_loss(embeddings=logits, num_cls=nrof_classes,labels=label_batch,margin=4)
         cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
         tf.add_to_collection('losses', cross_entropy_mean)
 
@@ -297,7 +297,7 @@ def train(args, sess, epoch, image_list, label_list, index_dequeue_op, enqueue_o
             summary_writer.add_summary(summary_str, global_step=step)
         else:
             if args_helper.facenet_open_debug==True:
-                err, _, step, reg_loss,_ = sess.run([loss, train_op, global_step, regularization_losses,tfprint.center_loss], feed_dict=feed_dict)
+                err, _, step, reg_loss,_ = sess.run([loss, train_op, global_step, regularization_losses,tfprint.asoftmax_loss], feed_dict=feed_dict)
             else:
                 err, _, step, reg_loss = sess.run([loss, train_op, global_step, regularization_losses], feed_dict=feed_dict)   
         duration = time.time() - start_time
