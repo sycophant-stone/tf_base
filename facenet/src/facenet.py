@@ -49,7 +49,7 @@ embeddings.transpose.shape =  [10575, None]
 def angular_softmax_loss(embeddings,labels,num_cls, margin=4):
     l = 0. 
     print("embeddings.shape = ",embeddings.get_shape().as_list())
-    embeddings=tf.transpose(embeddings) # 128, 90
+    embeddings=tf.transpose(embeddings) # 128, 90 [featuremap num, batchsize], batchsize 默认值是90
     embeddings_norm = tf.norm(embeddings, axis=1)
     zeros_tsr = tf.zeros([2, 3])
     print("embeddings.transpose.shape = ",embeddings.get_shape().as_list())
@@ -65,6 +65,10 @@ def angular_softmax_loss(embeddings,labels,num_cls, margin=4):
         weights = tf.get_variable(name='embedding_weights',
                                   #shape=[inputs_shape[0], inputs_shape[0]], # 10575 10575 太大了. GPU内存不够了.
                                   shape=[400,400], 
+                                  #classes,inputs_shape[1]
+                                  # 1. 做成 batchsize, classnum=10575
+                                  # 2. batchsize, 就是90(默认值, parser.add_argument('--batch_size', type=int,help='Number of images to process in a batch.', default=90)
+                                  # 3. 所以此处是 [90, num_cls] ,aka [90, 10575]
                                   #shape=[tf.shape(labels)[0],tf.shape(labels)[0]],
                                   initializer=tf.contrib.layers.xavier_initializer())
         w_origin = weights
