@@ -54,10 +54,11 @@ def angular_softmax_loss(embeddings,labels,num_cls, margin=4):
     # 1. tf.norm的axis为1, 是把每一行作为向量, 计算每一行的向量范数. 然后把这些向量范数值(标量)组合在一起.
     # 2. 把输入的矩阵认为是n个向量.
     # 3. 特别地,当axis为None时, 会把整个矩阵认为是一个向量来算.
-    # 4. 具体到这里, embedding本来是[90 128]的, 然后输入tf.norm的axis=1. 
-    #   a) 应该是把每个batch的128维度作为一个向量(这样才能解释通,才有物理意义.), 计算这个向量的范数.
+    # 4. 具体到这里, embedding本来是[B 128]的, 然后输入tf.norm的axis=1. 
+    #   a) 应该是把每个batch的128维度数值作为一个向量(作为一行)(这样才能解释通,才有物理意义.), 计算这个向量的范数.
     #   b) 对比于把90个batch作为向量, 计算的是90个batch下,128各自维度的"长度"..., 这个更有意义!!!
-    embeddings_norm = tf.norm(embeddings, axis=1)
+    '''embeddings_norm = tf.norm(embeddings, axis=1)'''
+    
     zeros_tsr = tf.zeros([2, 3])
     print("embeddings.transpose.shape = ",embeddings.get_shape().as_list())
     inputs_shape = embeddings.get_shape().as_list()
@@ -68,7 +69,19 @@ def angular_softmax_loss(embeddings,labels,num_cls, margin=4):
     '''
     
     with tf.variable_scope("softmax"):
-        label_shp = labels.get_shape()
+        '''<1> embedding及 eb/||eb||, embedding_norm'''
+        '''<2> weights 及 w/||w||, weights_norm'''
+        ## 1. 做norm时,消除的都是Feature的个数.
+        ##   a) embedding [B F], 按照axis=1消除F.
+        ##   b) weights [F C], 按照axis=0消除F.
+        ## 2. 区别tf.nn.normalize和tf.norm
+        ##   a) tf.nn.norm 是求解矩阵的范数. 当axis有值时, axis=1,则把每行当成向量, 计算向量的范数.
+        ##   b) tf.nn.normalize 是两部分的组合.
+        ##      i)   先做tf.nn.norm,求出范数.
+        ##      ii)  再利用上面的范数对原来的矩阵做归一化.
+        ##      iii) 效果是 T/||T||
+        embeddings_div_embedding_norm = tf.nn.l2_normalize(embeddings, axis=1)
+        embeddings_norm = tf.norm(embeddings,axis=1)
         weights = tf.get_variable(name='embedding_weights',
                                   #shape=[inputs_shape[0], inputs_shape[0]], # 10575 10575 太大了. GPU内存不够了.
                                   shape=[inputs_shape[1],num_cls], 
@@ -77,58 +90,17 @@ def angular_softmax_loss(embeddings,labels,num_cls, margin=4):
                                   # 2. feature dim是和basebone相关的.
                                   # 3. 所以此处是 [128, num_cls] ,aka [128, 10575]
                                   initializer=tf.contrib.layers.xavier_initializer())
+        
         w_origin = weights
         weights = tf.nn.l2_normalize(weights, axis=0)
-        w_l2_norm = weights
-        embeddings_norm = tf.nn.l2_normalize(embeddings,dim=1)
-        # cacualting the cos value of angles between embeddings and weights
-        orgina_logits = tf.matmul(embeddings, weights)
-        # 1. orgina_logits是 B(90默认) 10575的.
-        #    a) 含义是B(90)个样本, 每个样本保存有当前样本属于10575个分类的概率.
-        # 2. 根据batch中样本的gt label,从"10575个分类概率"中选取和gt label对应的那个概率.
-        #    a) 收敛情况下,这个概率(预测值)应该是所有分类概率中最大的.
-        #    b) 在训练时(训练初期),非常有可能不是最大的,是任意值.
-        #    c) 依据此值做收敛.
-        # 3. 确保最终结果是 [batchsize, num_cls]
+        weights_norm = tf.norm(weights,axis=0)
+        weights_div_weights_norm = weights
         
-        #N = embeddings.get_shape()[0] # get batch_size
-        single_sample_label_index = tf.stack([tf.constant(list(range(90)), tf.int64), labels], axis=1)
-        # N = 128, labels = [1,0,...,9]
-        # single_sample_label_index:
-        # [ [0,1],
-        #   [1,0],
-        #   ....
-        #   [128,9]]
-        selected_logits = tf.gather_nd(orgina_logits, single_sample_label_index) ## tf.gather_nd , orgina_logits,selected_logits
+        '''<3> weights和label相关的'''
+        weight_unit_batch = tf.gather(weights_div_weights_norm,labels) # shaep =batch,features_num,
         
-            inputs_shape = inputs.get_shape().as_list()
-    with tf.variable_scope(name_or_scope=scope):
-        weight = tf.Variable(initial_value=tf.random_normal((classes,inputs_shape[1])) * tf.sqrt(2 / inputs_shape[1]),dtype=tf.float32,name='weights') # shaep =classes, features,
-        print("weight shape = ",weight.get_shape().as_list())
-
-    weight_unit = tf.nn.l2_normalize(weight,dim=1)
-    print("weight_unit shape = ",weight_unit.get_shape().as_list())
-
-    inputs_mo = tf.sqrt(tf.reduce_sum(tf.square(inputs),axis=1)+eplion) #shape=[batch
-    print("inputs_mo shape = ",inputs_mo.get_shape().as_list())
-
-    inputs_unit = tf.nn.l2_normalize(inputs,dim=1)  #shape = [batch,features_num]
-    print("inputs_unit shape = ",inputs_unit.get_shape().as_list())
-
-    logits = tf.matmul(inputs,tf.transpose(weight_unit)) #shape = [batch,classes] x * w_unit
-    print("logits shape = ",logits.get_shape().as_list())
-
-    weight_unit_batch = tf.gather(weight_unit,label) # shaep =batch,features_num,
-    print("weight_unit_batch shape = ",weight_unit_batch.get_shape().as_list())
-
-    logits_inputs = tf.reduce_sum(tf.multiply(inputs,weight_unit_batch),axis=1) # shaep =batch,
-
-    print("logits_inputs shape = ",logits_inputs.get_shape().as_list())
-
-    cos_theta = tf.reduce_sum(tf.multiply(inputs_unit,weight_unit_batch),axis=1) # shaep =batch,
-    print("cos_theta shape = ",cos_theta.get_shape().as_list())
-        
-        cos_theta = tf.div(selected_logits, embeddings_norm)
+        '''<4> 计算cos_theta'''
+        cos_theta = tf.reduce_sum(tf.multiply(embeddings_div_embedding_norm,weight_unit_batch),axis=1) # shaep =batch,
         cos_theta_power = tf.square(cos_theta)
         cos_theta_biq = tf.pow(cos_theta, 4)
         sign0 = tf.sign(cos_theta)
@@ -136,15 +108,26 @@ def angular_softmax_loss(embeddings,labels,num_cls, margin=4):
         sign4 = 2*sign0 + sign3 -3
         result=sign3*(8*cos_theta_biq-8*cos_theta_power+1) + sign4
         
-        angu_theta = tf.acos(cos_theta)
-        cos_4Theta = tf.cos(4*angu_theta) ## result 的算法和实际要求的cos(4θ)的值不同,这是何意?
+        '''<5> cos_4theta并不能天然解决问题,需要再算成prediction的logits(margin_logits)'''
+        logits_inputs = tf.reduce_sum(tf.multiply(embeddings,weight_unit_batch),axis=1) # shaep =batch,
+        logits = tf.matmul(embeddings,weights_div_weights_norm) #shape = [batch,classes] x * w_unit ## 原始logits
+        
+        ##angu_theta = tf.acos(cos_theta)
+        ##cos_4Theta = tf.cos(4*angu_theta) ## result 的算法和实际要求的cos(4θ)的值不同,这是何意?
+        
         margin_logits = tf.multiply(result, embeddings_norm)
         f = 1.0/(1.0+l) # l:lambda
         ff = 1.0 - f
-        combined_logits = tf.add(orgina_logits, tf.scatter_nd(single_sample_label_index,tf.subtract(margin_logits, selected_logits),orgina_logits.get_shape()))
-        updated_logits = ff*orgina_logits + f*combined_logits
-        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels,logits=updated_logits))
-        pred_prob = tf.nn.softmax(logits=updated_logits)
+        
+
+        index_range = tf.range(start=0,limit= tf.shape(embeddings,out_type=tf.int64)[0],delta=1,dtype=tf.int64)
+        index_labels = tf.stack([index_range, labels], axis = 1)
+        index_logits =  tf.scatter_nd(index_labels,tf.subtract(margin_logits,logits_inputs), tf.shape(logits,out_type=tf.int64))# 关心的才有值,其他的为0值.
+
+        logits_final = f * logits + ff * index_logits
+
+        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels,logits=logits_final))
+        pred_prob = tf.nn.softmax(logits=logits_final)
         return loss
         
 def triplet_loss(anchor, positive, negative, alpha):
