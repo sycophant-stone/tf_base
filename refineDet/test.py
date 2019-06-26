@@ -17,7 +17,7 @@ batch_size = 32
 buffer_size = 1024
 epochs = 300
 reduce_lr_epoch = []
-ckpt_path = os.path.join('.', 'vgg_16.ckpt')
+ckpt_path = os.path.join('.', './pretrained/vgg_16.ckpt')
 config = {
     'mode': 'train',                            # 'train' ,'test'
     'input_size': 320,                          # 320 for refinedet320, 512 for refinedet512
@@ -45,11 +45,12 @@ image_augmentor_config = {
     'pad_truth_to': 60,
 }
 
-data = os.listdir('./voc2007/')
-data = [os.path.join('./voc2007/', name) for name in data]
+data = os.listdir('./VOCdevkit/VOC2007/')
+data = [os.path.join('./VOCdevkit/VOC2007/', name) for name in data]
 
 train_gen = voc_utils.get_generator(data,
                                     batch_size, buffer_size, image_augmentor_config)
+print("[train_gen]:",train_gen)
 trainset_provider = {
     'data_shape': [320, 320, 3],
     'num_train': 5011,
@@ -58,7 +59,7 @@ trainset_provider = {
     'val_generator': None                       # not used
 }
 refinedet = net.RefineDet320(config, trainset_provider)
-refinedet.load_weight('./refinedet320/test-1092')
+#refinedet.load_weight('./refinedet320/test-1092')
 for i in range(epochs):
     print('-'*25, 'epoch', i, '-'*25)
     if i in reduce_lr_epoch:
