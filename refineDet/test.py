@@ -45,12 +45,12 @@ image_augmentor_config = {
     'pad_truth_to': 60,
 }
 
-data1 = os.listdir('./VOCdevkit/VOC2007/')
-data1 = [os.path.join('./VOCdevkit/VOC2007/', name) for name in data1]
+data1 = os.listdir('./data')
+data1 = [os.path.join('./data', name) for name in data1]
 data = []
 for itm in data1:
     print("tim",itm)
-    if "pascal_train.record" in itm:
+    if "tfrecord" in itm:
         data.append(itm)
 
 print("[test] data:%s"%(data))
