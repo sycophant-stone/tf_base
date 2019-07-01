@@ -67,13 +67,16 @@ evalset_provider = {
 refinedet = net.RefineDet320(config, evalset_provider)
 refinedet.load_weight('refinedet320/test-2496')
 #refinedet.load_weight('refinedet320/checkpoint')
-#for i in range(1):#(epochs):
-for i in range(epochs):
+
+# debug one-epoch
+for i in range(1):#(epochs):
+#for i in range(epochs):
     print('-'*25, 'epoch', i, '-'*25)
     if i in reduce_lr_epoch:
         lr = lr/10.
         print('reduce lr, lr=', lr, 'now')
     pred,gt = refinedet.eval_calc()
+    refinedet.calc_precision(pred,gt)
     print('>> pred', pred)
     print('>> gt', gt)
     #refinedet.save_weight('latest', './refinedet320/test')    # 'latest' 'best'

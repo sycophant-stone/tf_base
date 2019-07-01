@@ -609,7 +609,9 @@ class RefineDet320:
         rd_pt = tf.Print(zeros_tsr,["refineDetLog",tf.shape(self.detection_pred[0]), tf.shape(self.detection_pred[1]), tf.shape(self.detection_pred[2]),tf.shape(self.ground_truth)],summarize=8)
         pred, gt, _ = self.sess.run([self.detection_pred, self.ground_truth, rd_pt])
         return pred, gt
-        
+    def calc_precision(self, pred, gt)
+        """calc fp,fn and precision"""
+        return 
     def save_weight(self, mode, path):
         assert(mode in ['latest', 'best'])
         if mode == 'latest':
