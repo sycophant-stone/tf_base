@@ -7,7 +7,7 @@ import sys
 import os
 import numpy as np
 
-def calc_iou(self, prediction_bbox, gt_bbox):
+def calc_iou(prediction_bbox, gt_bbox):
     """calc iou between prediction's bbox and groud truth's bbox
        @param:
        prediction_bbox:
@@ -16,8 +16,8 @@ def calc_iou(self, prediction_bbox, gt_bbox):
            groudtruth boundingbox, [60, 4]
     """
     iou = 0
-    if prediction_bbox[0]<gt_bbox[0]:
-        xmax = gt_bbox[0]
+    if prediction_bbox[:,0]<gt_bbox[:,0]:
+        xmax = gt_bbox[:,0]
     else:
         xmax = prediction_bbox[0]
     if prediction_bbox[2]>gt_bbox[2]:
@@ -60,11 +60,13 @@ def test_vectorize_calc_iou():
        [300.77795 , -10.516249, 313.15857 ,  58.1938  ],
        [100.60458 , 146.97646 , 173.40833 , 161.21843 ],
        [86.82617 , 179.19148 , 134.84885 , 193.90288 ]], dtype="float32")
-    gt = np.array([262.94,239,62.04001,70.40001], dtype="float32")
+    gt = np.array([[262.94,239,62.04001,70.40001]], dtype="float32")
     print("pred shape:", pred.shape)
     print("pred value:", pred)
     print("gt shape:", gt.shape)
     print("gt value:", gt)
+    iou = calc_iou(pred,gt)
+    print("iou:",iou)
     
 if __name__ == '__main__':
     test_vectorize_calc_iou()
