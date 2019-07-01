@@ -54,15 +54,17 @@ def calc_iou(self, prediction_bbox, gt_bbox):
 
 def test_vectorize_calc_iou():
     print("enter test_vectorize_calc_iou")
-    pred = np.array([287.37198 , 118.55582 , 291.1561  , 190.13669 ],
+    pred = np.array([[287.37198 , 118.55582 , 291.1561  , 190.13669 ],
        [580.10376 , 142.63705 , 885.83923 , 146.14606 ],
        [291.43027 , 123.61223 , 347.4736  , 130.00053 ],
        [300.77795 , -10.516249, 313.15857 ,  58.1938  ],
        [100.60458 , 146.97646 , 173.40833 , 161.21843 ],
-       [ 86.82617 , 179.19148 , 134.84885 , 193.90288 ])
-    gt = np.array([262.94,   239,       62.04001,  70.40001])
-    print("pred:", pred)
-    print("gt:", gt)
+       [86.82617 , 179.19148 , 134.84885 , 193.90288 ]], dtype="float32")
+    gt = np.array([262.94,239,62.04001,70.40001], dtype="float32")
+    print("pred shape:", pred.shape)
+    print("pred value:", pred)
+    print("gt shape:", gt.shape)
+    print("gt value:", gt)
     
 if __name__ == '__main__':
     test_vectorize_calc_iou()
