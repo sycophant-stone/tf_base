@@ -74,7 +74,7 @@ for i in range(epochs):
     mean_loss = refinedet.train_one_epoch(lr)
     print('>> mean loss', mean_loss)
     refinedet.save_weight('latest', './refinedet320/test')    # 'latest' 'best'
-
+refinedet.release_resorce()
 # img = io.imread('000026.jpg')
 # img = transform.resize(img, [300,300])
 # img = np.expand_dims(img, 0)

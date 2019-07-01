@@ -7,6 +7,7 @@ import sys
 import os
 import numpy as np
 
+import datetime
 
 class RefineDet320:
     def __init__(self, config, data_provider):
@@ -50,6 +51,9 @@ class RefineDet320:
         if self.mode == 'train':
             self._create_summary()
         self._init_session()
+        log_filename="trainlog" + str(datetime.datetime.now()) + '.txt'
+        self.log_fp = open(log_filename,"wr")
+        
 
     def _define_inputs(self):
         shape = [self.batch_size]
@@ -576,9 +580,11 @@ class RefineDet320:
         for i in range(num_iters):
             _, loss = self.sess.run([self.train_op, self.loss], feed_dict={self.lr: lr})
             sys.stdout.write('\r>> ' + 'iters '+str(i+1)+str('/')+str(num_iters)+' loss '+str(loss))
+            self.log_fp.write('\r>> ' + 'iters '+str(i+1)+str('/')+str(num_iters)+' loss '+str(loss))
             sys.stdout.flush()
             mean_loss.append(loss)
         sys.stdout.write('\n')
+        self.log_fp.write('\n')
         mean_loss = np.mean(mean_loss)
         return mean_loss
 
@@ -678,3 +684,5 @@ class RefineDet320:
             training=self.is_training,
             name=name
         )
+    def release_resorce(self):
+        self.log_fp.close()
