@@ -13,7 +13,7 @@ from utils.voc_classname_encoder import classname_to_ids
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 lr = 0.0001
-batch_size = 32
+batch_size = 1#32  # eval 
 buffer_size = 1024
 epochs = 300
 reduce_lr_epoch = []
@@ -65,7 +65,8 @@ evalset_provider = {
     #'val_generator': None                       # not used
 }
 refinedet = net.RefineDet320(config, evalset_provider)
-refinedet.load_weight('./refinedet320/test')
+refinedet.load_weight('refinedet320/test-2496')
+#refinedet.load_weight('refinedet320/checkpoint')
 for i in range(epochs):
     print('-'*25, 'epoch', i, '-'*25)
     if i in reduce_lr_epoch:

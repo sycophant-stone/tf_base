@@ -11,7 +11,7 @@ import datetime
 
 class RefineDet320:
     def __init__(self, config, data_provider):
-        assert config['mode'] in ['train', 'test']
+        assert config['mode'] in ['train', 'test', 'eval']
         assert config['data_format'] in ['channels_first', 'channels_last']
         self.config = config
         self.data_provider = data_provider
@@ -56,7 +56,7 @@ class RefineDet320:
             self._create_summary()
         self._init_session()
         log_filename="trainlog" + str(datetime.datetime.now()) + '.txt'
-        self.log_fp = open(log_filename,"wr")
+        self.log_fp = open(log_filename,"w")
         
 
     def _define_inputs(self):
@@ -603,7 +603,8 @@ class RefineDet320:
         return pred
     def eval_calc(self):
         self.is_training = False
-        pred = self.sess.run(self.detection_pred, feed_dict={self.images})
+        self.sess.run(self.eval_initializer)
+        pred = self.sess.run(self.detection_pred)
         return pred, self.ground_truth
         
     def save_weight(self, mode, path):
@@ -620,6 +621,8 @@ class RefineDet320:
 
     def load_weight(self, path):
         self.saver.restore(self.sess, path)
+        #model_file=tf.train.latest_checkpoint(path)
+        #self.saver.restore(self.sess,model_file)
         print('load weight', path, 'successfully')
 
     def _bn(self, bottom):
