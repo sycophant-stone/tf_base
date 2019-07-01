@@ -609,8 +609,56 @@ class RefineDet320:
         rd_pt = tf.Print(zeros_tsr,["refineDetLog",tf.shape(self.detection_pred[0]), tf.shape(self.detection_pred[1]), tf.shape(self.detection_pred[2]),tf.shape(self.ground_truth)],summarize=8)
         pred, gt, _ = self.sess.run([self.detection_pred, self.ground_truth, rd_pt])
         return pred, gt
-    def calc_precision(self, pred, gt)
+    def calc_iou(self, prediction_bbox, gt_bbox):
+        """calc iou between prediction's bbox and groud truth's bbox
+           @param:
+           prediction_bbox:
+               prediction boundingbox, [400, 4]
+           gt_bbox:
+               groudtruth boundingbox, [60, 4]
+        """
+        iou = 0
+        if prediction_bbox[0]<gt_bbox[0]:
+            xmax = gt_bbox[0]
+        else:
+            xmax = prediction_bbox[0]
+        if prediction_bbox[2]>gt_bbox[2]:
+            xmin = gt_bbox[2]
+        else:
+            xmin = prediction_bbox[2]
+        if prediction_bbox[1]<gt_bbox[1]:
+            xmax = gt_bbox[1]
+        else:
+            xmax = prediction_bbox[1]
+        if prediction_bbox[3]>gt_bbox[3]:
+            xmin = gt_bbox[3]
+        else:
+            xmin = prediction_bbox[3]
+        
+        if xmax>xmin:
+            return 0
+        if ymax>ymin:
+            return 0
+        prebboxarea = (prediction_bbox[2] - prediction_bbox[0])*(prediction_bbox[3] - prediction_bbox[1])
+        gtbboxarea = (gt_bbox[2] - gt_bbox[0])*(gt_bbox[3] - gt_bbox[1])
+        print("prebbox:(%d,%d)to(%d,%d), area:%d" %(prediction_bbox[0],prediction_bbox[1],prediction_bbox[2],prediction_bbox[3],prebboxarea))
+        print("gtbbox :(%d,%d)to(%d,%d), area:%d" %(gt_bbox[0],gt_bbox[1],gt_bbox[2],gt_bbox[3],gtbboxarea))
+
+        iou = (xmin-xmax)*(ymin-ymax)
+        iou = iou/(prebboxarea+gtbboxarea-iou)
+        if iou < 0:
+            raise Exception("iou is Negtive")
+            iou = 0
+        print("iou:",iou)
+        return iou
+        
+    def calc_precision(self, pred, gt, iou_thd=0.5)
         """calc fp,fn and precision"""
+        for gt_item in gt:
+            for pred_item in pred:
+                iou_item = calc_iou(pred_item,gt_item)
+                if iou_item>=iou_thd:
+                    
         return 
     def save_weight(self, mode, path):
         assert(mode in ['latest', 'best'])
