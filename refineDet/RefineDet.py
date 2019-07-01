@@ -41,7 +41,11 @@ class RefineDet320:
             if data_provider['val_generator'] is not None:
                 self.val_generator = data_provider['val_generator']
                 self.val_initializer, self.val_iterator = self.val_generator
-
+        elif self.mode == 'eval':
+            self.num_val = data_provider['num_val']
+            self.eval_generator = data_provider['eval_generator']
+            self.eval_initializer, self.eval_iterator = self.eval_generator
+            
         self.global_step = tf.get_variable(name='global_step', initializer=tf.constant(0), trainable=False)
         self.is_training = True
 
@@ -67,6 +71,11 @@ class RefineDet320:
             self.images, self.ground_truth = self.train_iterator.get_next()
             self.images.set_shape(shape)
             self.images = self.images - mean
+        elif self.mode == 'eval':
+            self.images, self.ground_truth = self.eval_iterator.get_next()
+            self.images.set_shape(shape)
+            self.images = self.images - mean
+            
         else:
             self.images = tf.placeholder(tf.float32, shape, name='images')
             self.images = self.images - mean
@@ -592,7 +601,11 @@ class RefineDet320:
         self.is_training = False
         pred = self.sess.run(self.detection_pred, feed_dict={self.images: images})
         return pred
-
+    def eval_calc(self):
+        self.is_training = False
+        pred = self.sess.run(self.detection_pred, feed_dict={self.images})
+        return pred, self.ground_truth
+        
     def save_weight(self, mode, path):
         assert(mode in ['latest', 'best'])
         if mode == 'latest':
