@@ -40,50 +40,59 @@ def calc_iou(prediction_bbox, gt_bbox):
         return 0
     prebboxarea = (prediction_bbox[2] - prediction_bbox[0])*(prediction_bbox[3] - prediction_bbox[1])
     gtbboxarea = (gt_bbox[2] - gt_bbox[0])*(gt_bbox[3] - gt_bbox[1])
-    print("prebbox:(%d,%d)to(%d,%d), area:%d" %(prediction_bbox[0],prediction_bbox[1],prediction_bbox[2],prediction_bbox[3],prebboxarea))
-    print("gtbbox :(%d,%d)to(%d,%d), area:%d" %(gt_bbox[0],gt_bbox[1],gt_bbox[2],gt_bbox[3],gtbboxarea))
+    #print("prebbox:(%d,%d)to(%d,%d), area:%d" %(prediction_bbox[0],prediction_bbox[1],prediction_bbox[2],prediction_bbox[3],prebboxarea))
+    #print("gtbbox :(%d,%d)to(%d,%d), area:%d" %(gt_bbox[0],gt_bbox[1],gt_bbox[2],gt_bbox[3],gtbboxarea))
 
     iou = (xmin-xmax)*(ymin-ymax)
     iou = iou/(prebboxarea+gtbboxarea-iou)
     if iou < 0:
         raise Exception("iou is Negtive")
         iou = 0
-    print("iou:",iou)
+    #print("iou:",iou)
     return iou    
     
-def find_col_maxvalue(prediction_bbox,gt_bbox):
+def calc_iou_vectorized(prediction_bbox,gt_bbox):
     xmax_ = np.maximum(prediction_bbox[:,0],gt_bbox[:,0])
-    print("xmax_", xmax_)
-    print("xmax_'s shape", xmax_.shape)
+    #print("xmax_", xmax_)
+    #print("xmax_'s shape", xmax_.shape)
 
     ymax_ = np.maximum(prediction_bbox[:,1],gt_bbox[:,1])
-    print("ymax_", ymax_)
-    print("ymax_'s shape", ymax_.shape)
+    #print("ymax_", ymax_)
+    #print("ymax_'s shape", ymax_.shape)
 
     xmin_ = np.minimum(prediction_bbox[:,2],gt_bbox[:,2])
-    print("xmin_", xmin_)
-    print("xmin_'s shape", xmin_.shape)
+    #print("xmin_", xmin_)
+    #print("xmin_'s shape", xmin_.shape)
 
     ymin_ = np.minimum(prediction_bbox[:,3],gt_bbox[:,3])
-    print("ymin_", ymin_)
-    print("ymin_'s shape", ymin_.shape)
+    #print("ymin_", ymin_)
+    #print("ymin_'s shape", ymin_.shape)
 
     xcond_ = np.less(xmax_, xmin_)
-    print("xcond_", xcond_)
+    #print("xcond_", xcond_)
     xleft_ = np.where(xcond_, xmax_, np.zeros(xcond_.shape))
-    print("xleft_", xleft_)
+    xdelta_ = np.where(xleft_, xmin_-xmax_, np.zeros(xcond_.shape))
+    #print("xleft_", xleft_)
+    #print("xdelta_", xdelta_)
 
     ycond_ = np.less(ymax_, ymin_)
-    print("ycond_", ycond_)
+    #print("ycond_", ycond_)
     yleft_ = np.where(ycond_, ymax_, np.zeros(ycond_.shape))
-    print("yleft_", yleft_)
+    ydelta_ = np.where(yleft_, ymin_-ymax_, np.zeros(ycond_.shape))
+    #print("yleft_", yleft_)
+    #print("ydelta_", ydelta_)
 
-
-
-    return 
+    prediction_area = (prediction_bbox[:,2] - prediction_bbox[:,0])*(prediction_bbox[:,3] - prediction_bbox[:,1])
+    gt_area = (gt_bbox[:,2] - gt_bbox[:,0])*(gt_bbox[:,3] - gt_bbox[:,1])
+    iou = xdelta_* ydelta_
+    iou = iou/(prediction_area + gt_area - iou)
+    #print("prediction_area:", prediction_area)
+    #print("gt_area:", gt_area)
+    #print("iou:",iou)
+    return iou
     
 def test_vectorize_calc_iou():
-    print("enter test_vectorize_calc_iou")
+    #print("enter test_vectorize_calc_iou")
     pred = np.array([[287.37198 , 118.55582 , 291.1561  , 190.13669 ],
        [580.10376 , 142.63705 , 885.83923 , 146.14606 ],
        [291.43027 , 123.61223 , 347.4736  , 130.00053 ],
@@ -92,13 +101,14 @@ def test_vectorize_calc_iou():
        [86.82617 , 179.19148 , 134.84885 , 193.90288 ]], dtype="float32")
     #gt = np.array([[262.94,239,62.04001,70.40001]], dtype="float32")
     gt = np.array([[62.04001,70.40001,262.94,239]], dtype="float32")
-    print("pred shape:", pred.shape)
+    #print("pred shape:", pred.shape)
     print("pred value:", pred)
-    print("gt shape:", gt.shape)
+    #print("gt shape:", gt.shape)
     print("gt value:", gt)
     #iou = calc_iou(pred,gt)
-    #print("iou:",iou)
-    find_col_maxvalue(pred, gt)
+    ##print("iou:",iou)
+    iou = calc_iou_vectorized(pred, gt)
+    print("iou:",iou)
     
 if __name__ == '__main__':
     test_vectorize_calc_iou()
