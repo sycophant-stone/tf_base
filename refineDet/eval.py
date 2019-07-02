@@ -8,6 +8,7 @@ import RefineDet as net
 import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import test_vectorize_metrics as tvm
 from skimage import io, transform
 from utils.voc_classname_encoder import classname_to_ids
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -76,9 +77,12 @@ for i in range(1):#(epochs):
         lr = lr/10.
         print('reduce lr, lr=', lr, 'now')
     pred,gt = refinedet.eval_calc()
-    refinedet.calc_precision(pred,gt)
+    #refinedet.calc_precision(pred,gt)
+    #iou = tvm.calc_iou_vectorized(pred,gt)
+    print('>> pred.type', type(pred))
     print('>> pred', pred)
     print('>> gt', gt)
+    print('>> iou', iou)
     #refinedet.save_weight('latest', './refinedet320/test')    # 'latest' 'best'
 refinedet.release_resorce()
 # img = io.imread('000026.jpg')

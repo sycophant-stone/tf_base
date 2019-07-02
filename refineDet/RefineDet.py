@@ -652,14 +652,16 @@ class RefineDet320:
         print("iou:",iou)
         return iou
         
-    def calc_precision(self, pred, gt, iou_thd=0.5)
+    def calc_precision(self, pred, gt, iou_thd=0.5):
         """calc fp,fn and precision"""
+        '''
         for gt_item in gt:
             for pred_item in pred:
                 iou_item = calc_iou(pred_item,gt_item)
                 if iou_item>=iou_thd:
-                    
-        return 
+        '''
+        return True
+                
     def save_weight(self, mode, path):
         assert(mode in ['latest', 'best'])
         if mode == 'latest':
