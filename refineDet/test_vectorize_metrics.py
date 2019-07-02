@@ -16,7 +16,7 @@ def calc_iou(prediction_bbox, gt_bbox):
            groudtruth boundingbox, [60, 4]
     """
     iou = 0
-    if prediction_bbox[:,0]<gt_bbox[:,0]:
+    np.maxmium(prediction_bbox[:,0],gt_bbox[:,0])
         xmax = gt_bbox[:,0]
     else:
         xmax = prediction_bbox[0]
@@ -50,8 +50,11 @@ def calc_iou(prediction_bbox, gt_bbox):
     print("iou:",iou)
     return iou    
     
+def find_col_maxvalue(prediction_bbox,gt_bbox):
+    newvect = np.maxmium(prediction_bbox[:,0],gt_bbox[:,0])   
+    print("find_col_maxvalue", newvect)
+    return 
     
-
 def test_vectorize_calc_iou():
     print("enter test_vectorize_calc_iou")
     pred = np.array([[287.37198 , 118.55582 , 291.1561  , 190.13669 ],
@@ -65,8 +68,9 @@ def test_vectorize_calc_iou():
     print("pred value:", pred)
     print("gt shape:", gt.shape)
     print("gt value:", gt)
-    iou = calc_iou(pred,gt)
-    print("iou:",iou)
+    #iou = calc_iou(pred,gt)
+    #print("iou:",iou)
+    find_col_maxvalue(pred, gt)
     
 if __name__ == '__main__':
     test_vectorize_calc_iou()
