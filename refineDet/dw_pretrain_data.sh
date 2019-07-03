@@ -5,3 +5,6 @@ cp /data_public/VOC/voc2007/VOCtrainval_06-Nov-2007.tar .
 echo "restore last checkpoint"
 mkdir refinedet320
 cp /data/refinedet_trainout/* refinedet320/
+echo "create tfrecord "
+mkdir data
+python utils/test_voc_utils.py
