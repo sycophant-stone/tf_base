@@ -50,8 +50,50 @@ def calc_iou(prediction_bbox, gt_bbox):
         iou = 0
     #print("iou:",iou)
     return iou    
+def tf_calc_iou_vectorized(prediction_bbox,gt_bbox):
+    xmax_ = tf.maximum(prediction_bbox[:,0],gt_bbox[:,0])
+    #print("xmax_", xmax_)
+    #print("xmax_'s shape", xmax_.shape)
+
+    ymax_ = tf.maximum(prediction_bbox[:,1],gt_bbox[:,1])
+    #print("ymax_", ymax_)
+    #print("ymax_'s shape", ymax_.shape)
+
+    xmin_ = tf.minimum(prediction_bbox[:,2],gt_bbox[:,2])
+    #print("xmin_", xmin_)
+    #print("xmin_'s shape", xmin_.shape)
+
+    ymin_ = tf.minimum(prediction_bbox[:,3],gt_bbox[:,3])
+    #print("ymin_", ymin_)
+    #print("ymin_'s shape", ymin_.shape)
+
+    xcond_ = tf.less(xmax_, xmin_)
+    #print("xcond_", xcond_)
+    xleft_ = tf.where(xcond_, xmax_, tf.zeros(xcond_.shape))
+    xdelta_ = tf.where(xleft_, tf.subtract(xmin_, xmax_), tf.zeros(xcond_.shape))
+    #print("xleft_", xleft_)
+    #print("xdelta_", xdelta_)
+
+    ycond_ = tf.less(ymax_, ymin_)
+    #print("ycond_", ycond_)
+    yleft_ = tf.where(ycond_, ymax_, tf.zeros(ycond_.shape))
+    ydelta_ = tf.where(yleft_, tf.subtract(ymin_, ymax_), tf.zeros(ycond_.shape))
+    #print("yleft_", yleft_)
+    #print("ydelta_", ydelta_)
+
+    prediction_area = tf.multiply(tf.subtract(prediction_bbox[:,2], prediction_bbox[:,0]), tf.subtract(prediction_bbox[:,3], prediction_bbox[:,1]))
+    gt_area = tf.multiply(tf.subtract(gt_bbox[:,2], gt_bbox[:,0]), tf.subtract(gt_bbox[:,3], gt_bbox[:,1]))
+    iou = tf.multiply(xdelta_, ydelta_)
+    iou = iou/(prediction_area + gt_area - iou)
+    #print("prediction_area:", prediction_area)
+    #print("gt_area:", gt_area)
+    #print("iou:",iou)
+    return iou
+
     
 def calc_iou_vectorized(prediction_bbox,gt_bbox):
+    print("prediction shape: ", prediction_bbox.shape)
+    print("gt_bbox shape: ", gt_bbox.shape)
     xmax_ = np.maximum(prediction_bbox[:,0],gt_bbox[:,0])
     #print("xmax_", xmax_)
     #print("xmax_'s shape", xmax_.shape)
