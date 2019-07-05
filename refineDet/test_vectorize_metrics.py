@@ -91,7 +91,7 @@ def tf_calc_iou_vectorized(prediction_bbox,gt_bbox):
     return iou
 
     
-def calc_iou_vectorized(prediction_bbox,gt_bbox):
+def calc_iou_vectorized_v1(prediction_bbox,gt_bbox):
     if len(gt_bbox.shape) > 2:
         print("gtbbox shape doesn't match")
         gt_bbox = np.squeeze(gt_bbox)
@@ -99,29 +99,23 @@ def calc_iou_vectorized(prediction_bbox,gt_bbox):
         print("gtbbox's colum doesn't match")
         colm=[0,1,2,3]
         gt_bbox = gt_bbox[:,colm]
-    checksum=0
-    for itm in range(gt_bbox.shape[0]):
-        if gt_bbox[itm,0] !=-1:
-            checksum=checksum+1
-    if checksum>1:
-        raise Exception("gt boxes have more than one sample")
-    gt_bbox = gt_bbox[0,:]
+
     print("prediction shape: ", prediction_bbox.shape)
     print("gt_bbox shape: ", gt_bbox.shape)
     print("gt ",gt_bbox)
-    xmax_ = np.maximum(prediction_bbox[:,0],gt_bbox[0])
+    xmax_ = np.where(prediction_bbox[:,0]>gt_bbox[:,0],prediction_bbox[:,0], gt_bbox[:,0] )
     #print("xmax_", xmax_)
     #print("xmax_'s shape", xmax_.shape)
 
-    ymax_ = np.maximum(prediction_bbox[:,1],gt_bbox[1])
+    ymax_ = np.where(prediction_bbox[:,1]>gt_bbox[:,1],prediction_bbox[:,1], gt_bbox[:,1] )
     #print("ymax_", ymax_)
     #print("ymax_'s shape", ymax_.shape)
 
-    xmin_ = np.minimum(prediction_bbox[:,2],gt_bbox[2])
+    xmin_ = np.where(prediction_bbox[:,2]<gt_bbox[:,2],prediction_bbox[:,2], gt_bbox[:,2] )
     #print("xmin_", xmin_)
     #print("xmin_'s shape", xmin_.shape)
 
-    ymin_ = np.minimum(prediction_bbox[:,3],gt_bbox[3])
+    ymin_ = np.where(prediction_bbox[:,3]<gt_bbox[:,3],prediction_bbox[:,3], gt_bbox[:,3] )
     #print("ymin_", ymin_)
     #print("ymin_'s shape", ymin_.shape)
 
@@ -147,6 +141,66 @@ def calc_iou_vectorized(prediction_bbox,gt_bbox):
     #print("gt_area:", gt_area)
     #print("iou:",iou)
     return iou
+
+def calc_iou_vectorized(prediction_bbox,gt_bbox):
+    if len(gt_bbox.shape) > 2:
+        print("gtbbox shape doesn't match")
+        gt_bbox = np.squeeze(gt_bbox)
+    if gt_bbox.shape[1] != 4:
+        print("gtbbox's colum doesn't match")
+        colm=[0,1,2,3]
+        gt_bbox = gt_bbox[:,colm]
+    checksum=0
+    for itm in range(gt_bbox.shape[0]):
+        if gt_bbox[itm,0] !=-1:
+            checksum=checksum+1
+    print("gt boxes have more than one sample")
+    print("prediction shape: ", prediction_bbox.shape)
+    print("gt_bbox shape: ", gt_bbox.shape)
+    print("gt ",gt_bbox)
+ 
+    gt_bbox = gt_bbox[0,:]
+    for index in range(checksum):
+        
+        xmax_ = np.maximum(prediction_bbox[:,0],gt_bbox[0])
+        #print("xmax_", xmax_)
+        #print("xmax_'s shape", xmax_.shape)
+
+        ymax_ = np.maximum(prediction_bbox[:,1],gt_bbox[1])
+        #print("ymax_", ymax_)
+        #print("ymax_'s shape", ymax_.shape)
+
+        xmin_ = np.minimum(prediction_bbox[:,2],gt_bbox[2])
+        #print("xmin_", xmin_)
+        #print("xmin_'s shape", xmin_.shape)
+
+        ymin_ = np.minimum(prediction_bbox[:,3],gt_bbox[3])
+        #print("ymin_", ymin_)
+        #print("ymin_'s shape", ymin_.shape)
+
+        xcond_ = np.less(xmax_, xmin_)
+        #print("xcond_", xcond_)
+        xleft_ = np.where(xcond_, xmax_, np.zeros(xcond_.shape))
+        xdelta_ = np.where(xleft_, xmin_-xmax_, np.zeros(xcond_.shape))
+        #print("xleft_", xleft_)
+        #print("xdelta_", xdelta_)
+
+        ycond_ = np.less(ymax_, ymin_)
+        #print("ycond_", ycond_)
+        yleft_ = np.where(ycond_, ymax_, np.zeros(ycond_.shape))
+        ydelta_ = np.where(yleft_, ymin_-ymax_, np.zeros(ycond_.shape))
+        #print("yleft_", yleft_)
+        #print("ydelta_", ydelta_)
+
+        prediction_area = (prediction_bbox[:,2] - prediction_bbox[:,0])*(prediction_bbox[:,3] - prediction_bbox[:,1])
+        gt_area = (gt_bbox[2] - gt_bbox[0])*(gt_bbox[3] - gt_bbox[1])
+        iou = xdelta_* ydelta_
+        iou = iou/(prediction_area + gt_area - iou)
+        #print("prediction_area:", prediction_area)
+        #print("gt_area:", gt_area)
+        #print("iou:",iou)
+        return iou
+
     
 def test_vectorize_calc_iou():
     #print("enter test_vectorize_calc_iou")
