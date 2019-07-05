@@ -6,7 +6,7 @@ from tensorflow.python import pywrap_tensorflow as wrap
 import sys
 import os
 import numpy as np
-
+LOCAL_TEST_ENTRY = False
 def calc_iou(prediction_bbox, gt_bbox):
     """calc iou between prediction's bbox and groud truth's bbox
        @param:
@@ -144,37 +144,37 @@ def calc_iou_vectorized_v1(prediction_bbox,gt_bbox):
 
 def calc_iou_vectorized(prediction_bbox,gt_bbox):
     if len(gt_bbox.shape) > 2:
-        print("gtbbox shape doesn't match")
+        print("gtbbox shape doesn't match, need (b,4) shapes, but get ",gt_bbox.shape)
         gt_bbox = np.squeeze(gt_bbox)
     if gt_bbox.shape[1] != 4:
-        print("gtbbox's colum doesn't match")
+        print("gtbbox's colum doesn't match, need (b,4), but get %s",gt_bbox.shape)
         colm=[0,1,2,3]
         gt_bbox = gt_bbox[:,colm]
-    checksum=0
+    gtsamples=0
     for itm in range(gt_bbox.shape[0]):
         if gt_bbox[itm,0] !=-1:
-            checksum=checksum+1
-    print("gt boxes have more than one sample")
-    print("prediction shape: ", prediction_bbox.shape)
-    print("gt_bbox shape: ", gt_bbox.shape)
-    print("gt ",gt_bbox)
- 
-    gt_bbox = gt_bbox[0,:]
-    for index in range(checksum):
-        
-        xmax_ = np.maximum(prediction_bbox[:,0],gt_bbox[0])
+            gtsamples=gtsamples+1
+    if gtsamples > 1: print("gt boxes have more than one sample:%s samples" % (gtsamples))
+    ##print("gt ",gt_bbox)
+    iou_res = [] 
+    for index in range(gtsamples):
+        print("the %dth sample" %(index))
+        gt_bbox_item = gt_bbox[index,:]
+        print("gtbbox item shape", gt_bbox_item.shape)
+        print("the %dth gtbbox item %s"%(index, gt_bbox_item))
+        xmax_ = np.maximum(prediction_bbox[:,0],gt_bbox_item[0])
         #print("xmax_", xmax_)
         #print("xmax_'s shape", xmax_.shape)
 
-        ymax_ = np.maximum(prediction_bbox[:,1],gt_bbox[1])
+        ymax_ = np.maximum(prediction_bbox[:,1],gt_bbox_item[1])
         #print("ymax_", ymax_)
         #print("ymax_'s shape", ymax_.shape)
 
-        xmin_ = np.minimum(prediction_bbox[:,2],gt_bbox[2])
+        xmin_ = np.minimum(prediction_bbox[:,2],gt_bbox_item[2])
         #print("xmin_", xmin_)
         #print("xmin_'s shape", xmin_.shape)
 
-        ymin_ = np.minimum(prediction_bbox[:,3],gt_bbox[3])
+        ymin_ = np.minimum(prediction_bbox[:,3],gt_bbox_item[3])
         #print("ymin_", ymin_)
         #print("ymin_'s shape", ymin_.shape)
 
@@ -193,17 +193,22 @@ def calc_iou_vectorized(prediction_bbox,gt_bbox):
         #print("ydelta_", ydelta_)
 
         prediction_area = (prediction_bbox[:,2] - prediction_bbox[:,0])*(prediction_bbox[:,3] - prediction_bbox[:,1])
-        gt_area = (gt_bbox[2] - gt_bbox[0])*(gt_bbox[3] - gt_bbox[1])
+        gt_area = (gt_bbox_item[2] - gt_bbox_item[0])*(gt_bbox_item[3] - gt_bbox_item[1])
         iou = xdelta_* ydelta_
         iou = iou/(prediction_area + gt_area - iou)
         #print("prediction_area:", prediction_area)
         #print("gt_area:", gt_area)
-        #print("iou:",iou)
-        return iou
-
+        print("%dth's iou: %s"%(index, iou))
+        iou_res.append(list(iou))
+    print("IOU len",len(iou_res))
+    if LOCAL_TEST_ENTRY:
+        print(iou_res[0][5])
+        print(iou_res[1][1])
+    return iou_res
     
 def test_vectorize_calc_iou():
     #print("enter test_vectorize_calc_iou")
+    LOCAL_TEST_ENTRY = True
     pred = np.array([[287.37198 , 118.55582 , 291.1561  , 190.13669 ],
        [580.10376 , 142.63705 , 885.83923 , 146.14606 ],
        [291.43027 , 123.61223 , 347.4736  , 130.00053 ],
@@ -211,8 +216,8 @@ def test_vectorize_calc_iou():
        [100.60458 , 146.97646 , 173.40833 , 161.21843 ],
        [86.82617 , 179.19148 , 134.84885 , 193.90288 ]], dtype="float32")
     #gt = np.array([[262.94,239,62.04001,70.40001]], dtype="float32")
-    gt = np.array([[62.04001,70.40001,262.94,239]], dtype="float32")
-                   #[164.48962, 144.80002,    64.629074,  75.240005]], dtype="float32")
+    gt = np.array([[62.04001,70.40001,262.94,239], #], dtype="float32")
+                   [164.48962, 144.80002,    64.629074,  75.240005]], dtype="float32")
     #print("pred shape:", pred.shape)
     print("pred value:", pred)
     #print("gt shape:", gt.shape)

@@ -78,14 +78,16 @@ for i in range(1):#(epochs):
         print('reduce lr, lr=', lr, 'now')
     pred,gt = refinedet.eval_calc()
     #refinedet.calc_precision(pred,gt)
+    '''
     print(pred[1])
     print("gt",gt)
+    '''
     iou = tvm.calc_iou_vectorized(np.array(pred[1]),gt)
     '''
     print('>> pred', pred)
     print('>> gt', gt)
-    print('>> iou', iou)
     '''
+    print('>> iou', iou)
     #refinedet.save_weight('latest', './refinedet320/test')    # 'latest' 'best'
 refinedet.release_resorce()
 # img = io.imread('000026.jpg')
