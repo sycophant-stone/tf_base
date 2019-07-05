@@ -205,6 +205,63 @@ def calc_iou_vectorized(prediction_bbox,gt_bbox):
         print(iou_res[0][5])
         print(iou_res[1][1])
     return iou_res
+
+def calc_tp(iou,thrd=0.5):
+    ''' calc the tp
+    statisfy below conditions
+    a) iou>0.5
+    b) find the max iou value ,s.t. a)
+       then tp++
+    tp covers all classes
+    '''
+    print("[calc_tp]: iou is num_gt(%d) x num_anchors(%d)"%(len(iou), len(iou[0])))
+    tp=0
+    for gts in range(len(iou)): # gt samples
+        max=-1  # every new gt target need reset the max value to get itself tp
+        for ans in range(len(iou[0])): # anchors
+            if iou[gts][ans] > thrd and max < iou[gts][ans]:
+                tp = tp+1
+    return tp
+
+def calc_fp(iou,thrd=0.5):
+    '''
+    iou < 0.5
+    '''
+    fp=0
+    for gts in range(len(iou)): # gt samples
+        for ans in range(len(iou[0])): # anchors
+            if iou[gts][ans] < thrd:
+                fp = fp+1
+    return fp
+
+def calc_fn(iou,thrd=0.5):
+    tp=0
+    fn=0
+    for gts in range(len(iou)): # gt samples
+        max=-1  # every new gt target need reset the max value to get itself tp
+        for ans in range(len(iou[0])): # anchors
+            if iou[gts][ans] > thrd and max < iou[gts][ans]:
+                tp = tp+1
+        if tp==0:
+            #print("gts:%d, ans:%d"%(gts,ans))
+            fn=fn+1
+        tp=0
+    return fn
+
+def calc_precision(iou,thrd=0.5):
+    tp = calc_tp(iou,thrd)
+    fp = calc_fp(iou,thrd)
+    p = 1.0*tp/(tp+fp)
+    return p,tp,fp
+
+def calc_recall(iou,thrd=0.5):
+    tp = calc_tp(iou,thrd)
+    fn = calc_fn(iou,thrd)
+    r = 1.0*tp/(tp+fn)
+    return r,tp,fn
+
+def calc_meanAP(iou,thrd=0.5):
+    return mAP
     
 def test_vectorize_calc_iou():
     #print("enter test_vectorize_calc_iou")
@@ -226,6 +283,38 @@ def test_vectorize_calc_iou():
     ##print("iou:",iou)
     iou = calc_iou_vectorized(pred, gt)
     print("iou:",iou)
-    
+    return iou
+def test_calc_tp():
+    iou = test_vectorize_calc_iou()
+    tp_ret = calc_tp(iou,0.5)
+    print("[test_calc_tp] tp :", tp_ret)
+
+def test_calc_fp():
+    iou = test_vectorize_calc_iou()
+    fp_ret = calc_fp(iou,0.5)
+    print("[test_calc_fp] fp :", fp_ret)
+
+def test_calc_fn():
+    iou = test_vectorize_calc_iou()
+    fn_ret = calc_fn(iou,0.5)
+    print("[test_calc_fn] fn :", fn_ret)
+
+def test_calc_precision():
+    iou = test_vectorize_calc_iou()
+    precision_ret,_,_ = calc_precision(iou,0.5)
+    print("[test_calc_precision] precision :", precision_ret)
+
+def test_calc_recall():
+    iou = test_vectorize_calc_iou()
+    recall_ret,_,_= calc_recall(iou,0.5)
+    print("[test_calc_recall] recall:", recall_ret)
+
+  
+
 if __name__ == '__main__':
-    test_vectorize_calc_iou()
+    #test_vectorize_calc_iou()
+    #test_calc_tp()
+    #test_calc_fp()
+    #test_calc_fn()
+    #test_calc_precision()
+    test_calc_recall()

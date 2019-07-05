@@ -87,7 +87,10 @@ for i in range(1):#(epochs):
     print('>> pred', pred)
     print('>> gt', gt)
     '''
-    print('>> iou', iou)
+    #print('>> iou', iou)
+    precision,tp,fp = tvm.calc_precision(iou,0.5)
+    recall,_,fn = tvm.calc_recall(iou,0.5)
+    print('>> p:%d,r:%d,tp:%d,fp:%d,fn:%d'%(precision,recall,tp,fp,fn))
     #refinedet.save_weight('latest', './refinedet320/test')    # 'latest' 'best'
 refinedet.release_resorce()
 # img = io.imread('000026.jpg')

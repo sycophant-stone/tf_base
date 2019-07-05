@@ -8,6 +8,7 @@ import RefineDet as net
 import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import test_vectorize_metrics as tvm
 from skimage import io, transform
 from utils.voc_classname_encoder import classname_to_ids
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -65,30 +66,20 @@ trainset_provider = {
     'val_generator': None                       # not used
 }
 refinedet = net.RefineDet320(config, trainset_provider)
-#refinedet.load_weight('./refinedet320/test-1092')
+refinedet.load_weight('./refinedet320/test-2496')
 for i in range(epochs):
     print('-'*25, 'epoch', i, '-'*25)
     if i in reduce_lr_epoch:
         lr = lr/10.
         print('reduce lr, lr=', lr, 'now')
     mean_loss = refinedet.train_one_epoch(lr)
+    if i%3 == 0:
+        print("epoch:%d, eval it " %(i))
+        pred,gt = refinedet.eval_calc()
+        iou = tvm.calc_iou_vectorized(np.array(pred[1]),gt)
+        precision,tp,fp = tvm.calc_precision(iou,0.5)
+        recall,_,fn = tvm.calc_recall(iou,0.5)
+        print('>> p:%d,r:%d,tp:%d,fp:%d,fn:%d'%(precision,recall,tp,fp,fn))
     print('>> mean loss', mean_loss)
     refinedet.save_weight('latest', './refinedet320/test')    # 'latest' 'best'
 refinedet.release_resorce()
-# img = io.imread('000026.jpg')
-# img = transform.resize(img, [300,300])
-# img = np.expand_dims(img, 0)
-# result = ssd300.test_one_image(img)
-# id_to_clasname = {k:v for (v,k) in classname_to_ids.items()}
-# scores = result[0]
-# bbox = result[1]
-# class_id = result[2]
-# print(scores, bbox, class_id)
-# plt.figure(1)
-# plt.imshow(np.squeeze(img))
-# axis = plt.gca()
-# for i in range(len(scores)):
-#     rect = patches.Rectangle((bbox[i][1],bbox[i][0]), bbox[i][3]-bbox[i][1],bbox[i][2]-bbox[i][0],linewidth=2,edgecolor='b',facecolor='none')
-#     axis.add_patch(rect)
-#     plt.text(bbox[i][1],bbox[i][0], id_to_clasname[class_id[i]]+str(' ')+str(scores[i]), color='red', fontsize=12)
-# plt.show()
