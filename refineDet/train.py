@@ -12,7 +12,7 @@ import test_vectorize_metrics as tvm
 from skimage import io, transform
 from utils.voc_classname_encoder import classname_to_ids
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-# os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2'
 
 flags = tf.app.flags
 flags.DEFINE_string('train_ckpt_dir', '', 'ckpt path of train flow.')

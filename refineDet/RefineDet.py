@@ -60,6 +60,7 @@ class RefineDet320:
         self._init_session()
         log_filename="trainlog" + str(datetime.datetime.now()) + '.txt'
         self.log_fp = open(log_filename,"w")
+
         
 
     def _define_inputs(self):
@@ -70,10 +71,14 @@ class RefineDet320:
             mean = tf.reshape(mean, [1, 1, 1, 3])
         else:
             mean = tf.reshape(mean, [1, 3, 1, 1])
+        self.shape = shape
+        self.mean = mean
         if self.mode == 'train':
             self.images, self.ground_truth = self.train_iterator.get_next()
             self.images.set_shape(shape)
             self.images = self.images - mean
+
+
         elif self.mode == 'eval':
             self.images, self.ground_truth = self.eval_iterator.get_next()
             self.images.set_shape(shape)
@@ -628,6 +633,10 @@ class RefineDet320:
 
     def train_one_epoch(self, lr):
         self.is_training = True
+        self.images, self.ground_truth = self.train_iterator.get_next()
+        self.images.set_shape(self.shape)
+        self.images = self.images - self.mean
+
         self.sess.run(self.train_initializer)
         mean_loss = []
         num_iters = self.num_train // self.batch_size
@@ -646,10 +655,14 @@ class RefineDet320:
 
     def test_one_image(self, images):
         self.is_training = False
+        self.images, self.ground_truth = self.eval_iterator.get_next()
+        self.images.set_shape(self.shape)
+        self.images= self.images - self.mean
         pred = self.sess.run(self.detection_pred, feed_dict={self.images: images})
         return pred
     def eval_calc(self):
         self.is_training = False
+        self.images, self.ground_truth = self.eval_iterator.get_next()
         if self.mode == 'eval':
             print("[eval_calc] mode:",self.mode)
             self.num_val = data_provider['num_val']
