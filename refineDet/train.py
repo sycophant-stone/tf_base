@@ -92,8 +92,7 @@ for i in range(epochs):
         lr = lr/10.
         print('reduce lr, lr=', lr, 'now')
     mean_loss = refinedet.train_one_epoch(lr)
-    #if i%3 == 0:
-    if True: # for debug
+    if i%10 == 0:
         print("epoch:%d, eval it " %(i))
         pred,gt = refinedet.eval_calc()
         iou = tvm.calc_iou_vectorized(np.array(pred[1]),gt[0,:,:]) # train's batchsize is 32, but eval need one sample
