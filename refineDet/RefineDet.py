@@ -38,6 +38,9 @@ class RefineDet320:
             self.num_val = data_provider['num_val']
             self.train_generator = data_provider['train_generator']
             self.train_initializer, self.train_iterator = self.train_generator
+            self.num_val = data_provider['num_val']
+            self.eval_generator = data_provider['eval_generator']
+            self.eval_initializer, self.eval_iterator = self.eval_generator
             if data_provider['val_generator'] is not None:
                 self.val_generator = data_provider['val_generator']
                 self.val_initializer, self.val_iterator = self.val_generator
@@ -184,6 +187,48 @@ class RefineDet320:
                 train_op = optimizer.minimize(self.loss, global_step=self.global_step)
                 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
                 self.train_op = tf.group([update_ops, train_op])
+
+                armconft = tf.nn.softmax(armpconf[0, ...])
+                odmconft = tf.nn.softmax(odmpconf[0, ...])
+                armmask = armconft[:, 1] < 0.99
+                odmmask = tf.argmax(odmconft, axis=-1) < self.num_classes - 1
+                mask = (tf.cast(armmask, tf.float32) * tf.cast(odmmask, tf.float32)) > 0.
+                armpbbox_yxt = tf.boolean_mask(armpbbox_yx[0, ...], mask)
+                armpbbox_hwt = tf.boolean_mask(armpbbox_hw[0, ...], mask)
+                odmpbbox_yxt = tf.boolean_mask(odmpbbox_yx[0, ...], mask)
+                odmpbbox_hwt = tf.boolean_mask(odmpbbox_hw[0, ...], mask)
+                abbox_yxt = tf.boolean_mask(abbox_yx, mask)
+                abbox_hwt = tf.boolean_mask(abbox_hw, mask)
+                odmconft = tf.boolean_mask(odmconft, mask)
+                confidence = odmconft[..., :self.num_classes-1]
+
+                arm_yx = armpbbox_yxt * abbox_hwt + abbox_yxt
+                arm_hw = tf.exp(armpbbox_hwt) * abbox_hwt
+                odm_yx = odmpbbox_yxt * arm_hw + arm_yx
+                odm_hw = tf.exp(odmpbbox_hwt) * arm_hw
+
+                odm_y1x1 = odm_yx - odm_hw / 2.
+                odm_y2x2 = odm_yx + odm_hw / 2.
+                odm_y1x1y2x2 = tf.concat([odm_y1x1, odm_y2x2], axis=-1)
+                filter_mask = tf.greater_equal(confidence, self.nms_score_threshold)
+                scores = []
+                class_id = []
+                bbox = []
+                for i in range(self.num_classes-1):
+                    scoresi = tf.boolean_mask(confidence[:, i], filter_mask[:, i])
+                    bboxi = tf.boolean_mask(odm_y1x1y2x2, filter_mask[:, i])
+                    selected_indices = tf.image.non_max_suppression(
+
+                        bboxi, scoresi, self.nms_max_boxes, self.nms_iou_threshold,
+                    )
+                    scores.append(tf.gather(scoresi, selected_indices))
+                    bbox.append(tf.gather(bboxi, selected_indices))
+                    class_id.append(tf.ones_like(tf.gather(scoresi, selected_indices), tf.int32) * i)
+                bbox = tf.concat(bbox, axis=0)
+                scores = tf.concat(scores, axis=0)
+                class_id = tf.concat(class_id, axis=0)
+
+                self.detection_pred = [scores, bbox, class_id]
 
             else:
                 armconft = tf.nn.softmax(armpconf[0, ...])
@@ -603,6 +648,11 @@ class RefineDet320:
         return pred
     def eval_calc(self):
         self.is_training = False
+        if self.mode == 'eval':
+            print("[eval_calc] mode:",self.mode)
+            self.num_val = data_provider['num_val']
+            self.eval_generator = data_provider['eval_generator']
+            self.eval_initializer, self.eval_iterator = self.eval_generator
         self.sess.run(self.eval_initializer)
         rd_pt = tf.placeholder(tf.float32)
         zeros_tsr = tf.zeros([2, 3]) ##为了调用tf.Print做的dummy.

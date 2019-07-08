@@ -9,6 +9,6 @@ import utils.tfrecord_voc_utils as voc_utils
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-tfrecord = voc_utils.dataset2tfrecord('VOCdevkit/VOC2007/Annotations', 'VOCdevkit/VOC2007/JPEGImages',
+tfrecord = voc_utils.dataset2tfrecord('VOC/VOCdevkit/VOC2007/Annotations', 'VOC/VOCdevkit/VOC2007/JPEGImages',
                                       'data/', 'test', 10)
 print(tfrecord)

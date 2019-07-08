@@ -8,3 +8,5 @@ cp /data/refinedet_trainout/* refinedet320/
 echo "create tfrecord "
 mkdir data
 python utils/test_voc_utils.py
+echo "setup python path"
+export PYTHONPATH=$PYTHONPATH:`pwd`

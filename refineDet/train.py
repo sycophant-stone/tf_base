@@ -15,6 +15,7 @@ from utils.voc_classname_encoder import classname_to_ids
 # os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 lr = 0.0001
 batch_size = 32
+eval_batch_size = 1
 buffer_size = 1024
 epochs = 300
 reduce_lr_epoch = []
@@ -58,25 +59,44 @@ print("[test] data:%s"%(data))
 train_gen = voc_utils.get_generator(data,
                                     batch_size, buffer_size, image_augmentor_config)
 print("[train_gen]:",train_gen)
+
+data2 = os.listdir('./eval_tfrecord')
+data2 = [os.path.join('./eval_tfrecord', name) for name in data2]
+ndata = []
+for itm in data2:
+    print("tim",itm)
+    if "tfrecord" in itm:
+        ndata.append(itm)
+
+print("[eval] data:%s"%(ndata))
+eval_gen = voc_utils.get_generator(ndata,
+                                    eval_batch_size, buffer_size, image_augmentor_config)
+
+
 trainset_provider = {
     'data_shape': [320, 320, 3],
     'num_train': 5011,
     'num_val': 0,                               # not used
     'train_generator': train_gen,
+    'eval_generator': eval_gen,  # not used in `test` mode
     'val_generator': None                       # not used
 }
 refinedet = net.RefineDet320(config, trainset_provider)
-refinedet.load_weight('./refinedet320/test-2496')
+if os.path.exists('./refinedet320/test-2496'):
+    refinedet.load_weight('./refinedet320/test-2496')
+else:
+    print("retrain from beginning")
 for i in range(epochs):
     print('-'*25, 'epoch', i, '-'*25)
     if i in reduce_lr_epoch:
         lr = lr/10.
         print('reduce lr, lr=', lr, 'now')
     mean_loss = refinedet.train_one_epoch(lr)
-    if i%3 == 0:
+    #if i%3 == 0:
+    if True: # for debug
         print("epoch:%d, eval it " %(i))
         pred,gt = refinedet.eval_calc()
-        iou = tvm.calc_iou_vectorized(np.array(pred[1]),gt)
+        iou = tvm.calc_iou_vectorized(np.array(pred[1]),gt[0,:,:]) # train's batchsize is 32, but eval need one sample
         precision,tp,fp = tvm.calc_precision(iou,0.5)
         recall,_,fn = tvm.calc_recall(iou,0.5)
         print('>> p:%d,r:%d,tp:%d,fp:%d,fn:%d'%(precision,recall,tp,fp,fn))

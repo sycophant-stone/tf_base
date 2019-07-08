@@ -198,7 +198,7 @@ def calc_iou_vectorized(prediction_bbox,gt_bbox):
         iou = iou/(prediction_area + gt_area - iou)
         #print("prediction_area:", prediction_area)
         #print("gt_area:", gt_area)
-        print("%dth's iou: %s"%(index, iou))
+        ##print("%dth's iou: %s"%(index, iou))
         iou_res.append(list(iou))
     print("IOU len",len(iou_res))
     if LOCAL_TEST_ENTRY:
