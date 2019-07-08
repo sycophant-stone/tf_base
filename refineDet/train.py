@@ -13,6 +13,11 @@ from skimage import io, transform
 from utils.voc_classname_encoder import classname_to_ids
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+
+flags = tf.app.flags
+flags.DEFINE_string('train_ckpt_dir', '', 'ckpt path of train flow.')
+FLAGS = flags.FLAGS
+
 lr = 0.0001
 batch_size = 32
 eval_batch_size = 1
@@ -85,14 +90,15 @@ refinedet = net.RefineDet320(config, trainset_provider)
 if os.path.exists('./refinedet320/test-2496'):
     refinedet.load_weight('./refinedet320/test-2496')
 else:
-    print("retrain from beginning")
+    refinedet.load_weight(FLAGS.train_ckpt_dir)
+    print("retrain from %s", FLAGS.train_ckpt_dir)
 for i in range(epochs):
     print('-'*25, 'epoch', i, '-'*25)
     if i in reduce_lr_epoch:
         lr = lr/10.
         print('reduce lr, lr=', lr, 'now')
     mean_loss = refinedet.train_one_epoch(lr)
-    if i%10 == 0:
+    if i%3 == 0:
         print("epoch:%d, eval it " %(i))
         pred,gt = refinedet.eval_calc()
         iou = tvm.calc_iou_vectorized(np.array(pred[1]),gt[0,:,:]) # train's batchsize is 32, but eval need one sample

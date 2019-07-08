@@ -6,7 +6,7 @@ from tensorflow.python import pywrap_tensorflow as wrap
 import sys
 import os
 import numpy as np
-
+import time
 import datetime
 
 class RefineDet320:
@@ -632,8 +632,10 @@ class RefineDet320:
         mean_loss = []
         num_iters = self.num_train // self.batch_size
         for i in range(num_iters):
+            train_one_start = time.time()
             _, loss = self.sess.run([self.train_op, self.loss], feed_dict={self.lr: lr})
-            sys.stdout.write('\r>> ' + 'iters '+str(i+1)+str('/')+str(num_iters)+' loss '+str(loss))
+            train_one_end = time.time()
+            sys.stdout.write('\r>> ' + 'iters '+str(i+1)+str('/')+str(num_iters)+' loss '+str(loss)+' time '+str(train_one_end - train_one_start))
             self.log_fp.write('\r>> ' + 'iters '+str(i+1)+str('/')+str(num_iters)+' loss '+str(loss))
             sys.stdout.flush()
             mean_loss.append(loss)
