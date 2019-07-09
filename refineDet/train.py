@@ -27,7 +27,7 @@ reduce_lr_epoch = []
 ckpt_path = os.path.join('.', './pretrained/vgg_16.ckpt')
 config = {
     'mode': 'train',                            # 'train' ,'test'
-    'input_size': 320,                          # 320 for refinedet320, 512 for refinedet512
+    'input_size': 320,                          # 320 for refinedet320_709, 512 for refinedet512
     'data_format': 'channels_last',             # 'channels_last' ,'channels_first'
     'num_classes': 20,
     'weight_decay': 1e-4,
@@ -86,12 +86,16 @@ trainset_provider = {
     'eval_generator': eval_gen,  # not used in `test` mode
     'val_generator': None                       # not used
 }
+
 refinedet = net.RefineDet320(config, trainset_provider)
-if os.path.exists('./refinedet320/test-2496'):
-    refinedet.load_weight('./refinedet320/test-2496')
-else:
+if os.path.exists('./refinedet320_709/test-2496'):
+    refinedet.load_weight('./refinedet320_709/test-2496')
+elif FLAGS.train_ckpt_dir!=None:
     refinedet.load_weight(FLAGS.train_ckpt_dir)
     print("retrain from %s", FLAGS.train_ckpt_dir)
+else:
+    print("retrain new begin ")
+    
 for i in range(epochs):
     print('-'*25, 'epoch', i, '-'*25)
     if i in reduce_lr_epoch:
@@ -106,5 +110,5 @@ for i in range(epochs):
         recall,_,fn = tvm.calc_recall(iou,0.5)
         print('>> p:%d,r:%d,tp:%d,fp:%d,fn:%d'%(precision,recall,tp,fp,fn))
     print('>> mean loss', mean_loss)
-    refinedet.save_weight('latest', './refinedet320/test')    # 'latest' 'best'
+    refinedet.save_weight('latest', './refinedet320_709/test')    # 'latest' 'best'
 refinedet.release_resorce()
