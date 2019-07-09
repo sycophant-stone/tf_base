@@ -655,9 +655,6 @@ class RefineDet320:
 
     def test_one_image(self, images):
         self.is_training = False
-        self.images, self.ground_truth = self.eval_iterator.get_next()
-        self.images.set_shape(self.shape)
-        self.images= self.images - self.mean
         pred = self.sess.run(self.detection_pred, feed_dict={self.images: images})
         return pred
     def eval_calc(self):
