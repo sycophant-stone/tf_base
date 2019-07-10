@@ -15,7 +15,7 @@ from utils.voc_classname_encoder import classname_to_ids
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2'
 
 flags = tf.app.flags
-flags.DEFINE_string('train_ckpt_dir', '', 'ckpt path of train flow.')
+flags.DEFINE_string('train_ckpt_dir', None, 'ckpt path of train flow.')
 FLAGS = flags.FLAGS
 
 lr = 0.0001
@@ -42,8 +42,8 @@ config = {
 image_augmentor_config = {
     'data_format': 'channels_last',
     'output_shape': [320, 320],
-    'zoom_size': [330, 330],
-    'crop_method': 'random',
+    #'zoom_size': [330, 330],
+    #'crop_method': 'random',
     'flip_prob': [0.0, 0.5],
     'fill_mode': 'BILINEAR',
     'keep_aspect_ratios': False,
