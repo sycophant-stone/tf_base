@@ -4,7 +4,7 @@ root_dir=$cur_dir/../..
 cd $root_dir
 
 redo=1
-data_root_dir="$HOME/data/VOCdevkit/"
+data_root_dir="/ssd/hnren/tf/tf_base/refineDet_caffe/data/VOCdevkit/"
 dataset_name="VOC0712"
 mapfile="$root_dir/data/$dataset_name/labelmap_voc.prototxt"
 anno_type="detection"
