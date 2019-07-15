@@ -10,27 +10,49 @@ import os
 import shutil
 import stat
 import subprocess
+import logging
+
+# add logger
+logger = logging.getLogger()
+hnlog = logging.getLogger('hn-refinedet')
+hnlog.setLevel(logging.DEBUG)
+fh = logging.FileHandler('/tmp/test.log')
+ch = logging.StreamHandler()
+ 
+#formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s %(pathname)s %(filename)s %(funcName)s %(lineno)s \
+      %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S")
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+hnlog.addHandler(fh)
+hnlog.addHandler(ch)
+
 
 # Add extra layers on top of a "base" network (e.g. VGGNet or ResNet).
 def AddExtraLayers(net, use_batchnorm=True, arm_source_layers=[], normalizations=[], lr_mult=1):
     use_relu = True
-
+    hnlog.debug("[AddExtraLayers], net:%s, use_batchnorm:%s, arm_source_layers:%s, normalizations:%s ,lr_mult:%d" %(net, use_batchnorm, arm_source_layers, normalizations, lr_mult))
     # Add additional convolutional layers.
     # 320/32: 10 x 10
     from_layer = net.keys()[-1]
-
+    hnlog.debug("[AddExtraLayers], from_layer:%s" %(from_layer))
     # 320/64: 5 x 5
     out_layer = "conv6_1"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 1, 0, 1, lr_mult=lr_mult)
+    hnlog.debug("[AddExtraLayers] ConvBNLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
 
     from_layer = out_layer
     out_layer = "conv6_2"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 512, 3, 1, 2, lr_mult=lr_mult)
+    hnlog.debug("[AddExtraLayers] ConvBNLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
 
     arm_source_layers.reverse()
     normalizations.reverse()
     num_p = 6
+    hnlog.debug("[AddExtraLayers] arm_source_layers:%s, len of(arm...):%d, normalizations:%s " %(arm_source_layers,len(arm_source_layers), normalizations))
     for index, layer in enumerate(arm_source_layers):
+        hnlog.debug("[AddExtraLayers] current index:%d, current layer:%s, normalizations[%d]:%s" %(index, layer, index, normalizations[index]))
         out_layer = layer
         if normalizations:
             if normalizations[index] != -1:
@@ -42,27 +64,33 @@ def AddExtraLayers(net, use_batchnorm=True, arm_source_layers=[], normalizations
         from_layer = out_layer
         out_layer = "TL{}_{}".format(num_p, 1)
         ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 1, lr_mult=lr_mult)
-
+        hnlog.debug("[AddExtraLayers] ConvBNLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
+        hnlog.debug("current num_p:%d"%(num_p))
         if num_p == 6:
             from_layer = out_layer
             out_layer = "TL{}_{}".format(num_p, 2)
             ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 1, lr_mult=lr_mult)
+            hnlog.debug("[AddExtraLayers] ConvBNLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
 
             from_layer = out_layer
             out_layer = "P{}".format(num_p)
             ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 1, lr_mult=lr_mult)
+            hnlog.debug("[AddExtraLayers] ConvBNLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
         else:
             from_layer = out_layer
             out_layer = "TL{}_{}".format(num_p, 2)
             ConvBNLayer(net, from_layer, out_layer, use_batchnorm, False, 256, 3, 1, 1, lr_mult=lr_mult)
+            hnlog.debug("[AddExtraLayers] ConvBNLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
 
             from_layer = "P{}".format(num_p+1)
             out_layer = "P{}-up".format(num_p+1)
             DeconvBNLayer(net, from_layer, out_layer, use_batchnorm, False, 256, 2, 0, 2, lr_mult=lr_mult)
+            hnlog.debug("[AddExtraLayers] DeconvBNLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
 
             from_layer = ["TL{}_{}".format(num_p, 2), "P{}-up".format(num_p+1)]
             out_layer = "Elt{}".format(num_p)
             EltwiseLayer(net, from_layer, out_layer)
+            hnlog.debug("[AddExtraLayers] EltwiseLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
             relu_name = '{}_relu'.format(out_layer)
             net[relu_name] = L.ReLU(net[out_layer], in_place=True)
             out_layer = relu_name
@@ -70,6 +98,7 @@ def AddExtraLayers(net, use_batchnorm=True, arm_source_layers=[], normalizations
             from_layer = out_layer
             out_layer = "P{}".format(num_p)
             ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 1, lr_mult=lr_mult)
+            hnlog.debug("[AddExtraLayers] ConvBNLayer, from_layer:%s, out_layer:%s " %(from_layer, out_layer))
 
         num_p = num_p - 1
 
