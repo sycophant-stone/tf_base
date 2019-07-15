@@ -1,7 +1,7 @@
 import _init_paths
 from fast_rcnn.test import single_scale_test_net, multi_scale_test_net_320, multi_scale_test_net_512
 from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list
-from datasets.factory import get_imdb
+from datasets.factory_voc import get_imdb
 import caffe
 import os
 
@@ -44,7 +44,9 @@ if __name__ == '__main__':
     models = os.listdir(path)
 
     mAP = {}
+    print("models:%s"%(models))
     for model in models:
+        print("Current Model:%s" %(model))
         if model.find('caffemodel') == -1:
             continue
         caffemodel = path + model
@@ -63,6 +65,7 @@ if __name__ == '__main__':
                 multi_scale_test_net_320(net, imdb)
             else:
                 multi_scale_test_net_512(net, imdb)
+        print("iter:%d, mAP[%d]:%s" %(iter,iter,mAP[iter]))
         mAP[iter] = cfg.mAP
 
     keys = mAP.keys()
