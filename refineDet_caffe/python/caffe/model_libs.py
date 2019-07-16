@@ -4,6 +4,23 @@ import caffe
 from caffe import layers as L
 from caffe import params as P
 from caffe.proto import caffe_pb2
+import logging
+
+logger = logging.getLogger()
+hnlog = logging.getLogger('hn-modellib')
+hnlog.setLevel(logging.DEBUG)
+fh = logging.FileHandler('/tmp/test.log')
+ch = logging.StreamHandler()
+ 
+#formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s %(pathname)s %(filename)s %(funcName)s %(lineno)s \
+      %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S")
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+hnlog.addHandler(fh)
+hnlog.addHandler(ch)
+
 
 def check_if_exist(path):
     return os.path.exists(path)
@@ -960,6 +977,14 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
         aspect_ratios=[], steps=[], img_height=0, img_width=0, share_location=True,
         flip=True, clip=True, offset=0.5, inter_layer_depth=[], kernel_size=1, pad=0,
         conf_postfix='', loc_postfix='', **bn_param):
+    print "CreateRefineDetHead Entry"
+    hnlog.debug("net:%s, data_layer:%s, num_classes:%s, from_layers:%s, from_layers2:%s, normalizations:%s, use_batchnorm:%s, lr_mult:%s, min_sizes:%s, max_sizes:%s, prior_variance:%s, aspect_ratios:%s, steps:%s, img_height:%d,img_width:%d, share_location:%s, flip:%s, clip:%s, offset:%d, inter_layer_depth:%s, kernel_size:%d, pad:%d, conf_postfix:%s, loc_postfix:%s" % (net, data_layer, num_classes, from_layers, 
+                 from_layers2,normalizations, use_batchnorm, lr_mult, min_sizes, max_sizes, prior_variance,aspect_ratios,
+                 steps,img_height, img_width, share_location,flip, clip, offset, inter_layer_depth, kernel_size, pad,conf_postfix, 
+                 loc_postfix))
+    '''hnlog.debug("num_classes:%s, from_layers:%s, from_layers2:%s" % (num_classes, from_layers, 
+                 from_layers2))'''
+
     assert num_classes, "must provide num_classes"
     assert num_classes > 0, "num_classes must be positive number"
     if normalizations:
@@ -984,13 +1009,15 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
     conf_layers = []
     for i in range(0, num):
         from_layer = from_layers[i]
-
+        if normalizations:
+            hnlog.debug("i:%d, from_layers[%d]:%s, normalizations[%d]:%d" %(i,i,from_layers[i],i,normalizations[i]))
         # Get the normalize value.
         if normalizations:
             if normalizations[i] != -1:
                 norm_name = "{}_norm".format(from_layer)
                 net[norm_name] = L.Normalize(net[from_layer], scale_filler=dict(type="constant", value=normalizations[i]),
                     across_spatial=False, channel_shared=False)
+                hnlog.debug("L.Normalize from_layer:%s, norm_name:%s" % (from_layer, norm_name))
                 from_layer = norm_name
 
         # Add intermediate layers.
@@ -998,6 +1025,7 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
             if inter_layer_depth[i] > 0:
                 inter_name = "{}_inter".format(from_layer)
                 ResBody(net, from_layer, inter_name, out2a=256, out2b=256, out2c=1024, stride=1, use_branch1=True)
+                hnlog.debug("ResBody from_layer:%s, inter_name:%s" %(from_layer, inter_name))
                 # ConvBNLayer(net, from_layer, inter_name, use_bn=use_batchnorm, use_relu=True, lr_mult=lr_mult,
                 #       num_output=inter_layer_depth[i], kernel_size=3, pad=1, stride=1, **bn_param)
                 from_layer = "res{}".format(inter_name)
@@ -1027,7 +1055,6 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
         step = []
         if len(steps) > i:
             step = steps[i]
-
         # Create location prediction layer.
         name = "{}_mbox_loc{}".format(from_layer, loc_postfix)
         num_loc_output = num_priors_per_location * 4
@@ -1035,11 +1062,16 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
             num_loc_output *= num_classes_rpn
         ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
             num_output=num_loc_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
+        hnlog.debug("ConvBNLayer , from_layer:%s, num_loc_output:%d"%(from_layer, num_loc_output))
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
+        hnlog.debug("for loc L.Permute,from :%s to  permute_name:%s" %(net[name],  permute_name))
         flatten_name = "{}_flat".format(name)
         net[flatten_name] = L.Flatten(net[permute_name], axis=1)
+        hnlog.debug("for loc L.flatten,from :%s to  flatten_name:%s" %(permute_name, flatten_name))
         loc_layers.append(net[flatten_name])
+        if max_size:
+            hnlog.debug("for loc max_size:%d, flip:%d, len(aspect_ratio):%d, len(min_size), num_loc_output:%d "%(max_size, flip, len(aspect_ratio), len(min_size), num_loc_output))
 
         # Create confidence prediction layer.
         name = "{}_mbox_conf{}".format(from_layer, conf_postfix)
@@ -1048,14 +1080,17 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
             num_output=num_conf_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
+        hnlog.debug("for conf L.Permute,from :%s to  permute_name:%s" %(net[name],  permute_name))
         flatten_name = "{}_flat".format(name)
         net[flatten_name] = L.Flatten(net[permute_name], axis=1)
+        hnlog.debug("for conf L.flatten,from :%s to  flatten_name:%s" %(permute_name, flatten_name))
         conf_layers.append(net[flatten_name])
 
         # Create prior generation layer.
         name = "{}_mbox_priorbox".format(from_layer)
         net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size,
                 clip=clip, variance=prior_variance, offset=offset)
+        hnlog.debug("L.Priorbox from_layer:%s, data_layer:%s, name:%s"%(from_layer, data_layer, name))
         if max_size:
             net.update(name, {'max_size': max_size})
         if aspect_ratio:
@@ -1073,12 +1108,15 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
     mbox_layers = []
     name = '{}{}'.format(prefix, "_loc")
     net[name] = L.Concat(*loc_layers, axis=1)
+    hnlog.debug("L.Concat *loc_layers:%s, name:%s "%(loc_layers, name))
     mbox_layers.append(net[name])
     name = '{}{}'.format(prefix, "_conf")
     net[name] = L.Concat(*conf_layers, axis=1)
+    hnlog.debug("L.Concat *conf_layers:%s, name:%s "%(conf_layers, name))
     mbox_layers.append(net[name])
     name = '{}{}'.format(prefix, "_priorbox")
     net[name] = L.Concat(*priorbox_layers, axis=2)
+    hnlog.debug("L.Concat *priorbox_layers:%s, name:%s "%(priorbox_layers, name))
     mbox_layers.append(net[name])
 
 
@@ -1096,6 +1134,7 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
                 norm_name = "{}_norm".format(from_layer)
                 net[norm_name] = L.Normalize(net[from_layer], scale_filler=dict(type="constant", value=normalizations[i]),
                     across_spatial=False, channel_shared=False)
+                hnlog.debug("L.Normalize from_layer:%s, norm_name:%s" %(from_layer, norm_name))
                 from_layer = norm_name
 
         # Add intermediate layers.
@@ -1103,6 +1142,7 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
             if inter_layer_depth[i] > 0:
                 inter_name = "{}_inter".format(from_layer)
                 ResBody(net, from_layer, inter_name, out2a=256, out2b=256, out2c=1024, stride=1, use_branch1=True)
+                hnlog.debug("ResBody from_layer:%s, inter_name:%s" %(from_layer, inter_name))
                 # ConvBNLayer(net, from_layer, inter_name, use_bn=use_batchnorm, use_relu=True, lr_mult=lr_mult,
                 #       num_output=inter_layer_depth[i], kernel_size=3, pad=1, stride=1, **bn_param)
                 # from_layer = inter_name
@@ -1138,10 +1178,13 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
             num_loc_output *= num_classes
         ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
                     num_output=num_loc_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
+        hnlog.debug("for loc ConvBNLayer frome_layer:%s, name:%s" %(from_layer, name))
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
+        hnlog.debug("for loc L.Permute frome_layer:%s, permute_name:%s" %(from_layer, permute_name))
         flatten_name = "{}_flat".format(name)
         net[flatten_name] = L.Flatten(net[permute_name], axis=1)
+        hnlog.debug("for loc L.Flatten frome_layer:%s, flatten_name:%s" %(from_layer, flatten_name))
         loc_layers.append(net[flatten_name])
 
         # Create confidence prediction layer.
@@ -1149,19 +1192,24 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
         num_conf_output = num_priors_per_location * num_classes
         ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
                     num_output=num_conf_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
+        hnlog.debug("for conf ConvBNLayer from_layer:%s, name:%s" %(from_layer, name))
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
+        hnlog.debug("for conf L.Permute frome_layer:%s, permute_name:%s" %(from_layer, permute_name))
         flatten_name = "{}_flat".format(name)
         net[flatten_name] = L.Flatten(net[permute_name], axis=1)
+        hnlog.debug("for conf L.Flatten frome_layer:%s, flatten_name:%s" %(from_layer, flatten_name))
         conf_layers.append(net[flatten_name])
 
 
     # Concatenate priorbox, loc, and conf layers.
     name = '{}{}'.format(prefix, "_loc")
     net[name] = L.Concat(*loc_layers, axis=1)
+    hnlog.debug("L.Concat *loc_layers:%s, name:%s "%(loc_layers, name))
     mbox_layers.append(net[name])
     name = '{}{}'.format(prefix, "_conf")
     net[name] = L.Concat(*conf_layers, axis=1)
+    hnlog.debug("L.Concat *conf_layers:%s, name:%s "%(conf_layers, name))
     mbox_layers.append(net[name])
-
+    hnlog.debug("mbox_layers:%s"%(mbox_layers))
     return mbox_layers
