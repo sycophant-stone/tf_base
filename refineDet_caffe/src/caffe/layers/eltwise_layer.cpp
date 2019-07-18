@@ -31,6 +31,10 @@ template <typename Dtype>
 void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   for (int i = 1; i < bottom.size(); ++i) {
+    #if 0 // debuging , not supposed to be used when training
+    printf("bottom[%d]->shape() n:%d, c:%d, h:%d, w:%d\n", i, bottom[i]->shape()[0], bottom[i]->shape()[1], bottom[i]->shape()[2], bottom[i]->shape()[3]);
+    printf("bottom[%d]->shape() n:%d, c:%d, h:%d, w:%d\n", 0, bottom[0]->shape()[0], bottom[0]->shape()[1], bottom[0]->shape()[2], bottom[0]->shape()[3]);
+    #endif
     CHECK(bottom[i]->shape() == bottom[0]->shape());
   }
   top[0]->ReshapeLike(*bottom[0]);

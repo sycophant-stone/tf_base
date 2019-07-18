@@ -132,7 +132,9 @@ def DeconvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output,
   deconv_name = '{}{}{}'.format(deconv_prefix, out_layer, deconv_postfix)
   net[deconv_name] = L.Deconvolution(net[from_layer], num_output=num_output,
       kernel_size=kernel_size, pad=pad, stride=stride, **kwargs)
-
+  #hnlog.debug("[DeconvBNLayer] from   net[%s]:%s" %(from_layer, net.to_proto(*net.__getitem__(from_layer))))
+  #hnlog.debug("=======================================================================")
+  #hnlog.debug("[DeconvBNLayer] deconv net[%s]:%s" %(deconv_name, net[deconv_name].to_proto()))
   if use_bn:
       bn_name = '{}{}{}'.format(bn_prefix, out_layer, bn_postfix)
       net[bn_name] = L.BatchNorm(net[deconv_name], in_place=True)
