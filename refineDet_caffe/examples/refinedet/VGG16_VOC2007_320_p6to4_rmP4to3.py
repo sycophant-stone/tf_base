@@ -429,7 +429,7 @@ solver_param = {
     'base_lr': base_lr,
     'weight_decay': 0.0005,
     'lr_policy': "multistep",
-    'stepvalue': [80000, 100000, 120000],
+    'stepvalue': [66200, 100000, 120000],
     'gamma': 0.1,
     'momentum': 0.9,
     'iter_size': iter_size,
