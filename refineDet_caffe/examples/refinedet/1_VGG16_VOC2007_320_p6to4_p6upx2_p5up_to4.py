@@ -12,6 +12,8 @@ import stat
 import subprocess
 import logging
 
+## configs
+JOB_NAME = "p6upup5_p5up4"
 # add logger
 logger = logging.getLogger()
 hnlog = logging.getLogger('hn-refinedet')
@@ -306,7 +308,7 @@ else:
     base_lr = 0.00004
 
 # Modify the job name if you want.
-job_name = "refinedet_vgg16_{}_{}".format(resize, "p6top4")
+job_name = "refinedet_vgg16_{}_{}".format(resize, JOB_NAME)
 # The name of the model. Modify it if you want.
 model_name = "VOC0712_{}".format(job_name)
 
