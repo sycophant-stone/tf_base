@@ -128,7 +128,7 @@ def AddExtraLayers(net, use_batchnorm=True, arm_source_layers=[], normalizations
         out_layer = "Elt{}".format(from_elt)
         target_elt = out_layer
         hnlog.debug("[extra_keys] from_point:%s, target_point:%s, target_elt:%s, out_layer:%s" %(from_point, target_point, target_elt, out_layer))
-        EltwiseLayer(net, from_layer, out_layer) #Elt_*
+        EltwiseLayer_triple(net, from_layer, out_layer) #Elt_*
         
         relu_name = '{}_relu'.format(out_layer)
         net[relu_name] = L.ReLU(net[out_layer], in_place=True)                                               ## Elt5_relu

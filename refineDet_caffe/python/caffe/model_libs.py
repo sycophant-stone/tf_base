@@ -154,6 +154,9 @@ def EltwiseLayer(net, from_layer, out_layer):
   elt_name = out_layer
   net[elt_name] = L.Eltwise(net[from_layer[0]], net[from_layer[1]])
 
+def EltwiseLayer_triple(net, from_layer, out_layer):
+  elt_name = out_layer
+  net[elt_name] = L.Eltwise(net[from_layer[0]], net[from_layer[1]], net[from_layer[2]])
 
 def ResBody(net, from_layer, block_name, out2a, out2b, out2c, stride, use_branch1, dilation=1, **bn_param):
   # ResBody(net, 'pool1', '2a', 64, 64, 256, 1, True)
