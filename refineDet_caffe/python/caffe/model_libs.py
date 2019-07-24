@@ -1184,7 +1184,6 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
         ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
                     num_output=num_loc_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
         hnlog.debug("for loc ConvBNLayer frome_layer:%s, name:%s" %(from_layer, name))
-        permute_name = "{}_perm".format(name)
         if from_layer == 'P3':
             kwargs = {
                 'param': [
@@ -1194,10 +1193,13 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
                 'bias_filler': dict(type='constant', value=0)
                 }
             convname = "{}_{}".format(from_layer, "auxConv")
-            net[convname] = L.Convolution(net[from_layer], num_output=num_loc_output,kernel_size=1, pad=0, stride=1, **kwargs)
-            name = convname
+            net[convname] = L.Convolution(net[name], num_output=num_loc_output,kernel_size=1, pad=0, stride=1, **kwargs)
+            helper_name = convname
+        else:
+            helper_name = name
         
-        net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
+        permute_name = "{}_perm".format(name)
+        net[permute_name] = L.Permute(net[helper_name], order=[0, 2, 3, 1])
         hnlog.debug("for loc L.Permute frome_layer:%s, permute_name:%s" %(from_layer, permute_name))
         flatten_name = "{}_flat".format(name)
         net[flatten_name] = L.Flatten(net[permute_name], axis=1)
