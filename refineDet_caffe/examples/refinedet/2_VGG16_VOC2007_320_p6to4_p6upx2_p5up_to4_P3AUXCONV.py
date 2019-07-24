@@ -13,7 +13,7 @@ import subprocess
 import logging
 
 ## configs
-JOB_NAME = "p6upup5_p5up4"
+JOB_NAME = "p6upup5_p5up4_P3AUXCONV"
 # add logger
 logger = logging.getLogger()
 hnlog = logging.getLogger('hn-refinedet')
