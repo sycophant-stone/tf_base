@@ -1185,6 +1185,18 @@ def CreateRefineDetHead(net, data_layer="data", num_classes=[], from_layers=[], 
                     num_output=num_loc_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
         hnlog.debug("for loc ConvBNLayer frome_layer:%s, name:%s" %(from_layer, name))
         permute_name = "{}_perm".format(name)
+        if from_layer == 'P3':
+            kwargs = {
+                'param': [
+                    dict(lr_mult=1, decay_mult=1),
+                    dict(lr_mult=2 * 1, decay_mult=0)],
+                'weight_filler': dict(type='xavier'),
+                'bias_filler': dict(type='constant', value=0)
+                }
+            convname = "{}_{}".format(from_layer, "auxConv")
+            net[convname] = L.Convolution(net[from_layer], num_output=num_loc_output,kernel_size=1, pad=0, stride=1, **kwargs)
+            name = convname
+        
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         hnlog.debug("for loc L.Permute frome_layer:%s, permute_name:%s" %(from_layer, permute_name))
         flatten_name = "{}_flat".format(name)
