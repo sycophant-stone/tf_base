@@ -1,5 +1,5 @@
 #!/bin/bash
-root_dir = '/ssd/hnren/tf/tf_base/refineDet_caffe/test/unds_metrics/VOCdevkit/'
+root_dir="/ssd/hnren/tf/tf_base/refineDet_caffe/test/unds_metrics/VOCdevkit/"
 sub_dir=ImageSets/Main
 bash_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for dataset in trainval test
@@ -11,7 +11,7 @@ do
   fi
   for name in VOC2007 VOC2012
   do
-    if [[ $dataset == "test" && $name == "VOC2011" ]]
+    if [[ $dataset == "test" && $name == "VOC2012" ]]
     then
       continue
     fi
@@ -20,6 +20,8 @@ do
 
     img_file=$bash_dir/$dataset"_img.txt"
     cp $dataset_file $img_file
+    echo "dataset_file: $dataset_file"
+    echo "img_file: $img_file"
     sed -i "s/^/$name\/JPEGImages\//g" $img_file
     sed -i "s/$/.jpg/g" $img_file
 
@@ -37,6 +39,7 @@ do
   # Generate image name and size infomation.
   if [ $dataset == "test" ]
   then
+    echo "$bash_dir/../../build/tools/get_image_size $root_dir $dst_file $bash_dir/$dataset\"_name_size.txt\""
     $bash_dir/../../build/tools/get_image_size $root_dir $dst_file $bash_dir/$dataset"_name_size.txt"
   fi
 
