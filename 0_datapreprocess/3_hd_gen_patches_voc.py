@@ -106,7 +106,11 @@ def crop_and_resize(img_path, ori_xml, newvocdir):
     if not os.path.exists(newvocdir):
         os.mkdir(newvocdir)
     njpegpth = newvocdir+"/JPEGImages"
+    if not os.path.exists(njpegpth):
+        os.mkdir(njpegpth)
     nannopth = newvocdir+"/Annotations"
+    if not os.path.exists(nannopth):
+        os.mkdir(nannopth)
     
     img_filepath = img_path
     lb_filepath = ori_xml
@@ -115,6 +119,7 @@ def crop_and_resize(img_path, ori_xml, newvocdir):
     bboxes = pascal_voc_ann.get_boxes()
     vec = []
     for i,b in enumerate(bboxes):
+        print('reshape oribbox to retangle ...')
         xmin, ymin, xmax, ymax = b[1:5]
         w = xmax - xmin + 1
         h = ymax - ymin + 1
@@ -124,6 +129,7 @@ def crop_and_resize(img_path, ori_xml, newvocdir):
         vec.extend([x, y, sz, sz])
         xc = x+sz/2
         yc = y+sz/2
+        print('crop img with 300x300 ...')
         img_xmn = xc-IM_RUS if xc-IM_RUS>=0 else 0
         img_ymn = yc-IM_RUS if yc-IM_RUS>=0 else 0
         img_xmx = xc+IM_RUS if xc+IM_RUS<img.shape[1] else img.shape[1] - 1
@@ -131,19 +137,25 @@ def crop_and_resize(img_path, ori_xml, newvocdir):
         ioregion = img[img_ymn:img_ymx,img_xmn:img_xmx]
         #print(img_filepath.split('.'))
         #print(os.path.splitext(img_filepath))
+        new_anns_folder = os.path.join(newvocdir, "Annotations")
+        new_imgs_folder = os.path.join(newvocdir, "JPEGImages")
         crop_img_name = os.path.splitext(img_filepath)[0]+"_crop_%d.jpg"%(i)
-        cv2.imwrite(crop_img_name, ioregion)
-        
+        crop_img_savepath = new_imgs_folder+"/"+os.path.basename(crop_img_name)
+        cv2.imwrite(crop_img_savepath, ioregion)
+        print('rebase ori bbox pos ...')
+        #print("crop_img_savepath:%s", crop_img_savepath)
         nxmin = x- img_xmn
         nymin = y- img_ymn
         nxmax = x+sz-1 - img_xmn
         nymax = y+sz-1 - img_ymn 
-        crop_xml_name = os.path.splitext(crop_img_name)[0]+".xml" 
-        newpascal_ann = PascalVocAnn(image_name=crop_img_name)
-        newpascal_ann.set_filename(file_name=crop_img_name)
+        crop_xml_name = os.path.splitext(os.path.basename(crop_img_savepath))[0]+".xml"
+        crop_xml_savepath = new_anns_folder+"/"+crop_xml_name
+        newpascal_ann = PascalVocAnn(image_name=crop_img_savepath)
+        newpascal_ann.set_filename(file_name=crop_img_savepath)
         newpascal_ann.set_size(size=[REQ_IMGSIZE, REQ_IMGSIZE, img.shape[2]])
         newpascal_ann.add_object(object_class="head", xmin=nxmin, ymin=nymin, xmax=nxmax, ymax=nymax)
-        newpascal_ann.write_xml(crop_xml_name)
+        newpascal_ann.write_xml(crop_xml_savepath)
+        print('... done')
 
 def gen_patches_voc2voc_format(dataset_list, req_imgsize=300):
     anno_type = 1  # fully labelled
