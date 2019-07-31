@@ -8,5 +8,13 @@
         test.txt    train.txt   trainval.txt    val.txt
        those files split the datasets into different usages.including training-set and testing-set.
     4. create list and data for LMDB
+       i) list
        mv HeadVocFormat/create_list.sh FID_DID_HEAD_CLEAN_0_patches
        modify create_list.sh according current dir arch.
+       cd FID_DID_HEAD_CLEAN_0_patches
+       ./create_list.sh
+       ii) data
+       mv HeadVocFormat/create_data.sh FID_DID_HEAD_CLEAN_0_patches
+       cd FID_DID_HEAD_CLEAN_0_patches
+       ./create_data.sh
+        
