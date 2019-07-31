@@ -1,0 +1,965 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotation>
+	
+	
+	
+	
+  
+	
+	
+	
+	<filename>/ssd/xieqiang/Data/FID_DID_HEAD_CLEAN_0/JPEGImages/ch00005_20190214_ch00005_20190214115838.mp4.cut.mp4_010500.jpg</filename>
+	
+	
+	
+	
+  
+	
+	
+	
+	<size>
+		
+		
+		
+		
+    
+		
+		
+		
+		<width>1920</width>
+		
+		
+		
+		
+    
+		
+		
+		
+		<height>1080</height>
+		
+		
+		
+		
+    
+		
+		
+		
+		<depth>3</depth>
+		
+		
+		
+		
+  
+	
+	
+	
+	</size>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>90</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>800</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>237</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>995</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>564</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>274</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>719</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>503</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>853</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>112</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>964</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>251</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>852</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>174</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>987</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>341</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>662</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>650</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>831</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>825</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>928</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>416</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>1103</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>631</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>884</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>618</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>1115</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>905</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>1042</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>698</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>1249</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>945</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>1376</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>466</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>1565</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>673</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+  
+	
+	
+	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>1270</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>0</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>1389</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>145</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+		
+		
+		
+  
+	
+	
+	
+	</object>
+	
+	
+	
+	
+
+
+
+
+</annotation>
