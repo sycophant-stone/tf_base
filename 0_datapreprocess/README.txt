@@ -7,3 +7,6 @@
     3. using HeadVocFormat `cls.py` to generate those below files:
         test.txt    train.txt   trainval.txt    val.txt
        those files split the datasets into different usages.including training-set and testing-set.
+    4. create list and data for LMDB
+       mv HeadVocFormat/create_list.sh FID_DID_HEAD_CLEAN_0_patches
+       modify create_list.sh according current dir arch.
