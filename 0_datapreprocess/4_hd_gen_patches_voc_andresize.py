@@ -86,7 +86,7 @@ def read_all(file_names):
     return lines
 
 # list all image files
-def list_all_files(dir_name, exts = ['jpg', 'bmp', 'png']):
+def list_all_files(dir_name, exts = ['jpg', 'bmp', 'png', 'xml']):
     result = []
     for dir, sub_dirs, file_names in os.walk(dir_name):
         for file_name in file_names:
@@ -102,7 +102,7 @@ def concat_files(in_filenames, out_filename):
                     outfile.write(line)
 REQ_IMGSIZE=300#128
 IM_RUS=REQ_IMGSIZE/2
-def crop_and_resize(img_path, ori_xml, newvocdir):
+def crop_and_resize(img_path, ori_xml, newvocdir,gen_gt_rect=False):
     if not os.path.exists(newvocdir):
         os.mkdir(newvocdir)
     njpegpth = newvocdir+"/JPEGImages"
@@ -111,9 +111,10 @@ def crop_and_resize(img_path, ori_xml, newvocdir):
     nannopth = newvocdir+"/Annotations"
     if not os.path.exists(nannopth):
         os.mkdir(nannopth)
-    rectpth = newvocdir+"/RECT_JPEGImages"
-    if not os.path.exists(rectpth):
-        os.mkdir(rectpth)
+    if gen_gt_rect:
+        rectpth = newvocdir+"/RECT_JPEGImages"
+        if not os.path.exists(rectpth):
+            os.mkdir(rectpth)
     
     img_filepath = img_path
     lb_filepath = ori_xml
@@ -158,18 +159,18 @@ def crop_and_resize(img_path, ori_xml, newvocdir):
         nymax = y+sz-1 - img_ymn
         print('... done')
         print('resize bbox pos ...')
-        nxmin = 128.0/w300*nxmin
-        nymin = 128.0/h300*nymin
-        nxmax = 128.0/w300*nxmax
-        nymax = 128.0/h300*nymax
+        nxmin = int(128.0/w300*nxmin)
+        nymin = int(128.0/h300*nymin)
+        nxmax = int(128.0/w300*nxmax)
+        nymax = int(128.0/h300*nymax)
         print('... done')
-
-        print('draw rectangle ...')
-        region_rect = cv2.rectangle(ioregion, (int(nxmin),int(nymin)), (int(nxmax),int(nymax)), (0,255,0), 2)
-        rect_imgs_folder = os.path.join(newvocdir, "RECT_JPEGImages")
-        rect_img_name = os.path.splitext(img_filepath)[0]+"_rect_%d.jpg"%(i)
-        rect_img_savepath = rect_imgs_folder+"/"+os.path.basename(rect_img_name)
-        cv2.imwrite(rect_img_savepath, region_rect)
+        if gen_gt_rect:
+            print('draw rectangle ...')
+            region_rect = cv2.rectangle(ioregion, (int(nxmin),int(nymin)), (int(nxmax),int(nymax)), (0,255,0), 2)
+            rect_imgs_folder = os.path.join(newvocdir, "RECT_JPEGImages")
+            rect_img_name = os.path.splitext(img_filepath)[0]+"_rect_%d.jpg"%(i)
+            rect_img_savepath = rect_imgs_folder+"/"+os.path.basename(rect_img_name)
+            cv2.imwrite(rect_img_savepath, region_rect)
         
         crop_xml_name = os.path.splitext(os.path.basename(crop_img_savepath))[0]+".xml"
         crop_xml_savepath = new_anns_folder+"/"+crop_xml_name
@@ -177,23 +178,24 @@ def crop_and_resize(img_path, ori_xml, newvocdir):
         newpascal_ann.set_filename(file_name=crop_img_savepath)
         newpascal_ann.set_size(size=[128, 128, img.shape[2]])
         newpascal_ann.add_object(object_class="head", xmin=nxmin, ymin=nymin, xmax=nxmax, ymax=nymax)
+        newpascal_ann.check_boxes()
         newpascal_ann.write_xml(crop_xml_savepath)
         print('... done')
 
-def gen_patches_voc2voc_format(dataset_list, req_imgsize=300):
+def gen_patches_voc2voc_format(dataset_list, req_imgsize=300, gen_gt_rect=False):
     anno_type = 1  # fully labelled
     for data_folder in dataset_list:
         ori_anns_folder = os.path.join(data_folder, "Annotations")
         ori_imgs_folder = os.path.join(data_folder, "JPEGImages")
         imgs = list_all_files(ori_imgs_folder, exts=["jpg"])
-        newvocdir = data_folder+"_patches"
+        newvocdir = data_folder+"_patches_int"
         print("....crop_and_resize")
         for i, img_path in enumerate(imgs):
             img_base_name = os.path.basename(img_path)
             xml_base_name = os.path.splitext(img_base_name)[0] + ".xml"
             ori_xml = os.path.join(ori_anns_folder, xml_base_name)
             #print("img_base_name>>>> %s, xml_base_name>>>> %s, img_path>>>> %s, ori_xml>>>> %s" %(img_base_name, xml_base_name, img_path, ori_xml))
-            crop_and_resize(img_path, ori_xml, newvocdir)
+            crop_and_resize(img_path, ori_xml, newvocdir,gen_gt_rect)
 
    
 def gen_positive_list_voc_format():
@@ -340,7 +342,24 @@ def gen_all_positive_list2():
                  ]
     workdir = "/ssd/xulifeng/workspace/hd_densebox/train_data"            
     concat_files(positives, os.path.join(workdir, "all_fullframe_lst.txt"))
-    
+def get_max_bbox_size(dataset_list):
+    res_max_size = 0
+    for data_folder in dataset_list:
+        ori_anns_folder = os.path.join(data_folder, "Annotations")
+        xmls = list_all_files(ori_anns_folder, exts=["xml"])
+        for i, xml_path in enumerate(xmls):
+            pascal_voc_ann = PascalVocAnn(xml=xml_path)
+            bboxes = pascal_voc_ann.get_boxes()
+            vec = []
+            for i,b in enumerate(bboxes):
+                xmin, ymin, xmax, ymax = b[1:5]
+                max_size = max(xmax-xmin,ymax-ymin)
+                if res_max_size < max_size:
+                    res_max_size = max_size
+
+    return res_max_size
+
+
 if __name__ == "__main__":
     #gen_positive_list_voc_format()
     #gen_positive_list_format1()
@@ -353,7 +372,8 @@ if __name__ == "__main__":
              'HeadVocFormat/HeadBoxDataFidChecked2'            ]'''
     #dslist= ['HeadVocFormat/HeadBoxDataFidChecked2']
     dslist= ['HeadVocFormat/FID_DID_HEAD_CLEAN_0']
- 
-    gen_patches_voc2voc_format(dataset_list = dslist, req_imgsize=300)
+    max_sz = get_max_bbox_size( dataset_list = dslist)
+    print("max sz:", max_sz)
+    gen_patches_voc2voc_format(dataset_list = dslist, req_imgsize=int(max_sz*1.5), gen_gt_rect=False)
     
     pass
