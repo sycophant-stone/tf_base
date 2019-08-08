@@ -1,0 +1,12 @@
+I0805 13:34:57.642292 12362 solver.cpp:544] class1: 0.893678
+I0805 13:34:57.642328 12362 solver.cpp:547] max_precision[0]=0
+I0805 13:34:57.642340 12362 solver.cpp:547] max_precision[1]=0.932666
+I0805 13:34:57.642352 12362 solver.cpp:547] max_precision[2]=0.966577
+I0805 13:34:57.642383 12362 solver.cpp:547] max_precision[3]=0.979269
+I0805 13:34:57.642411 12362 solver.cpp:547] max_precision[4]=0.984513
+I0805 13:34:57.642438 12362 solver.cpp:547] max_precision[5]=0.988833
+I0805 13:34:57.642451 12362 solver.cpp:547] max_precision[6]=0.989782
+I0805 13:34:57.642463 12362 solver.cpp:547] max_precision[7]=0.993337
+I0805 13:34:57.642505 12362 solver.cpp:547] max_precision[8]=0.996522
+I0805 13:34:57.642519 12362 solver.cpp:547] max_precision[9]=0.998963
+I0805 13:34:57.642534 12362 solver.cpp:547] max_precision[10]=1

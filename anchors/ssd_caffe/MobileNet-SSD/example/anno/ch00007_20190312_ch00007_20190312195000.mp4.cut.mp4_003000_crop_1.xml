@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotation>
+	
+  
+	<filename>HeadVocFormat/FID_DID_HEAD_CLEAN_0_patches_int/JPEGImages/ch00007_20190312_ch00007_20190312195000.mp4.cut.mp4_003000_crop_1.jpg</filename>
+	
+  
+	<size>
+		
+    
+		<width>128</width>
+		
+    
+		<height>128</height>
+		
+    
+		<depth>3</depth>
+		
+  
+	</size>
+	
+  
+	<object>
+		
+    
+		<name>head</name>
+		
+    
+		<difficult>0</difficult>
+		
+    
+		<bndbox>
+			
+      
+			<xmin>42</xmin>
+			
+      
+			<ymin>42</ymin>
+			
+      
+			<xmax>84</xmax>
+			
+      
+			<ymax>84</ymax>
+			
+    
+		</bndbox>
+		
+  
+	</object>
+	
+
+</annotation>
