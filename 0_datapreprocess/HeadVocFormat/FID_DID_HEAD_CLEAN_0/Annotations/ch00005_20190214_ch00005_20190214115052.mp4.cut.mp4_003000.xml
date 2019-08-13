@@ -496,16 +496,87 @@
 		
 		</bndbox>
 		
-		
-		
-		
-  
-	
-	
+
 	
 	</object>
 	
+	<object>
+		
+		
+		
+		
+    
+		
+		
+		
+		<name>head</name>
+		
+		
+		
+		
+    
+		
+		
+		
+		<difficult>0</difficult>
+		
+		
+		
+		
+    
+		
+		
+		
+		<bndbox>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmin>855</xmin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymin>156</ymin>
+			
+			
+			
+			
+      
+			
+			
+			
+			<xmax>955</xmax>
+			
+			
+			
+			
+      
+			
+			
+			
+			<ymax>456</ymax>
+			
+			
+			
+			
+    
+		
+		
+		
+		</bndbox>
+		
+
 	
+	</object>	
 	
 	
 

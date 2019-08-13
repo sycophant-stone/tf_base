@@ -122,6 +122,7 @@ def crop_and_resize(img_path, ori_xml, newvocdir,gen_gt_rect=False):
     pascal_voc_ann = PascalVocAnn(xml=lb_filepath)
     bboxes = pascal_voc_ann.get_boxes()
     vec = []
+    print("Operating at ",img_filepath)
     for i,b in enumerate(bboxes):
         print('reshape oribbox to retangle ...')
         xmin, ymin, xmax, ymax = b[1:5]
@@ -134,6 +135,7 @@ def crop_and_resize(img_path, ori_xml, newvocdir,gen_gt_rect=False):
         xc = x+sz/2
         yc = y+sz/2
         print('crop img with 300x300 ...')
+        print('input gtbox:',b)
         img_xmn = xc-IM_RUS if xc-IM_RUS>=0 else 0
         img_ymn = yc-IM_RUS if yc-IM_RUS>=0 else 0
         img_xmx = xc+IM_RUS if xc+IM_RUS<img.shape[1] else img.shape[1] - 1
