@@ -38,7 +38,11 @@ class PascalVocAnn(object):
 
     def get_size(self):
         return (int(self.node_height.text), int(self.node_width.text), int(self.node_depth.text))
-    
+
+    def get_filename(self):
+        return self.node_filename.text
+
+   
     def add_object(self, object_class="head", xmin=0, ymin=0, xmax=0, ymax=0):
         object_new = SubElement(self.node_root, 'object')
         object_name_new = SubElement(object_new, 'name')
