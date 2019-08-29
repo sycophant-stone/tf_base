@@ -189,7 +189,7 @@ if __name__ == '__main__':
     image_resize = 72
     net.blobs['data'].reshape(1,3,image_resize,image_resize)
 
-    imglist_prefix="/ssd/hnren/tf/1sd/1_lf/libfacedetection-master/test_fined_ds/head_img/"
+    imglist_prefix="/ssd/hnren/tf/1sd/1_lf/libfacedetection-master/test_fined_ds/sub_train_head_img/"
     
     jpgs = list_all_files(imglist_prefix + "/JPEGImages/", exts=["jpg"])
     
