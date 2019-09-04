@@ -189,7 +189,7 @@ if __name__ == '__main__':
     image_resize = 72
     net.blobs['data'].reshape(1,3,image_resize,image_resize)
 
-    imglist_prefix="/ssd/hnren/tf/1sd/1_lf/libfacedetection-master/test_fined_ds/head_img/"
+    imglist_prefix="/ssd/hnren/tf/1sd/1_lf/libfacedetection-master/all_head_in72/"
     
     jpgs = list_all_files(imglist_prefix + "/JPEGImages/", exts=["jpg"])
     
@@ -266,8 +266,9 @@ if __name__ == '__main__':
         
         pdlist=[]
         for d in detections[0,0,:]:
-            pd=[d[3]*72, d[4]*72, d[5]*72, d[6]*72, d[2]]
-            pdlist.append(pd)
+            if d[2] >= float(input_conf):
+                pd=[d[3]*72, d[4]*72, d[5]*72, d[6]*72, d[2]]
+                pdlist.append(pd)
         '''
         d=detections[0,0,0,:]
         pd=[d[3]*72, d[4]*72, d[5]*72, d[6]*72, d[2]]
@@ -280,11 +281,14 @@ if __name__ == '__main__':
     logging.info( "label_dict:%s"%(label_dict))
     logging.info( "dt_dict:%s"%(dt_dict))
     #match = detection_result_match(label_dict, dt_dict, 0.5)
-    match = detection_result_match(label_dict, dt_dict, 0.5)#float(_args.iouthd))#0.45)
+    match = detection_result_match(label_dict, dt_dict, float(_args.iouthd))#0.45)
     logging.info( match)
     testfppi_val=[0.1, 0.25, 0.3]
     fppi_res = calculate_fppi(match, testfppi_val)
     logging.warning(fppi_res)
+    logging.warning(fppi_res['head']['recall'][0])
+    logging.warning(fppi_res['head']['recall'][1])
+    logging.warning(fppi_res['head']['recall'][2])
     
     # output post process
     print('output log and model post-process ...')
