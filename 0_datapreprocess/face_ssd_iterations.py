@@ -12,6 +12,7 @@ from eval_fppi import *
 from shell import run_system_command
 # save with datetime info
 from datetime import datetime
+from cputime import calc_mean
 
 
 '''USAGE:
@@ -26,7 +27,7 @@ from google.protobuf import text_format
 from caffe.proto import caffe_pb2
 
 # list all image files
-def list_all_files(dir_name, exts = ['jpg', 'bmp', 'png', 'xml']):
+def list_all_files(dir_name, exts = ['jpg', 'bmp', 'png', 'xml', 'log']):
     result = []
     for dir, sub_dirs, file_names in os.walk(dir_name):
         for file_name in file_names:
@@ -132,24 +133,30 @@ def put_iou_on_img(bboxes, img, predbbox_list):
 
 '''
 usage:
+
+imgdir:
+    JPEGImages:    for test set's images.
+    Annotations:   for test set's annotations.
     
 '''
 if __name__ == '__main__':
     # load PASCAL VOC labels
     parse = argparse.ArgumentParser()
-    parse.add_argument('--conf', type=str, help='threshold for classfication --conf 0.6')
-    parse.add_argument('--deploy', type=str, help='m.deploy.prototxt')
-    parse.add_argument('--weights', type=str, help='snapshot/mT**.caffemodel')
+    parse.add_argument('--imgdir', type=str, help='test images dir, ex: /ssd/hnren/tf/1sd/1_lf/libfacedetection-master/all_head_in72/', required=True)
+    parse.add_argument('--conf', type=str, help='threshold for classfication --conf 0.6', required=True)
+    parse.add_argument('--deploy', type=str, help='m.deploy.prototxt', required=True)
+    parse.add_argument('--weights', type=str, help='snapshot/mT**.caffemodel', required=True)
     parse.add_argument('--draw', type=str, help='whether output the prediction bbox GUI pictures')
     parse.add_argument('--iouthd', type=float, help='iou thred', default='0.5')
     parse.add_argument('--loglevel', type=int, help='loglevel, 30: WARNING and above; 20:INFO LOG', default=logging.WARNING)
     _args = parse.parse_args()
-    input_conf = _args.conf
-    input_deploy = _args.deploy
-    input_weights = _args.weights
-    input_draw = _args.draw
-    input_iouthd = _args.iouthd
-    log_level = _args.loglevel;
+    input_imgdir   =  _args.imgdir
+    input_conf     =  _args.conf
+    input_deploy   =  _args.deploy
+    input_weights  =  _args.weights
+    input_draw     =  _args.draw
+    input_iouthd   =  _args.iouthd
+    log_level      =  _args.loglevel;
     
     iterations_num = os.path.splitext(os.path.basename(input_weights))[0].split('_')[2]
     save_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -189,7 +196,7 @@ if __name__ == '__main__':
     image_resize = 72
     net.blobs['data'].reshape(1,3,image_resize,image_resize)
 
-    imglist_prefix="/ssd/hnren/tf/1sd/1_lf/libfacedetection-master/all_head_in72/"
+    imglist_prefix=input_imgdir #"/ssd/hnren/tf/1sd/1_lf/libfacedetection-master/all_head_in72/"
     
     jpgs = list_all_files(imglist_prefix + "/JPEGImages/", exts=["jpg"])
     
@@ -299,5 +306,8 @@ if __name__ == '__main__':
     cmd = 'cp %s %s/'%(input_weights, save_dstpath)
     run_system_command(cmd)
     print('save to %s...'%(save_dstpath))
+
+    result_log = list_all_files(save_dstpath, exts=['log'])
+    calc_mean(result_log[0])
     print('... done')
 
